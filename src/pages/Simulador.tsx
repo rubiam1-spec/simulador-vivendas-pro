@@ -43,7 +43,6 @@ type ContrapropostaBomm = {
   condicao: CondicaoPagamento;
   validade: string;
   observacoes: string;
-  detalhesNegociacao: string;
 };
 
 function brl(n: number) {
@@ -189,7 +188,6 @@ export default function Simulador() {
       condicao: criarCondicaoPadrao(),
       validade: "",
       observacoes: "",
-      detalhesNegociacao: "",
     });
 
   const [copiado, setCopiado] = useState(false);
@@ -480,10 +478,6 @@ export default function Simulador() {
       `• ${propostaCliente.condicao.baloesSemestrais} balões semestrais de ${brl(calculo.valorBalao)}`
     );
 
-    if (propostaCliente.observacoes) {
-      linhas.push(`• Observações: ${propostaCliente.observacoes}`);
-    }
-
     return {
       linhas,
       calculo,
@@ -541,16 +535,6 @@ export default function Simulador() {
 
     if (contrapropostaBomm.validade) {
       linhas.push(`• Validade: ${contrapropostaBomm.validade}`);
-    }
-
-    if (contrapropostaBomm.observacoes) {
-      linhas.push(`• Observações comerciais: ${contrapropostaBomm.observacoes}`);
-    }
-
-    if (contrapropostaBomm.detalhesNegociacao) {
-      linhas.push(
-        `• Detalhes da negociação: ${contrapropostaBomm.detalhesNegociacao}`
-      );
     }
 
     return {
@@ -629,6 +613,12 @@ export default function Simulador() {
       linhas.push("");
       linhas.push("📋 Estrutura da proposta do cliente:");
       resumoPropostaCliente.linhas.forEach((linha) => linhas.push(linha));
+
+      if (propostaCliente.observacoes) {
+        linhas.push("");
+        linhas.push(`Observações: ${propostaCliente.observacoes}`);
+      }
+
       linhas.push("");
       linhas.push(
         "📌 Condição sujeita à validação comercial e financeira da incorporadora."
@@ -656,11 +646,9 @@ export default function Simulador() {
       linhas.push("📋 Condição aprovada:");
       resumoContraproposta.linhas.forEach((linha) => linhas.push(linha));
 
-      if (contrapropostaBomm.detalhesNegociacao) {
+      if (contrapropostaBomm.observacoes) {
         linhas.push("");
-        linhas.push(
-          `Detalhes da negociação: ${contrapropostaBomm.detalhesNegociacao}`
-        );
+        linhas.push(`Observações comerciais: ${contrapropostaBomm.observacoes}`);
       }
 
       linhas.push("");
@@ -698,8 +686,9 @@ export default function Simulador() {
     baloesSemestrais,
     valorBalao,
     resumoPropostaCliente,
+    propostaCliente.observacoes,
     resumoContraproposta,
-    contrapropostaBomm.detalhesNegociacao,
+    contrapropostaBomm.observacoes,
   ]);
 
   async function copiarMensagem() {
@@ -719,7 +708,6 @@ export default function Simulador() {
     });
 
     const margemX = 42;
-    const larguraUtil = 485;
     let y = 40;
 
     const tituloPdf =
@@ -728,31 +716,6 @@ export default function Simulador() {
         : modoDocumento === "proposta"
           ? "Proposta Comercial"
           : "Contra-proposta Comercial";
-
-    function garantirEspaco(alturaNecessaria = 40) {
-      if (y + alturaNecessaria > 780) {
-        doc.addPage();
-        y = 42;
-      }
-    }
-
-    function escreverLinhas(
-      linhas: string[],
-      fontSize = 11,
-      color: [number, number, number] = [230, 235, 232],
-      font: "normal" | "bold" = "normal"
-    ) {
-      doc.setFont("helvetica", font);
-      doc.setFontSize(fontSize);
-      doc.setTextColor(color[0], color[1], color[2]);
-
-      linhas.forEach((linha) => {
-        const quebradas = doc.splitTextToSize(linha, larguraUtil);
-        garantirEspaco(quebradas.length * 14 + 8);
-        doc.text(quebradas, margemX, y);
-        y += quebradas.length * 14;
-      });
-    }
 
     doc.setFillColor(21, 42, 34);
     doc.roundedRect(24, 24, 547, 794, 18, 18, "F");
@@ -790,22 +753,28 @@ export default function Simulador() {
     doc.text("Dados do atendimento", margemX, y);
 
     y += 20;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.setTextColor(230, 235, 232);
 
-    escreverLinhas([
+    const blocoAtendimento = [
       `Cliente: ${cliente || "-"}`,
       `Corretor(a): ${corretor || "-"}`,
       `Imobiliária: ${imobiliaria || "-"}`,
       `Quantidade de lotes: ${quantidadeLotesSelecionados || 0}`,
-    ]);
+    ];
+
+    blocoAtendimento.forEach((linha) => {
+      doc.text(linha, margemX, y);
+      y += 16;
+    });
 
     y += 10;
-    garantirEspaco(30);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.setTextColor(245, 245, 245);
     doc.text("Unidades selecionadas", margemX, y);
 
     y += 18;
+    doc.setFont("helvetica", "normal");
 
     const unidadesPdf =
       lotesSelecionados.length > 0
@@ -814,70 +783,102 @@ export default function Simulador() {
           )
         : ["• Nenhuma unidade selecionada"];
 
-    escreverLinhas(unidadesPdf);
+    unidadesPdf.forEach((linha) => {
+      doc.text(linha, margemX, y);
+      y += 16;
+    });
 
     y += 10;
 
     if (modoDocumento === "simulacao") {
-      garantirEspaco(30);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
       doc.setTextColor(245, 245, 245);
       doc.text("Estrutura da negociação", margemX, y);
 
       y += 20;
-      escreverLinhas(resumoNegociacao);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.setTextColor(230, 235, 232);
+
+      resumoNegociacao.forEach((linha) => {
+        doc.text(linha, margemX, y);
+        y += 16;
+      });
 
       y += 12;
-      garantirEspaco(30);
+
       doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
       doc.setTextColor(245, 245, 245);
       doc.text("Condição sugerida", margemX, y);
 
       y += 20;
-      escreverLinhas([
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.setTextColor(230, 235, 232);
+
+      [
         `• ${parcelasMeses} parcelas mensais de ${brl(valorParcela)}`,
         `• ${baloesSemestrais} balões semestrais de ${brl(valorBalao)}`,
         "• Correção via INCC durante a obra e, após a entrega, IPCA.",
-      ]);
+      ].forEach((linha) => {
+        doc.text(linha, margemX, y);
+        y += 16;
+      });
     }
 
     if (modoDocumento === "proposta") {
-      garantirEspaco(30);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
       doc.setTextColor(245, 245, 245);
       doc.text("Proposta recebida do cliente", margemX, y);
 
       y += 20;
-      escreverLinhas(resumoPropostaCliente.linhas);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.setTextColor(230, 235, 232);
+
+      resumoPropostaCliente.linhas.forEach((linha) => {
+        doc.text(linha, margemX, y);
+        y += 16;
+      });
+
+      if (propostaCliente.observacoes) {
+        y += 8;
+        doc.text(`Observações: ${propostaCliente.observacoes}`, margemX, y);
+        y += 16;
+      }
     }
 
     if (modoDocumento === "contraproposta") {
-      garantirEspaco(30);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
       doc.setTextColor(245, 245, 245);
       doc.text("Contra-proposta da BOMM", margemX, y);
 
       y += 20;
-      escreverLinhas(resumoContraproposta.linhas);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.setTextColor(230, 235, 232);
 
-      if (contrapropostaBomm.detalhesNegociacao) {
+      resumoContraproposta.linhas.forEach((linha) => {
+        doc.text(linha, margemX, y);
+        y += 16;
+      });
+
+      if (contrapropostaBomm.observacoes) {
         y += 8;
-        const detalhes = doc.splitTextToSize(
-          `Detalhes da negociação: ${contrapropostaBomm.detalhesNegociacao}`,
-          larguraUtil
+        doc.text(
+          `Observações comerciais: ${contrapropostaBomm.observacoes}`,
+          margemX,
+          y
         );
-        garantirEspaco(detalhes.length * 14 + 8);
-        doc.text(detalhes, margemX, y);
-        y += detalhes.length * 14;
+        y += 16;
       }
     }
 
     y += 18;
-    garantirEspaco(40);
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
@@ -889,8 +890,7 @@ export default function Simulador() {
     doc.setFontSize(9);
     doc.setTextColor(225, 231, 227);
 
-    const linhasMensagem = doc.splitTextToSize(mensagemWhatsApp, larguraUtil);
-    garantirEspaco(linhasMensagem.length * 11 + 12);
+    const linhasMensagem = doc.splitTextToSize(mensagemWhatsApp, 485);
     doc.text(linhasMensagem, margemX, y);
 
     const nomeArquivo =
@@ -1929,24 +1929,6 @@ export default function Simulador() {
                           placeholder="Ex: veículo sujeito à vistoria, permuta sujeita à análise"
                         />
                       </div>
-                    </div>
-
-                    <div className="luxSpacer" />
-
-                    <div className="luxField">
-                      <label>Detalhes da negociação</label>
-                      <textarea
-                        className="whats"
-                        style={{ minHeight: 120 }}
-                        value={contrapropostaBomm.detalhesNegociacao}
-                        onChange={(e) =>
-                          setContrapropostaBomm((anterior) => ({
-                            ...anterior,
-                            detalhesNegociacao: e.target.value,
-                          }))
-                        }
-                        placeholder="Ex: veículo sujeito à vistoria, permuta sujeita à análise documental, condição válida por 7 dias, entrada pode ser dividida em 2 pagamentos..."
-                      />
                     </div>
 
                     <div className="luxNote">
