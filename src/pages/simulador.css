@@ -507,7 +507,8 @@ body::after {
 }
 
 .luxField input:hover:not(:focus),
-.luxField select:hover:not(:focus) {
+.luxField select:hover:not(:focus),
+.whats:hover:not(:focus) {
   border-color: rgba(255, 255, 255, 0.16);
   background: var(--field-bg-hover);
 }
@@ -520,7 +521,8 @@ body::after {
   background: var(--field-bg-focus);
 }
 
-.luxField input::placeholder {
+.luxField input::placeholder,
+.whats::placeholder {
   color: var(--muted3);
 }
 
@@ -816,12 +818,17 @@ body::after {
 .luxNote {
   margin-top: 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.025));
   border-radius: var(--r-md);
   padding: 13px 14px;
   color: var(--muted);
   font-size: var(--text-xs);
   line-height: 1.58;
+}
+
+.luxNote strong {
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .whats {
@@ -867,13 +874,19 @@ body::after {
   transition:
     filter var(--t-base),
     transform var(--t-base) var(--ease-soft),
-    box-shadow var(--t-base);
+    box-shadow var(--t-base),
+    border-color var(--t-base),
+    background var(--t-base);
 }
 
 .btn:hover {
   filter: brightness(1.05);
   transform: translateY(-1px);
   box-shadow: 0 10px 24px rgba(57, 163, 118, 0.22);
+}
+
+.btn:active {
+  transform: translateY(0);
 }
 
 .btnGhost {

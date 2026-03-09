@@ -7,6 +7,43 @@ import logoVivendas from "../assets/logo-vivendas.png";
 import logoBomm from "../assets/logo-bomm.png";
 
 type StatusFiltro = "todos" | "disponivel" | "indisponivel";
+type ModoDocumento = "simulacao" | "proposta" | "contraproposta";
+type TipoEntrada = "percentual" | "valor";
+
+type CondicaoPagamento = {
+  entradaTipo: TipoEntrada;
+  entradaValor: number;
+  parcelasMeses: number;
+  baloesSemestrais: number;
+  percentualParcelas: number;
+  percentualBaloes: number;
+};
+
+type AtivoNegociado = {
+  descricao: string;
+  valor: number;
+};
+
+type PropostaCliente = {
+  valorOfertado: number;
+  temPermuta: boolean;
+  permuta: AtivoNegociado | null;
+  temVeiculo: boolean;
+  veiculo: AtivoNegociado | null;
+  condicao: CondicaoPagamento;
+  observacoes: string;
+};
+
+type ContrapropostaBomm = {
+  valorAprovado: number;
+  temPermuta: boolean;
+  permutaAceita: AtivoNegociado | null;
+  temVeiculo: boolean;
+  veiculoAceito: AtivoNegociado | null;
+  condicao: CondicaoPagamento;
+  validade: string;
+  observacoes: string;
+};
 
 function brl(n: number) {
   return (Number.isFinite(n) ? n : 0).toLocaleString("pt-BR", {
@@ -48,10 +85,64 @@ function chaveLote(lote: Lote) {
   return `${String(lote.quadra)}::${String(lote.lote)}`;
 }
 
+function criarCondicaoPadrao(): CondicaoPagamento {
+  return {
+    entradaTipo: "percentual",
+    entradaValor: 20,
+    parcelasMeses: 36,
+    baloesSemestrais: 6,
+    percentualParcelas: 30,
+    percentualBaloes: 70,
+  };
+}
+
+function calcularEntrada(valorBase: number, condicao: CondicaoPagamento) {
+  if (condicao.entradaTipo === "valor") {
+    return Math.max(0, numeroSeguro(condicao.entradaValor));
+  }
+
+  return Math.max(0, valorBase * (numeroSeguro(condicao.entradaValor) / 100));
+}
+
+function calcularResumoFinanceiro(
+  valorBase: number,
+  condicao: CondicaoPagamento,
+  valorPermuta: number,
+  valorVeiculo: number
+) {
+  const entrada = calcularEntrada(valorBase, condicao);
+  const saldoInicial = Math.max(valorBase - entrada, 0);
+  const saldoFinal = Math.max(saldoInicial - valorPermuta - valorVeiculo, 0);
+
+  const baseParcelas =
+    saldoFinal * (Math.max(0, numeroSeguro(condicao.percentualParcelas)) / 100);
+  const baseBaloes =
+    saldoFinal * (Math.max(0, numeroSeguro(condicao.percentualBaloes)) / 100);
+
+  const valorParcela =
+    condicao.parcelasMeses > 0 ? baseParcelas / condicao.parcelasMeses : 0;
+
+  const valorBalao =
+    condicao.baloesSemestrais > 0 ? baseBaloes / condicao.baloesSemestrais : 0;
+
+  return {
+    entrada,
+    saldoInicial,
+    saldoFinal,
+    baseParcelas,
+    baseBaloes,
+    valorParcela,
+    valorBalao,
+  };
+}
+
 export default function Simulador() {
   const [lotes, setLotes] = useState<Lote[]>([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState("");
+
+  const [modoDocumento, setModoDocumento] =
+    useState<ModoDocumento>("simulacao");
 
   const [cliente, setCliente] = useState("");
   const [corretor, setCorretor] = useState("");
@@ -76,6 +167,28 @@ export default function Simulador() {
   const [temVeiculo, setTemVeiculo] = useState(false);
   const [modeloVeiculo, setModeloVeiculo] = useState("");
   const [valorVeiculo, setValorVeiculo] = useState(0);
+
+  const [propostaCliente, setPropostaCliente] = useState<PropostaCliente>({
+    valorOfertado: 0,
+    temPermuta: false,
+    permuta: null,
+    temVeiculo: false,
+    veiculo: null,
+    condicao: criarCondicaoPadrao(),
+    observacoes: "",
+  });
+
+  const [contrapropostaBomm, setContrapropostaBomm] =
+    useState<ContrapropostaBomm>({
+      valorAprovado: 0,
+      temPermuta: false,
+      permutaAceita: null,
+      temVeiculo: false,
+      veiculoAceito: null,
+      condicao: criarCondicaoPadrao(),
+      validade: "",
+      observacoes: "",
+    });
 
   const [copiado, setCopiado] = useState(false);
 
@@ -110,6 +223,42 @@ export default function Simulador() {
       setValorVeiculo(0);
     }
   }, [temVeiculo]);
+
+  useEffect(() => {
+    if (!propostaCliente.temPermuta) {
+      setPropostaCliente((anterior) => ({
+        ...anterior,
+        permuta: null,
+      }));
+    }
+  }, [propostaCliente.temPermuta]);
+
+  useEffect(() => {
+    if (!propostaCliente.temVeiculo) {
+      setPropostaCliente((anterior) => ({
+        ...anterior,
+        veiculo: null,
+      }));
+    }
+  }, [propostaCliente.temVeiculo]);
+
+  useEffect(() => {
+    if (!contrapropostaBomm.temPermuta) {
+      setContrapropostaBomm((anterior) => ({
+        ...anterior,
+        permutaAceita: null,
+      }));
+    }
+  }, [contrapropostaBomm.temPermuta]);
+
+  useEffect(() => {
+    if (!contrapropostaBomm.temVeiculo) {
+      setContrapropostaBomm((anterior) => ({
+        ...anterior,
+        veiculoAceito: null,
+      }));
+    }
+  }, [contrapropostaBomm.temVeiculo]);
 
   const quadras = useMemo(() => {
     const unicas = Array.from(new Set(lotes.map((l) => String(l.quadra || ""))));
@@ -206,12 +355,50 @@ export default function Simulador() {
   const valorBalao =
     baloesSemestrais > 0 ? baseBaloes / numeroSeguro(baloesSemestrais) : 0;
 
+  useEffect(() => {
+    setContrapropostaBomm((anterior) => ({
+      ...anterior,
+      valorAprovado: valorTerreno,
+      temPermuta,
+      permutaAceita: temPermuta
+        ? {
+            descricao: descricaoPermuta,
+            valor: valorPermuta,
+          }
+        : null,
+      temVeiculo,
+      veiculoAceito: temVeiculo
+        ? {
+            descricao: modeloVeiculo,
+            valor: valorVeiculo,
+          }
+        : null,
+      condicao: {
+        entradaTipo: "percentual",
+        entradaValor: entradaPercentual,
+        parcelasMeses,
+        baloesSemestrais,
+        percentualParcelas: 30,
+        percentualBaloes: 70,
+      },
+    }));
+  }, [
+    valorTerreno,
+    temPermuta,
+    descricaoPermuta,
+    valorPermuta,
+    temVeiculo,
+    modeloVeiculo,
+    valorVeiculo,
+    entradaPercentual,
+    parcelasMeses,
+    baloesSemestrais,
+  ]);
+
   const resumoNegociacao = useMemo(() => {
     const partes: string[] = [];
 
-    partes.push(
-      `• Valor total dos terrenos: ${brl(valorTerreno)}`
-    );
+    partes.push(`• Valor total dos terrenos: ${brl(valorTerreno)}`);
     partes.push(`• Entrada (${entradaPercentual}%): ${brl(valorEntrada)}`);
 
     if (temPermuta && permutaAplicada > 0) {
@@ -242,51 +429,233 @@ export default function Simulador() {
     saldoFinal,
   ]);
 
+  const resumoPropostaCliente = useMemo(() => {
+    const valorPermutaCliente =
+      propostaCliente.temPermuta && propostaCliente.permuta
+        ? numeroSeguro(propostaCliente.permuta.valor)
+        : 0;
+
+    const valorVeiculoCliente =
+      propostaCliente.temVeiculo && propostaCliente.veiculo
+        ? numeroSeguro(propostaCliente.veiculo.valor)
+        : 0;
+
+    const calculo = calcularResumoFinanceiro(
+      numeroSeguro(propostaCliente.valorOfertado),
+      propostaCliente.condicao,
+      valorPermutaCliente,
+      valorVeiculoCliente
+    );
+
+    const linhas: string[] = [];
+    linhas.push(`• Valor ofertado: ${brl(propostaCliente.valorOfertado)}`);
+
+    if (propostaCliente.condicao.entradaTipo === "percentual") {
+      linhas.push(
+        `• Entrada (${propostaCliente.condicao.entradaValor}%): ${brl(calculo.entrada)}`
+      );
+    } else {
+      linhas.push(`• Entrada: ${brl(calculo.entrada)}`);
+    }
+
+    if (valorPermutaCliente > 0) {
+      linhas.push(
+        `• Permuta proposta: ${propostaCliente.permuta?.descricao || "Permuta informada"} — ${brl(valorPermutaCliente)}`
+      );
+    }
+
+    if (valorVeiculoCliente > 0) {
+      linhas.push(
+        `• Veículo proposto: ${propostaCliente.veiculo?.descricao || "Veículo informado"} — ${brl(valorVeiculoCliente)}`
+      );
+    }
+
+    linhas.push(`• Saldo estimado: ${brl(calculo.saldoFinal)}`);
+    linhas.push(
+      `• ${propostaCliente.condicao.parcelasMeses} parcelas mensais de ${brl(calculo.valorParcela)}`
+    );
+    linhas.push(
+      `• ${propostaCliente.condicao.baloesSemestrais} balões semestrais de ${brl(calculo.valorBalao)}`
+    );
+
+    return {
+      linhas,
+      calculo,
+    };
+  }, [propostaCliente]);
+
+  const resumoContraproposta = useMemo(() => {
+    const valorPermutaBomm =
+      contrapropostaBomm.temPermuta && contrapropostaBomm.permutaAceita
+        ? numeroSeguro(contrapropostaBomm.permutaAceita.valor)
+        : 0;
+
+    const valorVeiculoBomm =
+      contrapropostaBomm.temVeiculo && contrapropostaBomm.veiculoAceito
+        ? numeroSeguro(contrapropostaBomm.veiculoAceito.valor)
+        : 0;
+
+    const calculo = calcularResumoFinanceiro(
+      numeroSeguro(contrapropostaBomm.valorAprovado),
+      contrapropostaBomm.condicao,
+      valorPermutaBomm,
+      valorVeiculoBomm
+    );
+
+    const linhas: string[] = [];
+    linhas.push(`• Valor aprovado: ${brl(contrapropostaBomm.valorAprovado)}`);
+
+    if (contrapropostaBomm.condicao.entradaTipo === "percentual") {
+      linhas.push(
+        `• Entrada (${contrapropostaBomm.condicao.entradaValor}%): ${brl(calculo.entrada)}`
+      );
+    } else {
+      linhas.push(`• Entrada: ${brl(calculo.entrada)}`);
+    }
+
+    if (valorPermutaBomm > 0) {
+      linhas.push(
+        `• Permuta aceita: ${contrapropostaBomm.permutaAceita?.descricao || "Permuta informada"} — ${brl(valorPermutaBomm)}`
+      );
+    }
+
+    if (valorVeiculoBomm > 0) {
+      linhas.push(
+        `• Veículo aceito: ${contrapropostaBomm.veiculoAceito?.descricao || "Veículo informado"} — ${brl(valorVeiculoBomm)}`
+      );
+    }
+
+    linhas.push(`• Saldo remanescente: ${brl(calculo.saldoFinal)}`);
+    linhas.push(
+      `• ${contrapropostaBomm.condicao.parcelasMeses} parcelas mensais de ${brl(calculo.valorParcela)}`
+    );
+    linhas.push(
+      `• ${contrapropostaBomm.condicao.baloesSemestrais} balões semestrais de ${brl(calculo.valorBalao)}`
+    );
+
+    if (contrapropostaBomm.validade) {
+      linhas.push(`• Validade: ${contrapropostaBomm.validade}`);
+    }
+
+    return {
+      linhas,
+      calculo,
+    };
+  }, [contrapropostaBomm]);
+
   const mensagemWhatsApp = useMemo(() => {
     const linhas: string[] = [];
 
-    linhas.push(`Opa, ${cliente || "Nome"}! 😊`);
-    linhas.push("");
-    linhas.push(
-      "Preparei uma simulação personalizada do Vivendas do Bosque pra você ter uma visão clara de como fica o fluxo financeiro:"
-    );
-    linhas.push("");
-    linhas.push("🏡 Unidades:");
-
-    if (lotesSelecionados.length > 0) {
-      lotesSelecionados.forEach((lote) => {
-        linhas.push(`• Quadra ${lote.quadra} • Lote ${lote.lote}`);
-      });
-    } else {
-      linhas.push("• Nenhuma unidade selecionada");
-    }
-
-    linhas.push("");
-    linhas.push("💰 Valores:");
-    linhas.push(`• Valor total dos terrenos: ${brl(valorTerreno)}`);
-    linhas.push(`• Entrada (${entradaPercentual}%): ${brl(valorEntrada)}`);
-
-    if (temPermuta && permutaAplicada > 0) {
+    if (modoDocumento === "simulacao") {
+      linhas.push(`Opa, ${cliente || "Nome"}! 😊`);
+      linhas.push("");
       linhas.push(
-        `• Permuta: ${descricaoPermuta || "Permuta informada"} — ${brl(permutaAplicada)}`
+        "Preparei uma simulação personalizada do Vivendas do Bosque pra você ter uma visão clara de como fica o fluxo financeiro:"
+      );
+      linhas.push("");
+      linhas.push("🏡 Unidades:");
+
+      if (lotesSelecionados.length > 0) {
+        lotesSelecionados.forEach((lote) => {
+          linhas.push(`• Quadra ${lote.quadra} • Lote ${lote.lote}`);
+        });
+      } else {
+        linhas.push("• Nenhuma unidade selecionada");
+      }
+
+      linhas.push("");
+      linhas.push("💰 Valores:");
+      linhas.push(`• Valor total dos terrenos: ${brl(valorTerreno)}`);
+      linhas.push(`• Entrada (${entradaPercentual}%): ${brl(valorEntrada)}`);
+
+      if (temPermuta && permutaAplicada > 0) {
+        linhas.push(
+          `• Permuta: ${descricaoPermuta || "Permuta informada"} — ${brl(permutaAplicada)}`
+        );
+      }
+
+      if (temVeiculo && veiculoAplicado > 0) {
+        linhas.push(
+          `• Veículo: ${modeloVeiculo || "Veículo informado"} — ${brl(veiculoAplicado)}`
+        );
+      }
+
+      linhas.push(`• Saldo remanescente: ${brl(saldoFinal)}`);
+      linhas.push("");
+      linhas.push("📋 Condição sugerida:");
+      linhas.push(`• ${parcelasMeses} parcelas mensais de ${brl(valorParcela)}`);
+      linhas.push(
+        `• ${baloesSemestrais} balões semestrais de ${brl(valorBalao)}`
+      );
+      linhas.push("");
+      linhas.push(
+        "📌 Importante: parcelas e balões são corrigidos pelo INCC durante a obra e, após a entrega, pelo IPCA."
       );
     }
 
-    if (temVeiculo && veiculoAplicado > 0) {
+    if (modoDocumento === "proposta") {
+      linhas.push(`Belgio, proposta recebida para análise:`);
+      linhas.push("");
+      linhas.push(`Cliente: ${cliente || "-"}`);
+      linhas.push(`Corretor(a): ${corretor || "-"}`);
+      linhas.push(`Imobiliária: ${imobiliaria || "-"}`);
+      linhas.push("");
+      linhas.push("🏡 Unidades:");
+
+      if (lotesSelecionados.length > 0) {
+        lotesSelecionados.forEach((lote) => {
+          linhas.push(`• Quadra ${lote.quadra} • Lote ${lote.lote}`);
+        });
+      } else {
+        linhas.push("• Nenhuma unidade selecionada");
+      }
+
+      linhas.push("");
+      linhas.push("📋 Estrutura da proposta do cliente:");
+      resumoPropostaCliente.linhas.forEach((linha) => linhas.push(linha));
+
+      if (propostaCliente.observacoes) {
+        linhas.push("");
+        linhas.push(`Observações: ${propostaCliente.observacoes}`);
+      }
+
+      linhas.push("");
       linhas.push(
-        `• Veículo: ${modeloVeiculo || "Veículo informado"} — ${brl(veiculoAplicado)}`
+        "📌 Condição sujeita à validação comercial e financeira da incorporadora."
       );
     }
 
-    linhas.push(`• Saldo remanescente: ${brl(saldoFinal)}`);
-    linhas.push("");
-    linhas.push("📋 Condição sugerida:");
-    linhas.push(`• ${parcelasMeses} parcelas mensais de ${brl(valorParcela)}`);
-    linhas.push(`• ${baloesSemestrais} balões semestrais de ${brl(valorBalao)}`);
-    linhas.push("");
-    linhas.push(
-      "📌 Importante: parcelas e balões são corrigidos pelo INCC durante a obra e, após a entrega, pelo IPCA."
-    );
+    if (modoDocumento === "contraproposta") {
+      linhas.push(`Olá, ${cliente || "Nome"}!`);
+      linhas.push("");
+      linhas.push(
+        "Segue a contraproposta estruturada para sua análise no Vivendas do Bosque:"
+      );
+      linhas.push("");
+      linhas.push("🏡 Unidades:");
+
+      if (lotesSelecionados.length > 0) {
+        lotesSelecionados.forEach((lote) => {
+          linhas.push(`• Quadra ${lote.quadra} • Lote ${lote.lote}`);
+        });
+      } else {
+        linhas.push("• Nenhuma unidade selecionada");
+      }
+
+      linhas.push("");
+      linhas.push("📋 Condição aprovada:");
+      resumoContraproposta.linhas.forEach((linha) => linhas.push(linha));
+
+      if (contrapropostaBomm.observacoes) {
+        linhas.push("");
+        linhas.push(`Observações comerciais: ${contrapropostaBomm.observacoes}`);
+      }
+
+      linhas.push("");
+      linhas.push(
+        "📌 Importante: parcelas e balões são corrigidos pelo INCC durante a obra e, após a entrega, pelo IPCA."
+      );
+    }
 
     if (corretor || imobiliaria) {
       linhas.push("");
@@ -297,7 +666,10 @@ export default function Simulador() {
 
     return linhas.join("\n");
   }, [
+    modoDocumento,
     cliente,
+    corretor,
+    imobiliaria,
     lotesSelecionados,
     valorTerreno,
     entradaPercentual,
@@ -313,8 +685,10 @@ export default function Simulador() {
     valorParcela,
     baloesSemestrais,
     valorBalao,
-    corretor,
-    imobiliaria,
+    resumoPropostaCliente,
+    propostaCliente.observacoes,
+    resumoContraproposta,
+    contrapropostaBomm.observacoes,
   ]);
 
   async function copiarMensagem() {
@@ -336,6 +710,13 @@ export default function Simulador() {
     const margemX = 42;
     let y = 40;
 
+    const tituloPdf =
+      modoDocumento === "simulacao"
+        ? "Simulação Comercial"
+        : modoDocumento === "proposta"
+          ? "Proposta Comercial"
+          : "Contra-proposta Comercial";
+
     doc.setFillColor(21, 42, 34);
     doc.roundedRect(24, 24, 547, 794, 18, 18, "F");
 
@@ -343,7 +724,7 @@ export default function Simulador() {
       doc.addImage(logoVivendas, "PNG", margemX, y, 88, 28);
       doc.addImage(logoBomm, "PNG", 470, y + 2, 60, 22);
     } catch {
-      // segue sem imagem se falhar
+      // segue sem imagem
     }
 
     y += 48;
@@ -351,7 +732,7 @@ export default function Simulador() {
     doc.setTextColor(245, 245, 245);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(22);
-    doc.text("Simulação Comercial", margemX, y);
+    doc.text(tituloPdf, margemX, y);
 
     y += 24;
     doc.setFont("helvetica", "normal");
@@ -409,41 +790,93 @@ export default function Simulador() {
 
     y += 10;
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.setTextColor(245, 245, 245);
-    doc.text("Estrutura da negociação", margemX, y);
+    if (modoDocumento === "simulacao") {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(245, 245, 245);
+      doc.text("Estrutura da negociação", margemX, y);
 
-    y += 20;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-    doc.setTextColor(230, 235, 232);
+      y += 20;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.setTextColor(230, 235, 232);
 
-    resumoNegociacao.forEach((linha) => {
-      doc.text(linha, margemX, y);
-      y += 16;
-    });
+      resumoNegociacao.forEach((linha) => {
+        doc.text(linha, margemX, y);
+        y += 16;
+      });
 
-    y += 12;
+      y += 12;
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.setTextColor(245, 245, 245);
-    doc.text("Condição sugerida", margemX, y);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(245, 245, 245);
+      doc.text("Condição sugerida", margemX, y);
 
-    y += 20;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-    doc.setTextColor(230, 235, 232);
+      y += 20;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.setTextColor(230, 235, 232);
 
-    [
-      `• ${parcelasMeses} parcelas mensais de ${brl(valorParcela)}`,
-      `• ${baloesSemestrais} balões semestrais de ${brl(valorBalao)}`,
-      "• Correção via INCC durante a obra e, após a entrega, IPCA.",
-    ].forEach((linha) => {
-      doc.text(linha, margemX, y);
-      y += 16;
-    });
+      [
+        `• ${parcelasMeses} parcelas mensais de ${brl(valorParcela)}`,
+        `• ${baloesSemestrais} balões semestrais de ${brl(valorBalao)}`,
+        "• Correção via INCC durante a obra e, após a entrega, IPCA.",
+      ].forEach((linha) => {
+        doc.text(linha, margemX, y);
+        y += 16;
+      });
+    }
+
+    if (modoDocumento === "proposta") {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(245, 245, 245);
+      doc.text("Proposta recebida do cliente", margemX, y);
+
+      y += 20;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.setTextColor(230, 235, 232);
+
+      resumoPropostaCliente.linhas.forEach((linha) => {
+        doc.text(linha, margemX, y);
+        y += 16;
+      });
+
+      if (propostaCliente.observacoes) {
+        y += 8;
+        doc.text(`Observações: ${propostaCliente.observacoes}`, margemX, y);
+        y += 16;
+      }
+    }
+
+    if (modoDocumento === "contraproposta") {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(245, 245, 245);
+      doc.text("Contra-proposta da BOMM", margemX, y);
+
+      y += 20;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.setTextColor(230, 235, 232);
+
+      resumoContraproposta.linhas.forEach((linha) => {
+        doc.text(linha, margemX, y);
+        y += 16;
+      });
+
+      if (contrapropostaBomm.observacoes) {
+        y += 8;
+        doc.text(
+          `Observações comerciais: ${contrapropostaBomm.observacoes}`,
+          margemX,
+          y
+        );
+        y += 16;
+      }
+    }
 
     y += 18;
 
@@ -460,8 +893,29 @@ export default function Simulador() {
     const linhasMensagem = doc.splitTextToSize(mensagemWhatsApp, 485);
     doc.text(linhasMensagem, margemX, y);
 
-    doc.save("simulacao-vivendas-multiplos-lotes.pdf");
+    const nomeArquivo =
+      modoDocumento === "simulacao"
+        ? "simulacao-vivendas.pdf"
+        : modoDocumento === "proposta"
+          ? "proposta-vivendas.pdf"
+          : "contraproposta-vivendas.pdf";
+
+    doc.save(nomeArquivo);
   }
+
+  const tituloModo =
+    modoDocumento === "simulacao"
+      ? "Nova simulação"
+      : modoDocumento === "proposta"
+        ? "Nova proposta"
+        : "Nova contra-proposta";
+
+  const descricaoModo =
+    modoDocumento === "simulacao"
+      ? "Monte uma simulação comercial com clareza e rapidez."
+      : modoDocumento === "proposta"
+        ? "Registre a proposta recebida do cliente com organização."
+        : "Compare a proposta do cliente com a condição aprovada pela BOMM.";
 
   return (
     <div className="simPage">
@@ -471,7 +925,9 @@ export default function Simulador() {
             <img src={logoVivendas} alt="Vivendas do Bosque" className="luxLogo" />
             <div className="luxBrandText">
               <div className="luxBrandName">Vivendas do Bosque</div>
-              <div className="luxBrandSub">Simulador Comercial • BOMM Urbanizadora</div>
+              <div className="luxBrandSub">
+                Simulador Comercial • BOMM Urbanizadora
+              </div>
             </div>
           </div>
 
@@ -485,12 +941,46 @@ export default function Simulador() {
           {erro ? <div className="alert alertDanger">{erro}</div> : null}
 
           <section className="luxHero">
-            <div className="luxHeroKicker">Nova simulação</div>
+            <div className="luxHeroKicker">{tituloModo}</div>
             <h1 className="luxTitle">Dados do Cliente</h1>
-            <p className="luxHeroText">
-              Um ambiente comercial claro, rápido e confiável para gerar simulações com
-              segurança e boa experiência em qualquer tela.
-            </p>
+            <p className="luxHeroText">{descricaoModo}</p>
+          </section>
+
+          <section className="luxSection">
+            <div className="luxSectionInner">
+              <div className="luxKicker">Modo de trabalho</div>
+              <h2 className="luxH2">Tipo de documento</h2>
+
+              <div className="luxActions">
+                <button
+                  type="button"
+                  className={`btn ${modoDocumento === "simulacao" ? "" : "btnGhost"}`}
+                  onClick={() => setModoDocumento("simulacao")}
+                >
+                  Simulação
+                </button>
+
+                <button
+                  type="button"
+                  className={`btn ${modoDocumento === "proposta" ? "" : "btnGhost"}`}
+                  onClick={() => setModoDocumento("proposta")}
+                >
+                  Proposta
+                </button>
+
+                <button
+                  type="button"
+                  className={`btn ${modoDocumento === "contraproposta" ? "" : "btnGhost"}`}
+                  onClick={() => setModoDocumento("contraproposta")}
+                >
+                  Contra-proposta
+                </button>
+              </div>
+
+              <div className="luxNote" style={{ marginTop: 16 }}>
+                <strong>Modo atual:</strong> {modoDocumento}
+              </div>
+            </div>
           </section>
 
           <section className="luxSection">
@@ -671,221 +1161,888 @@ export default function Simulador() {
             </div>
           </section>
 
-          <section className="luxSection">
-            <div className="luxSectionInner">
-              <div className="luxKicker">Composição do negócio</div>
-              <h2 className="luxH2">Permuta e veículo</h2>
+          {modoDocumento === "simulacao" && (
+            <>
+              <section className="luxSection">
+                <div className="luxSectionInner">
+                  <div className="luxKicker">Composição do negócio</div>
+                  <h2 className="luxH2">Permuta e veículo</h2>
 
-              <div className="luxGrid2">
-                <div className="luxField">
-                  <label>Tem permuta?</label>
-                  <select
-                    value={temPermuta ? "sim" : "nao"}
-                    onChange={(e) => setTemPermuta(e.target.value === "sim")}
-                  >
-                    <option value="nao">Não</option>
-                    <option value="sim">Sim</option>
-                  </select>
+                  <div className="luxGrid2">
+                    <div className="luxField">
+                      <label>Tem permuta?</label>
+                      <select
+                        value={temPermuta ? "sim" : "nao"}
+                        onChange={(e) => setTemPermuta(e.target.value === "sim")}
+                      >
+                        <option value="nao">Não</option>
+                        <option value="sim">Sim</option>
+                      </select>
+                    </div>
+
+                    <div className="luxField">
+                      <label>Entra veículo?</label>
+                      <select
+                        value={temVeiculo ? "sim" : "nao"}
+                        onChange={(e) => setTemVeiculo(e.target.value === "sim")}
+                      >
+                        <option value="nao">Não</option>
+                        <option value="sim">Sim</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {(temPermuta || temVeiculo) && <div className="luxSpacer" />}
+
+                  {temPermuta && (
+                    <div className="luxGrid2">
+                      <div className="luxField">
+                        <label>O que entra na permuta</label>
+                        <input
+                          value={descricaoPermuta}
+                          onChange={(e) => setDescricaoPermuta(e.target.value)}
+                          placeholder="Ex: apartamento no Porto Cruz"
+                        />
+                      </div>
+
+                      <div className="luxField">
+                        <label>Valor da permuta</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={toInputNumber(valorPermuta)}
+                          onChange={(e) => setValorPermuta(numeroSeguro(e.target.value))}
+                          placeholder="0"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {temPermuta && temVeiculo && <div className="luxSpacer" />}
+
+                  {temVeiculo && (
+                    <div className="luxGrid2">
+                      <div className="luxField">
+                        <label>Modelo do veículo</label>
+                        <input
+                          value={modeloVeiculo}
+                          onChange={(e) => setModeloVeiculo(e.target.value)}
+                          placeholder="Ex: Hilux SRX 2023"
+                        />
+                      </div>
+
+                      <div className="luxField">
+                        <label>Valor do veículo</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={toInputNumber(valorVeiculo)}
+                          onChange={(e) => setValorVeiculo(numeroSeguro(e.target.value))}
+                          placeholder="0"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
+              </section>
 
-                <div className="luxField">
-                  <label>Entra veículo?</label>
-                  <select
-                    value={temVeiculo ? "sim" : "nao"}
-                    onChange={(e) => setTemVeiculo(e.target.value === "sim")}
-                  >
-                    <option value="nao">Não</option>
-                    <option value="sim">Sim</option>
-                  </select>
-                </div>
-              </div>
+              <div className="luxSplit">
+                <section className="luxSection">
+                  <div className="luxSectionInner">
+                    <div className="luxKicker">Estrutura financeira</div>
+                    <h2 className="luxH2">Valor, entrada e condições</h2>
 
-              {(temPermuta || temVeiculo) && <div className="luxSpacer" />}
+                    <div className="luxValueRow">
+                      <div className="luxValueMain">
+                        <div className="luxValueLabel">Valor total dos terrenos</div>
+                        <div className="luxValue">{brl(valorTerreno)}</div>
+                      </div>
 
-              {temPermuta && (
-                <div className="luxGrid2">
-                  <div className="luxField">
-                    <label>O que entra na permuta</label>
-                    <input
-                      value={descricaoPermuta}
-                      onChange={(e) => setDescricaoPermuta(e.target.value)}
-                      placeholder="Ex: apartamento no Porto Cruz"
-                    />
-                  </div>
+                      <div className="luxMiniCard">
+                        <div className="luxMiniLabel">Entrada</div>
+                        <div className="luxMiniValue">{brl(valorEntrada)}</div>
+                        <div className="luxMiniHint">{entradaPercentual}%</div>
+                      </div>
 
-                  <div className="luxField">
-                    <label>Valor da permuta</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={toInputNumber(valorPermuta)}
-                      onChange={(e) => setValorPermuta(numeroSeguro(e.target.value))}
-                      placeholder="0"
-                    />
-                  </div>
-                </div>
-              )}
+                      <div className="luxMiniCard">
+                        <div className="luxMiniLabel">Saldo remanescente</div>
+                        <div className="luxMiniValue">{brl(saldoFinal)}</div>
+                        <div className="luxMiniHint">após abatimentos</div>
+                      </div>
+                    </div>
 
-              {temPermuta && temVeiculo && <div className="luxSpacer" />}
+                    <div className="luxSpacer" />
 
-              {temVeiculo && (
-                <div className="luxGrid2">
-                  <div className="luxField">
-                    <label>Modelo do veículo</label>
-                    <input
-                      value={modeloVeiculo}
-                      onChange={(e) => setModeloVeiculo(e.target.value)}
-                      placeholder="Ex: Hilux SRX 2023"
-                    />
-                  </div>
+                    <div className="luxGrid3">
+                      <div className="luxField">
+                        <label>Percentual de entrada</label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={toInputNumber(entradaPercentual)}
+                          onChange={(e) =>
+                            setEntradaPercentual(
+                              Math.max(0, Math.min(100, numeroSeguro(e.target.value)))
+                            )
+                          }
+                        />
+                        <div className="mini">Entrada: {brl(valorEntrada)}</div>
+                      </div>
 
-                  <div className="luxField">
-                    <label>Valor do veículo</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={toInputNumber(valorVeiculo)}
-                      onChange={(e) => setValorVeiculo(numeroSeguro(e.target.value))}
-                      placeholder="0"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          </section>
+                      <div className="luxField">
+                        <label>Parcelas (meses)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={toInputNumber(parcelasMeses)}
+                          onChange={(e) =>
+                            setParcelasMeses(
+                              Math.max(1, Math.round(numeroSeguro(e.target.value)))
+                            )
+                          }
+                        />
+                        <div className="mini">Parcela: {brl(valorParcela)}</div>
+                      </div>
 
-          <div className="luxSplit">
-            <section className="luxSection">
-              <div className="luxSectionInner">
-                <div className="luxKicker">Estrutura financeira</div>
-                <h2 className="luxH2">Valor, entrada e condições</h2>
+                      <div className="luxField">
+                        <label>Balões semestrais</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={toInputNumber(baloesSemestrais)}
+                          onChange={(e) =>
+                            setBaloesSemestrais(
+                              Math.max(1, Math.round(numeroSeguro(e.target.value)))
+                            )
+                          }
+                        />
+                        <div className="mini">Balão: {brl(valorBalao)}</div>
+                      </div>
+                    </div>
 
-                <div className="luxValueRow">
-                  <div className="luxValueMain">
-                    <div className="luxValueLabel">Valor total dos terrenos</div>
-                    <div className="luxValue">{brl(valorTerreno)}</div>
-                  </div>
-
-                  <div className="luxMiniCard">
-                    <div className="luxMiniLabel">Entrada</div>
-                    <div className="luxMiniValue">{brl(valorEntrada)}</div>
-                    <div className="luxMiniHint">{entradaPercentual}%</div>
-                  </div>
-
-                  <div className="luxMiniCard">
-                    <div className="luxMiniLabel">Saldo remanescente</div>
-                    <div className="luxMiniValue">{brl(saldoFinal)}</div>
-                    <div className="luxMiniHint">após abatimentos</div>
-                  </div>
-                </div>
-
-                <div className="luxSpacer" />
-
-                <div className="luxGrid3">
-                  <div className="luxField">
-                    <label>Percentual de entrada</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={toInputNumber(entradaPercentual)}
-                      onChange={(e) =>
-                        setEntradaPercentual(
-                          Math.max(0, Math.min(100, numeroSeguro(e.target.value)))
-                        )
-                      }
-                    />
-                    <div className="mini">Entrada: {brl(valorEntrada)}</div>
-                  </div>
-
-                  <div className="luxField">
-                    <label>Parcelas (meses)</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={toInputNumber(parcelasMeses)}
-                      onChange={(e) =>
-                        setParcelasMeses(Math.max(1, Math.round(numeroSeguro(e.target.value))))
-                      }
-                    />
-                    <div className="mini">Parcela: {brl(valorParcela)}</div>
-                  </div>
-
-                  <div className="luxField">
-                    <label>Balões semestrais</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={toInputNumber(baloesSemestrais)}
-                      onChange={(e) =>
-                        setBaloesSemestrais(Math.max(1, Math.round(numeroSeguro(e.target.value))))
-                      }
-                    />
-                    <div className="mini">Balão: {brl(valorBalao)}</div>
-                  </div>
-                </div>
-
-                <div className="luxNote">
-                  <strong>Estrutura da negociação:</strong>
-                  <br />
-                  {resumoNegociacao.map((linha, idx) => (
-                    <span key={idx}>
-                      {linha}
+                    <div className="luxNote">
+                      <strong>Estrutura da negociação:</strong>
                       <br />
-                    </span>
-                  ))}
-                  <br />
-                  <strong>Unidades:</strong>
-                  <br />
-                  {lotesSelecionados.length > 0 ? (
-                    lotesSelecionados.map((lote, idx) => (
-                      <span key={`${chaveLote(lote)}-${idx}`}>
-                        • Quadra {lote.quadra} • Lote {lote.lote}
+                      {resumoNegociacao.map((linha, idx) => (
+                        <span key={idx}>
+                          {linha}
+                          <br />
+                        </span>
+                      ))}
+                      <br />
+                      <strong>Unidades:</strong>
+                      <br />
+                      {lotesSelecionados.length > 0 ? (
+                        lotesSelecionados.map((lote, idx) => (
+                          <span key={`${chaveLote(lote)}-${idx}`}>
+                            • Quadra {lote.quadra} • Lote {lote.lote}
+                            <br />
+                          </span>
+                        ))
+                      ) : (
+                        <span>
+                          • Nenhuma unidade selecionada
+                          <br />
+                        </span>
+                      )}
+                      <br />
+                      Obs.: Parcelas e balões corrigidos por INCC até a entrega e após a
+                      entrega por IPCA.
+                    </div>
+                  </div>
+                </section>
+
+                <section className="luxSection">
+                  <div className="luxSectionInner">
+                    <div className="luxKicker">Resultado</div>
+                    <h2 className="luxH2">Mensagem pronta para envio</h2>
+
+                    <textarea
+                      className="whats luxWhats"
+                      value={mensagemWhatsApp}
+                      onChange={() => {}}
+                      readOnly
+                    />
+
+                    <div className="luxActions">
+                      <button type="button" className="btn" onClick={copiarMensagem}>
+                        {copiado ? "Copiado!" : "Copiar texto"}
+                      </button>
+
+                      <button type="button" className="btn btnGhost" onClick={gerarPdf}>
+                        Gerar PDF Pro
+                      </button>
+
+                      <span className="luxHint">
+                        INCC até entrega • IPCA após entrega
+                      </span>
+                    </div>
+
+                    <div className="foot">
+                      Próximas evoluções: histórico de simulações • modos de atendimento
+                      • propostas comerciais avançadas
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </>
+          )}
+
+          {(modoDocumento === "proposta" || modoDocumento === "contraproposta") && (
+            <>
+              <section className="luxSection">
+                <div className="luxSectionInner">
+                  <div className="luxKicker">Negociação</div>
+                  <h2 className="luxH2">Proposta recebida do cliente</h2>
+
+                  <div className="luxGrid2">
+                    <div className="luxField">
+                      <label>Valor ofertado</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={toInputNumber(propostaCliente.valorOfertado)}
+                        onChange={(e) =>
+                          setPropostaCliente((anterior) => ({
+                            ...anterior,
+                            valorOfertado: numeroSeguro(e.target.value),
+                          }))
+                        }
+                      />
+                    </div>
+
+                    <div className="luxField">
+                      <label>Tipo de entrada</label>
+                      <select
+                        value={propostaCliente.condicao.entradaTipo}
+                        onChange={(e) =>
+                          setPropostaCliente((anterior) => ({
+                            ...anterior,
+                            condicao: {
+                              ...anterior.condicao,
+                              entradaTipo: e.target.value as TipoEntrada,
+                            },
+                          }))
+                        }
+                      >
+                        <option value="percentual">Percentual</option>
+                        <option value="valor">Valor fixo</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="luxSpacer" />
+
+                  <div className="luxGrid3">
+                    <div className="luxField">
+                      <label>
+                        {propostaCliente.condicao.entradaTipo === "percentual"
+                          ? "Entrada (%)"
+                          : "Entrada (R$)"}
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={toInputNumber(propostaCliente.condicao.entradaValor)}
+                        onChange={(e) =>
+                          setPropostaCliente((anterior) => ({
+                            ...anterior,
+                            condicao: {
+                              ...anterior.condicao,
+                              entradaValor: numeroSeguro(e.target.value),
+                            },
+                          }))
+                        }
+                      />
+                    </div>
+
+                    <div className="luxField">
+                      <label>Parcelas (meses)</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={toInputNumber(propostaCliente.condicao.parcelasMeses)}
+                        onChange={(e) =>
+                          setPropostaCliente((anterior) => ({
+                            ...anterior,
+                            condicao: {
+                              ...anterior.condicao,
+                              parcelasMeses: Math.max(
+                                1,
+                                Math.round(numeroSeguro(e.target.value))
+                              ),
+                            },
+                          }))
+                        }
+                      />
+                    </div>
+
+                    <div className="luxField">
+                      <label>Balões semestrais</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={toInputNumber(propostaCliente.condicao.baloesSemestrais)}
+                        onChange={(e) =>
+                          setPropostaCliente((anterior) => ({
+                            ...anterior,
+                            condicao: {
+                              ...anterior.condicao,
+                              baloesSemestrais: Math.max(
+                                1,
+                                Math.round(numeroSeguro(e.target.value))
+                              ),
+                            },
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="luxSpacer" />
+
+                  <div className="luxGrid2">
+                    <div className="luxField">
+                      <label>Tem permuta?</label>
+                      <select
+                        value={propostaCliente.temPermuta ? "sim" : "nao"}
+                        onChange={(e) =>
+                          setPropostaCliente((anterior) => ({
+                            ...anterior,
+                            temPermuta: e.target.value === "sim",
+                          }))
+                        }
+                      >
+                        <option value="nao">Não</option>
+                        <option value="sim">Sim</option>
+                      </select>
+                    </div>
+
+                    <div className="luxField">
+                      <label>Entra veículo?</label>
+                      <select
+                        value={propostaCliente.temVeiculo ? "sim" : "nao"}
+                        onChange={(e) =>
+                          setPropostaCliente((anterior) => ({
+                            ...anterior,
+                            temVeiculo: e.target.value === "sim",
+                          }))
+                        }
+                      >
+                        <option value="nao">Não</option>
+                        <option value="sim">Sim</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {(propostaCliente.temPermuta || propostaCliente.temVeiculo) && (
+                    <div className="luxSpacer" />
+                  )}
+
+                  {propostaCliente.temPermuta && (
+                    <div className="luxGrid2">
+                      <div className="luxField">
+                        <label>Descrição da permuta</label>
+                        <input
+                          value={propostaCliente.permuta?.descricao || ""}
+                          onChange={(e) =>
+                            setPropostaCliente((anterior) => ({
+                              ...anterior,
+                              permuta: {
+                                descricao: e.target.value,
+                                valor: numeroSeguro(anterior.permuta?.valor),
+                              },
+                            }))
+                          }
+                          placeholder="Ex: casa, apartamento, terreno"
+                        />
+                      </div>
+
+                      <div className="luxField">
+                        <label>Valor da permuta</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={toInputNumber(numeroSeguro(propostaCliente.permuta?.valor))}
+                          onChange={(e) =>
+                            setPropostaCliente((anterior) => ({
+                              ...anterior,
+                              permuta: {
+                                descricao: anterior.permuta?.descricao || "",
+                                valor: numeroSeguro(e.target.value),
+                              },
+                            }))
+                          }
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {propostaCliente.temPermuta && propostaCliente.temVeiculo && (
+                    <div className="luxSpacer" />
+                  )}
+
+                  {propostaCliente.temVeiculo && (
+                    <div className="luxGrid2">
+                      <div className="luxField">
+                        <label>Descrição do veículo</label>
+                        <input
+                          value={propostaCliente.veiculo?.descricao || ""}
+                          onChange={(e) =>
+                            setPropostaCliente((anterior) => ({
+                              ...anterior,
+                              veiculo: {
+                                descricao: e.target.value,
+                                valor: numeroSeguro(anterior.veiculo?.valor),
+                              },
+                            }))
+                          }
+                          placeholder="Ex: Hilux, Volvo XC60, CR-V"
+                        />
+                      </div>
+
+                      <div className="luxField">
+                        <label>Valor do veículo</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={toInputNumber(numeroSeguro(propostaCliente.veiculo?.valor))}
+                          onChange={(e) =>
+                            setPropostaCliente((anterior) => ({
+                              ...anterior,
+                              veiculo: {
+                                descricao: anterior.veiculo?.descricao || "",
+                                valor: numeroSeguro(e.target.value),
+                              },
+                            }))
+                          }
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="luxSpacer" />
+
+                  <div className="luxField">
+                    <label>Observações da proposta</label>
+                    <textarea
+                      className="whats"
+                      style={{ minHeight: 120 }}
+                      value={propostaCliente.observacoes}
+                      onChange={(e) =>
+                        setPropostaCliente((anterior) => ({
+                          ...anterior,
+                          observacoes: e.target.value,
+                        }))
+                      }
+                      placeholder="Ex: cliente busca entrada menor, quer reforçar com permuta, precisa de aprovação da diretoria..."
+                    />
+                  </div>
+
+                  <div className="luxNote">
+                    <strong>Resumo da proposta:</strong>
+                    <br />
+                    {resumoPropostaCliente.linhas.map((linha, idx) => (
+                      <span key={idx}>
+                        {linha}
                         <br />
                       </span>
-                    ))
-                  ) : (
-                    <span>• Nenhuma unidade selecionada<br /></span>
-                  )}
-                  <br />
-                  Obs.: Parcelas e balões corrigidos por INCC até a entrega e após a
-                  entrega por IPCA.
+                    ))}
+                  </div>
                 </div>
+              </section>
+
+              {modoDocumento === "contraproposta" && (
+                <section className="luxSection">
+                  <div className="luxSectionInner">
+                    <div className="luxKicker">Retorno da incorporadora</div>
+                    <h2 className="luxH2">Contra-proposta da BOMM</h2>
+
+                    <div className="luxGrid2">
+                      <div className="luxField">
+                        <label>Valor aprovado</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={toInputNumber(contrapropostaBomm.valorAprovado)}
+                          onChange={(e) =>
+                            setContrapropostaBomm((anterior) => ({
+                              ...anterior,
+                              valorAprovado: numeroSeguro(e.target.value),
+                            }))
+                          }
+                        />
+                      </div>
+
+                      <div className="luxField">
+                        <label>Tipo de entrada</label>
+                        <select
+                          value={contrapropostaBomm.condicao.entradaTipo}
+                          onChange={(e) =>
+                            setContrapropostaBomm((anterior) => ({
+                              ...anterior,
+                              condicao: {
+                                ...anterior.condicao,
+                                entradaTipo: e.target.value as TipoEntrada,
+                              },
+                            }))
+                          }
+                        >
+                          <option value="percentual">Percentual</option>
+                          <option value="valor">Valor fixo</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="luxSpacer" />
+
+                    <div className="luxGrid3">
+                      <div className="luxField">
+                        <label>
+                          {contrapropostaBomm.condicao.entradaTipo === "percentual"
+                            ? "Entrada (%)"
+                            : "Entrada (R$)"}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={toInputNumber(contrapropostaBomm.condicao.entradaValor)}
+                          onChange={(e) =>
+                            setContrapropostaBomm((anterior) => ({
+                              ...anterior,
+                              condicao: {
+                                ...anterior.condicao,
+                                entradaValor: numeroSeguro(e.target.value),
+                              },
+                            }))
+                          }
+                        />
+                      </div>
+
+                      <div className="luxField">
+                        <label>Parcelas (meses)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={toInputNumber(contrapropostaBomm.condicao.parcelasMeses)}
+                          onChange={(e) =>
+                            setContrapropostaBomm((anterior) => ({
+                              ...anterior,
+                              condicao: {
+                                ...anterior.condicao,
+                                parcelasMeses: Math.max(
+                                  1,
+                                  Math.round(numeroSeguro(e.target.value))
+                                ),
+                              },
+                            }))
+                          }
+                        />
+                      </div>
+
+                      <div className="luxField">
+                        <label>Balões semestrais</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={toInputNumber(contrapropostaBomm.condicao.baloesSemestrais)}
+                          onChange={(e) =>
+                            setContrapropostaBomm((anterior) => ({
+                              ...anterior,
+                              condicao: {
+                                ...anterior.condicao,
+                                baloesSemestrais: Math.max(
+                                  1,
+                                  Math.round(numeroSeguro(e.target.value))
+                                ),
+                              },
+                            }))
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    <div className="luxSpacer" />
+
+                    <div className="luxGrid2">
+                      <div className="luxField">
+                        <label>Tem permuta aceita?</label>
+                        <select
+                          value={contrapropostaBomm.temPermuta ? "sim" : "nao"}
+                          onChange={(e) =>
+                            setContrapropostaBomm((anterior) => ({
+                              ...anterior,
+                              temPermuta: e.target.value === "sim",
+                            }))
+                          }
+                        >
+                          <option value="nao">Não</option>
+                          <option value="sim">Sim</option>
+                        </select>
+                      </div>
+
+                      <div className="luxField">
+                        <label>Tem veículo aceito?</label>
+                        <select
+                          value={contrapropostaBomm.temVeiculo ? "sim" : "nao"}
+                          onChange={(e) =>
+                            setContrapropostaBomm((anterior) => ({
+                              ...anterior,
+                              temVeiculo: e.target.value === "sim",
+                            }))
+                          }
+                        >
+                          <option value="nao">Não</option>
+                          <option value="sim">Sim</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {(contrapropostaBomm.temPermuta || contrapropostaBomm.temVeiculo) && (
+                      <div className="luxSpacer" />
+                    )}
+
+                    {contrapropostaBomm.temPermuta && (
+                      <div className="luxGrid2">
+                        <div className="luxField">
+                          <label>Descrição da permuta aceita</label>
+                          <input
+                            value={contrapropostaBomm.permutaAceita?.descricao || ""}
+                            onChange={(e) =>
+                              setContrapropostaBomm((anterior) => ({
+                                ...anterior,
+                                permutaAceita: {
+                                  descricao: e.target.value,
+                                  valor: numeroSeguro(anterior.permutaAceita?.valor),
+                                },
+                              }))
+                            }
+                            placeholder="Ex: apartamento, casa, terreno"
+                          />
+                        </div>
+
+                        <div className="luxField">
+                          <label>Valor da permuta aceita</label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={toInputNumber(
+                              numeroSeguro(contrapropostaBomm.permutaAceita?.valor)
+                            )}
+                            onChange={(e) =>
+                              setContrapropostaBomm((anterior) => ({
+                                ...anterior,
+                                permutaAceita: {
+                                  descricao: anterior.permutaAceita?.descricao || "",
+                                  valor: numeroSeguro(e.target.value),
+                                },
+                              }))
+                            }
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {contrapropostaBomm.temPermuta && contrapropostaBomm.temVeiculo && (
+                      <div className="luxSpacer" />
+                    )}
+
+                    {contrapropostaBomm.temVeiculo && (
+                      <div className="luxGrid2">
+                        <div className="luxField">
+                          <label>Descrição do veículo aceito</label>
+                          <input
+                            value={contrapropostaBomm.veiculoAceito?.descricao || ""}
+                            onChange={(e) =>
+                              setContrapropostaBomm((anterior) => ({
+                                ...anterior,
+                                veiculoAceito: {
+                                  descricao: e.target.value,
+                                  valor: numeroSeguro(anterior.veiculoAceito?.valor),
+                                },
+                              }))
+                            }
+                            placeholder="Ex: Hilux, Volvo XC60, CR-V"
+                          />
+                        </div>
+
+                        <div className="luxField">
+                          <label>Valor do veículo aceito</label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={toInputNumber(
+                              numeroSeguro(contrapropostaBomm.veiculoAceito?.valor)
+                            )}
+                            onChange={(e) =>
+                              setContrapropostaBomm((anterior) => ({
+                                ...anterior,
+                                veiculoAceito: {
+                                  descricao: anterior.veiculoAceito?.descricao || "",
+                                  valor: numeroSeguro(e.target.value),
+                                },
+                              }))
+                            }
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="luxSpacer" />
+
+                    <div className="luxGrid2">
+                      <div className="luxField">
+                        <label>Validade da contraproposta</label>
+                        <input
+                          value={contrapropostaBomm.validade}
+                          onChange={(e) =>
+                            setContrapropostaBomm((anterior) => ({
+                              ...anterior,
+                              validade: e.target.value,
+                            }))
+                          }
+                          placeholder="Ex: válida por 7 dias"
+                        />
+                      </div>
+
+                      <div className="luxField">
+                        <label>Observações comerciais</label>
+                        <input
+                          value={contrapropostaBomm.observacoes}
+                          onChange={(e) =>
+                            setContrapropostaBomm((anterior) => ({
+                              ...anterior,
+                              observacoes: e.target.value,
+                            }))
+                          }
+                          placeholder="Ex: veículo sujeito à vistoria, permuta sujeita à análise"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="luxNote">
+                      <strong>Resumo da contraproposta:</strong>
+                      <br />
+                      {resumoContraproposta.linhas.map((linha, idx) => (
+                        <span key={idx}>
+                          {linha}
+                          <br />
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              <div className="luxSplit">
+                <section className="luxSection">
+                  <div className="luxSectionInner">
+                    <div className="luxKicker">Comparativo</div>
+                    <h2 className="luxH2">
+                      {modoDocumento === "proposta"
+                        ? "Resumo da proposta"
+                        : "Proposta x contra-proposta"}
+                    </h2>
+
+                    <div className="luxNote">
+                      <strong>Valor dos lotes selecionados:</strong> {brl(valorTerreno)}
+                      <br />
+                      <br />
+
+                      <strong>Unidades:</strong>
+                      <br />
+                      {lotesSelecionados.length > 0 ? (
+                        lotesSelecionados.map((lote, idx) => (
+                          <span key={`${chaveLote(lote)}-${idx}`}>
+                            • Quadra {lote.quadra} • Lote {lote.lote}
+                            <br />
+                          </span>
+                        ))
+                      ) : (
+                        <span>
+                          • Nenhuma unidade selecionada
+                          <br />
+                        </span>
+                      )}
+
+                      <br />
+
+                      <strong>Proposta do cliente:</strong>
+                      <br />
+                      {resumoPropostaCliente.linhas.map((linha, idx) => (
+                        <span key={`pc-${idx}`}>
+                          {linha}
+                          <br />
+                        </span>
+                      ))}
+
+                      {modoDocumento === "contraproposta" && (
+                        <>
+                          <br />
+                          <strong>Contra-proposta da BOMM:</strong>
+                          <br />
+                          {resumoContraproposta.linhas.map((linha, idx) => (
+                            <span key={`cb-${idx}`}>
+                              {linha}
+                              <br />
+                            </span>
+                          ))}
+                        </>
+                      )}
+
+                      <br />
+                      Obs.: Parcelas e balões corrigidos por INCC até a entrega e após a
+                      entrega por IPCA.
+                    </div>
+                  </div>
+                </section>
+
+                <section className="luxSection">
+                  <div className="luxSectionInner">
+                    <div className="luxKicker">Resultado</div>
+                    <h2 className="luxH2">Mensagem pronta para envio</h2>
+
+                    <textarea
+                      className="whats luxWhats"
+                      value={mensagemWhatsApp}
+                      onChange={() => {}}
+                      readOnly
+                    />
+
+                    <div className="luxActions">
+                      <button type="button" className="btn" onClick={copiarMensagem}>
+                        {copiado ? "Copiado!" : "Copiar texto"}
+                      </button>
+
+                      <button type="button" className="btn btnGhost" onClick={gerarPdf}>
+                        Gerar PDF Pro
+                      </button>
+
+                      <span className="luxHint">
+                        INCC até entrega • IPCA após entrega
+                      </span>
+                    </div>
+
+                    <div className="foot">
+                      Evolução atual: base pronta para proposta e contra-proposta dentro
+                      do mesmo sistema.
+                    </div>
+                  </div>
+                </section>
               </div>
-            </section>
-
-            <section className="luxSection">
-              <div className="luxSectionInner">
-                <div className="luxKicker">Resultado</div>
-                <h2 className="luxH2">Mensagem pronta para envio</h2>
-
-                <textarea
-                  className="whats luxWhats"
-                  value={mensagemWhatsApp}
-                  onChange={() => {}}
-                  readOnly
-                />
-
-                <div className="luxActions">
-                  <button type="button" className="btn" onClick={copiarMensagem}>
-                    {copiado ? "Copiado!" : "Copiar texto"}
-                  </button>
-
-                  <button type="button" className="btn btnGhost" onClick={gerarPdf}>
-                    Gerar PDF Pro
-                  </button>
-
-                  <span className="luxHint">INCC até entrega • IPCA após entrega</span>
-                </div>
-
-                <div className="foot">
-                  Próximas evoluções: histórico de simulações • modos de atendimento • propostas comerciais avançadas
-                </div>
-              </div>
-            </section>
-          </div>
+            </>
+          )}
         </main>
       </div>
     </div>
