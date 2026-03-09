@@ -171,7 +171,6 @@ function drawFieldRow(
 function drawBigBox(
   doc: jsPDF,
   y: number,
-  title: string,
   text: string,
   height: number
 ) {
@@ -179,15 +178,10 @@ function drawBigBox(
   doc.setFillColor(255, 255, 255)
   doc.roundedRect(42, y, 511, height, 5, 5, "FD")
 
-  doc.setFont("helvetica", "bold")
-  doc.setFontSize(8)
-  doc.setTextColor(99, 114, 107)
-  doc.text(title.toUpperCase(), 52, y + 12)
-
   doc.setFont("helvetica", "normal")
   doc.setFontSize(10)
   doc.setTextColor(35, 43, 39)
-  doc.text(doc.splitTextToSize(text || "-", 491), 52, y + 28)
+  doc.text(doc.splitTextToSize(text || "-", 491), 52, y + 22)
 }
 
 function drawDadosLote(doc: jsPDF, y: number, payload: { quadra: string; lote: string; valor: string }) {
@@ -213,7 +207,7 @@ function drawIdentificacaoCliente(
     clienteEstadoCivil?: string
   }
 ) {
-  drawSectionTitle(doc, "Identificacao do cliente", y)
+  drawSectionTitle(doc, "Identificação do Cliente", y)
   y += 30
   drawFieldRow(doc, y, [
     { label: "Nome", value: payload.clienteNome || "-" },
@@ -226,7 +220,7 @@ function drawIdentificacaoCliente(
   ])
   y += 52
   drawFieldRow(doc, y, [
-    { label: "Profissao", value: payload.clienteProfissao || "-" },
+    { label: "Profissão", value: payload.clienteProfissao || "-" },
     { label: "Estado civil", value: payload.clienteEstadoCivil || "-" },
   ])
   return y + 58
@@ -237,12 +231,12 @@ function drawIdentificacaoCorretor(
   y: number,
   payload: { corretor: string; creci?: string; imobiliaria: string }
 ) {
-  drawSectionTitle(doc, "Identificacao do corretor", y)
+  drawSectionTitle(doc, "Identificação do Corretor", y)
   y += 30
   drawFieldRow(doc, y, [
     { label: "Nome do corretor", value: payload.corretor || "-" },
     { label: "CRECI", value: payload.creci || "-" },
-    { label: "Imobiliaria", value: payload.imobiliaria || "-" },
+    { label: "Imobiliária", value: payload.imobiliaria || "-" },
   ])
   return y + 58
 }
@@ -252,7 +246,7 @@ function addFooter(doc: jsPDF) {
   doc.setFontSize(8)
   doc.setTextColor(112, 124, 118)
   doc.text(
-    "Parcelas corrigidas por INCC ate a entrega e, apos a entrega, por IPCA.",
+    "Parcelas corrigidas por INCC até a entrega e, após a entrega, por IPCA.",
     42,
     812
   )
@@ -317,17 +311,17 @@ export function gerarPdfProposta(dados: PdfPropostaPayload) {
     doc,
     y,
     [
-      { label: "Balao: tipo", value: dados.balao?.tipo || "-" },
+      { label: "Balão: tipo", value: dados.balao?.tipo || "-" },
       {
-        label: "Balao: qtd. parcelas",
+        label: "Balão: qtd. parcelas",
         value: dados.balao?.quantidadeParcelas || "-",
       },
       {
-        label: "Balao: valor parcela",
+        label: "Balão: valor parcela",
         value: dados.balao?.valorParcela || "-",
       },
       {
-        label: "Balao: primeiro vencimento",
+        label: "Balão: primeiro vencimento",
         value: dados.balao?.primeiroVencimento || "-",
       },
     ],
@@ -343,15 +337,15 @@ export function gerarPdfProposta(dados: PdfPropostaPayload) {
       value: dados.permuta?.valor || "-",
     },
     {
-      label: "Descricao da permuta",
+      label: "Descrição da permuta",
       value: dados.permuta?.descricao || "-",
     },
   ], [44, 60])
   y += 74
 
-  drawSectionTitle(doc, "Observacao", y)
+  drawSectionTitle(doc, "Observação", y)
   y += 30
-  drawBigBox(doc, y, "Observacao", dados.observacao || detalhesNegociacao, 90)
+  drawBigBox(doc, y, dados.observacao || detalhesNegociacao, 90)
 
   addFooter(doc)
   doc.save("proposta-vivendas.pdf")
@@ -370,7 +364,7 @@ export function gerarPdfContraproposta(dados: PdfContrapropostaPayload) {
   y = drawIdentificacaoCliente(doc, y, dados)
   y = drawIdentificacaoCorretor(doc, y, dados)
 
-  drawSectionTitle(doc, "Condicao aprovada", y)
+  drawSectionTitle(doc, "Condição Aprovada", y)
   y += 30
   drawFieldRow(doc, y, [
     { label: "Valor aprovado", value: dados.condicaoAprovada.valor || "-" },
@@ -394,15 +388,15 @@ export function gerarPdfContraproposta(dados: PdfContrapropostaPayload) {
   y += 52
   drawFieldRow(doc, y, [
     {
-      label: "Balao: tipo",
+      label: "Balão: tipo",
       value: dados.condicaoAprovada.balaoTipo || "-",
     },
     {
-      label: "Balao: qtd. parcelas",
+      label: "Balão: qtd. parcelas",
       value: dados.condicaoAprovada.balaoQuantidade || "-",
     },
     {
-      label: "Balao: valor parcela",
+      label: "Balão: valor parcela",
       value: dados.condicaoAprovada.balaoValor || "-",
     },
   ])
@@ -416,15 +410,15 @@ export function gerarPdfContraproposta(dados: PdfContrapropostaPayload) {
       value: dados.permuta?.valor || "-",
     },
     {
-      label: "Descricao da permuta",
+      label: "Descrição da permuta",
       value: dados.permuta?.descricao || "-",
     },
   ], [44, 60])
   y += 74
 
-  drawSectionTitle(doc, "Observacao", y)
+  drawSectionTitle(doc, "Observação", y)
   y += 30
-  drawBigBox(doc, y, "Observacao", dados.observacao || "-", 90)
+  drawBigBox(doc, y, dados.observacao || "-", 90)
 
   addFooter(doc)
   doc.save("contraproposta-vivendas.pdf")

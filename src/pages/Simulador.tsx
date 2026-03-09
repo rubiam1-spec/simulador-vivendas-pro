@@ -513,7 +513,9 @@ export default function Simulador() {
 
   const quadraProposta = useMemo(() => {
     if (!lotesSelecionados.length) return "-";
-    return lotesSelecionados.map((lote) => String(lote.quadra ?? "-")).join(", ");
+    return Array.from(
+      new Set(lotesSelecionados.map((lote) => String(lote.quadra ?? "-")))
+    ).join(", ");
   }, [lotesSelecionados]);
 
   const loteProposta = useMemo(() => {
