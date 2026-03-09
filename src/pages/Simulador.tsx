@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import jsPDF from "jspdf";
 import { carregarLotes, type Lote } from "../services/planilhaService";
+import {
+  gerarPdfContraproposta,
+  gerarPdfProposta,
+} from "../services/pdfService";
 import "./simulador.css";
 
 import logoVivendas from "../assets/logo-vivendas.png";
@@ -9,6 +13,7 @@ import logoBomm from "../assets/logo-bomm.png";
 type StatusFiltro = "todos" | "disponivel" | "indisponivel";
 type ModoDocumento = "simulacao" | "proposta" | "contraproposta";
 type TipoEntrada = "percentual" | "valor";
+type TipoBalao = "anual" | "semestral";
 
 type CondicaoPagamento = {
   entradaTipo: TipoEntrada;
@@ -25,7 +30,13 @@ type AtivoNegociado = {
 };
 
 type PropostaCliente = {
+  data: string;
   valorOfertado: number;
+  entradaQuantidadeParcelas: number;
+  entradaPrimeiroVencimento: string;
+  mensaisPrimeiroVencimento: string;
+  balaoTipo: TipoBalao;
+  balaoPrimeiroVencimento: string;
   temPermuta: boolean;
   permuta: AtivoNegociado | null;
   temVeiculo: boolean;
@@ -79,6 +90,10 @@ function statusDisponivel(status: string) {
 
 function toInputNumber(value: number) {
   return Number.isFinite(value) ? String(value) : "0";
+}
+
+function dataAtualInput() {
+  return new Date().toISOString().slice(0, 10);
 }
 
 function chaveLote(lote: Lote) {
@@ -145,7 +160,13 @@ export default function Simulador() {
     useState<ModoDocumento>("simulacao");
 
   const [cliente, setCliente] = useState("");
+  const [clienteCpf, setClienteCpf] = useState("");
+  const [clienteTelefone, setClienteTelefone] = useState("");
+  const [clienteEmail, setClienteEmail] = useState("");
+  const [clienteProfissao, setClienteProfissao] = useState("");
+  const [clienteEstadoCivil, setClienteEstadoCivil] = useState("");
   const [corretor, setCorretor] = useState("");
+  const [creci, setCreci] = useState("");
   const [imobiliaria, setImobiliaria] = useState("");
 
   const [quadraFiltro, setQuadraFiltro] = useState("");
@@ -169,7 +190,13 @@ export default function Simulador() {
   const [valorVeiculo, setValorVeiculo] = useState(0);
 
   const [propostaCliente, setPropostaCliente] = useState<PropostaCliente>({
+    data: dataAtualInput(),
     valorOfertado: 0,
+    entradaQuantidadeParcelas: 1,
+    entradaPrimeiroVencimento: "",
+    mensaisPrimeiroVencimento: "",
+    balaoTipo: "semestral",
+    balaoPrimeiroVencimento: "",
     temPermuta: false,
     permuta: null,
     temVeiculo: false,
@@ -484,6 +511,16 @@ export default function Simulador() {
     };
   }, [propostaCliente]);
 
+  const quadraProposta = useMemo(() => {
+    if (!lotesSelecionados.length) return "-";
+    return lotesSelecionados.map((lote) => String(lote.quadra ?? "-")).join(", ");
+  }, [lotesSelecionados]);
+
+  const loteProposta = useMemo(() => {
+    if (!lotesSelecionados.length) return "-";
+    return lotesSelecionados.map((lote) => String(lote.lote ?? "-")).join(", ");
+  }, [lotesSelecionados]);
+
   const resumoContraproposta = useMemo(() => {
     const valorPermutaBomm =
       contrapropostaBomm.temPermuta && contrapropostaBomm.permutaAceita
@@ -503,6 +540,7 @@ export default function Simulador() {
     );
 
     const linhas: string[] = [];
+    linhas.push(`• Valor total dos terrenos: ${brl(valorTerreno)}`);
     linhas.push(`• Valor aprovado: ${brl(contrapropostaBomm.valorAprovado)}`);
 
     if (contrapropostaBomm.condicao.entradaTipo === "percentual") {
@@ -541,7 +579,7 @@ export default function Simulador() {
       linhas,
       calculo,
     };
-  }, [contrapropostaBomm]);
+  }, [contrapropostaBomm, valorTerreno]);
 
   const mensagemWhatsApp = useMemo(() => {
     const linhas: string[] = [];
@@ -702,6 +740,128 @@ export default function Simulador() {
   }
 
   function gerarPdf() {
+    if (modoDocumento === "proposta") {
+      const dataPdf = propostaCliente.data || dataAtualInput();
+      const entradaProposta =
+        propostaCliente.condicao.entradaTipo === "percentual"
+          ? `${propostaCliente.condicao.entradaValor}%`
+          : brl(resumoPropostaCliente.calculo.entrada);
+
+      const detalhesNegociacao = [...resumoPropostaCliente.linhas];
+
+      if (propostaCliente.observacoes) {
+        detalhesNegociacao.push(`Observações: ${propostaCliente.observacoes}`);
+      }
+
+      gerarPdfProposta({
+        data: dataPdf,
+        quadra: quadraProposta,
+        lote: loteProposta,
+        valor: brl(valorTerreno),
+        clienteNome: cliente || "-",
+        clienteCpf: clienteCpf || "-",
+        clienteTelefone: clienteTelefone || "-",
+        clienteEmail: clienteEmail || "-",
+        clienteProfissao: clienteProfissao || "-",
+        clienteEstadoCivil: clienteEstadoCivil || "-",
+        corretor: corretor || "-",
+        creci: creci || "-",
+        imobiliaria: imobiliaria || "-",
+        entrada: {
+          valor: brl(resumoPropostaCliente.calculo.entrada),
+          quantidadeParcelas: String(propostaCliente.entradaQuantidadeParcelas || 1),
+          valorParcela: brl(
+            (propostaCliente.entradaQuantidadeParcelas || 1) > 0
+              ? resumoPropostaCliente.calculo.entrada /
+                  (propostaCliente.entradaQuantidadeParcelas || 1)
+              : resumoPropostaCliente.calculo.entrada
+          ),
+          primeiroVencimento: propostaCliente.entradaPrimeiroVencimento || "-",
+        },
+        mensais: {
+          quantidadeParcelas: String(propostaCliente.condicao.parcelasMeses),
+          valorParcela: brl(resumoPropostaCliente.calculo.valorParcela),
+          primeiroVencimento: propostaCliente.mensaisPrimeiroVencimento || "-",
+        },
+        balao: {
+          tipo: propostaCliente.balaoTipo,
+          quantidadeParcelas: String(propostaCliente.condicao.baloesSemestrais),
+          valorParcela: brl(resumoPropostaCliente.calculo.valorBalao),
+          primeiroVencimento: propostaCliente.balaoPrimeiroVencimento || "-",
+        },
+        permuta: propostaCliente.temPermuta
+          ? {
+              valor: brl(numeroSeguro(propostaCliente.permuta?.valor)),
+              descricao: propostaCliente.permuta?.descricao || "-",
+            }
+          : undefined,
+        observacao: propostaCliente.observacoes || "-",
+        unidades: lotesSelecionados.map((lote) => ({
+          quadra: String(lote.quadra ?? "-"),
+          lote: String(lote.lote ?? "-"),
+          valor: brl(numeroSeguro(lote.valor)),
+        })),
+        pagamento: [
+          {
+            tipo: "Entrada",
+            quantidade: entradaProposta,
+            valor: brl(resumoPropostaCliente.calculo.entrada),
+          },
+          {
+            tipo: "Parcelas",
+            quantidade: `${propostaCliente.condicao.parcelasMeses}x`,
+            valor: brl(resumoPropostaCliente.calculo.valorParcela),
+          },
+          {
+            tipo: "Balões",
+            quantidade: `${propostaCliente.condicao.baloesSemestrais}x`,
+            valor: brl(resumoPropostaCliente.calculo.valorBalao),
+          },
+        ],
+        detalhesNegociacao,
+      });
+      return;
+    }
+
+    if (modoDocumento === "contraproposta") {
+      gerarPdfContraproposta({
+        data: dataAtualInput(),
+        quadra: quadraProposta,
+        lote: loteProposta,
+        valor: brl(valorTerreno),
+        clienteNome: cliente || "-",
+        clienteCpf: clienteCpf || "-",
+        clienteTelefone: clienteTelefone || "-",
+        clienteEmail: clienteEmail || "-",
+        clienteProfissao: clienteProfissao || "-",
+        clienteEstadoCivil: clienteEstadoCivil || "-",
+        corretor: corretor || "-",
+        creci: creci || "-",
+        imobiliaria: imobiliaria || "-",
+        condicaoAprovada: {
+          valor: brl(contrapropostaBomm.valorAprovado),
+          entrada:
+            contrapropostaBomm.condicao.entradaTipo === "percentual"
+              ? `${contrapropostaBomm.condicao.entradaValor}% (${brl(resumoContraproposta.calculo.entrada)})`
+              : brl(resumoContraproposta.calculo.entrada),
+          mensaisQuantidade: `${contrapropostaBomm.condicao.parcelasMeses}x`,
+          mensaisValor: brl(resumoContraproposta.calculo.valorParcela),
+          balaoTipo: "semestral",
+          balaoQuantidade: `${contrapropostaBomm.condicao.baloesSemestrais}x`,
+          balaoValor: brl(resumoContraproposta.calculo.valorBalao),
+          validade: contrapropostaBomm.validade || "-",
+        },
+        permuta: contrapropostaBomm.temPermuta
+          ? {
+              valor: brl(numeroSeguro(contrapropostaBomm.permutaAceita?.valor)),
+              descricao: contrapropostaBomm.permutaAceita?.descricao || "-",
+            }
+          : undefined,
+        observacao: contrapropostaBomm.observacoes || "-",
+      });
+      return;
+    }
+
     const doc = new jsPDF({
       unit: "pt",
       format: "a4",
@@ -710,12 +870,7 @@ export default function Simulador() {
     const margemX = 42;
     let y = 40;
 
-    const tituloPdf =
-      modoDocumento === "simulacao"
-        ? "Simulação Comercial"
-        : modoDocumento === "proposta"
-          ? "Proposta Comercial"
-          : "Contra-proposta Comercial";
+    const tituloPdf = "Simulação Comercial";
 
     doc.setFillColor(21, 42, 34);
     doc.roundedRect(24, 24, 547, 794, 18, 18, "F");
@@ -828,56 +983,6 @@ export default function Simulador() {
       });
     }
 
-    if (modoDocumento === "proposta") {
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.setTextColor(245, 245, 245);
-      doc.text("Proposta recebida do cliente", margemX, y);
-
-      y += 20;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(11);
-      doc.setTextColor(230, 235, 232);
-
-      resumoPropostaCliente.linhas.forEach((linha) => {
-        doc.text(linha, margemX, y);
-        y += 16;
-      });
-
-      if (propostaCliente.observacoes) {
-        y += 8;
-        doc.text(`Observações: ${propostaCliente.observacoes}`, margemX, y);
-        y += 16;
-      }
-    }
-
-    if (modoDocumento === "contraproposta") {
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.setTextColor(245, 245, 245);
-      doc.text("Contra-proposta da BOMM", margemX, y);
-
-      y += 20;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(11);
-      doc.setTextColor(230, 235, 232);
-
-      resumoContraproposta.linhas.forEach((linha) => {
-        doc.text(linha, margemX, y);
-        y += 16;
-      });
-
-      if (contrapropostaBomm.observacoes) {
-        y += 8;
-        doc.text(
-          `Observações comerciais: ${contrapropostaBomm.observacoes}`,
-          margemX,
-          y
-        );
-        y += 16;
-      }
-    }
-
     y += 18;
 
     doc.setFont("helvetica", "bold");
@@ -893,12 +998,7 @@ export default function Simulador() {
     const linhasMensagem = doc.splitTextToSize(mensagemWhatsApp, 485);
     doc.text(linhasMensagem, margemX, y);
 
-    const nomeArquivo =
-      modoDocumento === "simulacao"
-        ? "simulacao-vivendas.pdf"
-        : modoDocumento === "proposta"
-          ? "proposta-vivendas.pdf"
-          : "contraproposta-vivendas.pdf";
+    const nomeArquivo = "simulacao-vivendas.pdf";
 
     doc.save(nomeArquivo);
   }
@@ -985,7 +1085,21 @@ export default function Simulador() {
 
           <section className="luxSection">
             <div className="luxSectionInner">
-              <div className="luxGrid2">
+              <div className="luxGrid3">
+                <div className="luxField">
+                  <label>Data</label>
+                  <input
+                    type="date"
+                    value={propostaCliente.data}
+                    onChange={(e) =>
+                      setPropostaCliente((anterior) => ({
+                        ...anterior,
+                        data: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+
                 <div className="luxField">
                   <label>Cliente</label>
                   <input
@@ -996,11 +1110,73 @@ export default function Simulador() {
                 </div>
 
                 <div className="luxField">
+                  <label>CPF</label>
+                  <input
+                    value={clienteCpf}
+                    onChange={(e) => setClienteCpf(e.target.value)}
+                    placeholder="CPF do cliente"
+                  />
+                </div>
+              </div>
+
+              <div className="luxSpacer" />
+
+              <div className="luxGrid3">
+                <div className="luxField">
+                  <label>Telefone</label>
+                  <input
+                    value={clienteTelefone}
+                    onChange={(e) => setClienteTelefone(e.target.value)}
+                    placeholder="Telefone do cliente"
+                  />
+                </div>
+
+                <div className="luxField">
+                  <label>Email</label>
+                  <input
+                    value={clienteEmail}
+                    onChange={(e) => setClienteEmail(e.target.value)}
+                    placeholder="Email do cliente"
+                  />
+                </div>
+
+                <div className="luxField">
+                  <label>Profissão</label>
+                  <input
+                    value={clienteProfissao}
+                    onChange={(e) => setClienteProfissao(e.target.value)}
+                    placeholder="Profissão do cliente"
+                  />
+                </div>
+              </div>
+
+              <div className="luxSpacer" />
+
+              <div className="luxGrid3">
+                <div className="luxField">
+                  <label>Estado civil</label>
+                  <input
+                    value={clienteEstadoCivil}
+                    onChange={(e) => setClienteEstadoCivil(e.target.value)}
+                    placeholder="Estado civil"
+                  />
+                </div>
+
+                <div className="luxField">
                   <label>Corretor(a)</label>
                   <input
                     value={corretor}
                     onChange={(e) => setCorretor(e.target.value)}
                     placeholder="Nome do corretor"
+                  />
+                </div>
+
+                <div className="luxField">
+                  <label>CRECI</label>
+                  <input
+                    value={creci}
+                    onChange={(e) => setCreci(e.target.value)}
+                    placeholder="CRECI do corretor"
                   />
                 </div>
               </div>
@@ -1398,6 +1574,25 @@ export default function Simulador() {
                   <div className="luxKicker">Negociação</div>
                   <h2 className="luxH2">Proposta recebida do cliente</h2>
 
+                  <div className="luxGrid3">
+                    <div className="luxField">
+                      <label>Quadra</label>
+                      <input value={quadraProposta} readOnly />
+                    </div>
+
+                    <div className="luxField">
+                      <label>Lote</label>
+                      <input value={loteProposta} readOnly />
+                    </div>
+
+                    <div className="luxField">
+                      <label>Valor</label>
+                      <input value={brl(valorTerreno)} readOnly />
+                    </div>
+                  </div>
+
+                  <div className="luxSpacer" />
+
                   <div className="luxGrid2">
                     <div className="luxField">
                       <label>Valor ofertado</label>
@@ -1432,6 +1627,58 @@ export default function Simulador() {
                         <option value="percentual">Percentual</option>
                         <option value="valor">Valor fixo</option>
                       </select>
+                    </div>
+                  </div>
+
+                  <div className="luxSpacer" />
+
+                  <div className="luxGrid2">
+                    <div className="luxField">
+                      <label>Entrada: valor</label>
+                      <input value={brl(resumoPropostaCliente.calculo.entrada)} readOnly />
+                    </div>
+
+                    <div className="luxField">
+                      <label>Entrada: qtd. parcelas</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={toInputNumber(propostaCliente.entradaQuantidadeParcelas)}
+                        onChange={(e) =>
+                          setPropostaCliente((anterior) => ({
+                            ...anterior,
+                            entradaQuantidadeParcelas: Math.max(
+                              1,
+                              Math.round(numeroSeguro(e.target.value))
+                            ),
+                          }))
+                        }
+                      />
+                    </div>
+
+                    <div className="luxField">
+                      <label>Entrada: valor da parcela</label>
+                      <input
+                        value={brl(
+                          resumoPropostaCliente.calculo.entrada /
+                            Math.max(1, propostaCliente.entradaQuantidadeParcelas)
+                        )}
+                        readOnly
+                      />
+                    </div>
+
+                    <div className="luxField">
+                      <label>Entrada: 1º vencimento</label>
+                      <input
+                        type="date"
+                        value={propostaCliente.entradaPrimeiroVencimento}
+                        onChange={(e) =>
+                          setPropostaCliente((anterior) => ({
+                            ...anterior,
+                            entradaPrimeiroVencimento: e.target.value,
+                          }))
+                        }
+                      />
                     </div>
                   </div>
 
@@ -1498,6 +1745,84 @@ export default function Simulador() {
                                 Math.round(numeroSeguro(e.target.value))
                               ),
                             },
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="luxSpacer" />
+
+                  <div className="luxGrid3">
+                    <div className="luxField">
+                      <label>Mensais: qtd. parcelas</label>
+                      <input
+                        value={toInputNumber(propostaCliente.condicao.parcelasMeses)}
+                        readOnly
+                      />
+                    </div>
+
+                    <div className="luxField">
+                      <label>Mensais: valor da parcela</label>
+                      <input value={brl(resumoPropostaCliente.calculo.valorParcela)} readOnly />
+                    </div>
+
+                    <div className="luxField">
+                      <label>Mensais: 1º vencimento</label>
+                      <input
+                        type="date"
+                        value={propostaCliente.mensaisPrimeiroVencimento}
+                        onChange={(e) =>
+                          setPropostaCliente((anterior) => ({
+                            ...anterior,
+                            mensaisPrimeiroVencimento: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="luxSpacer" />
+
+                  <div className="luxGrid2">
+                    <div className="luxField">
+                      <label>Balão: tipo</label>
+                      <select
+                        value={propostaCliente.balaoTipo}
+                        onChange={(e) =>
+                          setPropostaCliente((anterior) => ({
+                            ...anterior,
+                            balaoTipo: e.target.value as TipoBalao,
+                          }))
+                        }
+                      >
+                        <option value="semestral">Semestral</option>
+                        <option value="anual">Anual</option>
+                      </select>
+                    </div>
+
+                    <div className="luxField">
+                      <label>Balão: qtd. parcelas</label>
+                      <input
+                        value={toInputNumber(propostaCliente.condicao.baloesSemestrais)}
+                        readOnly
+                      />
+                    </div>
+
+                    <div className="luxField">
+                      <label>Balão: valor da parcela</label>
+                      <input value={brl(resumoPropostaCliente.calculo.valorBalao)} readOnly />
+                    </div>
+
+                    <div className="luxField">
+                      <label>Balão: 1º vencimento</label>
+                      <input
+                        type="date"
+                        value={propostaCliente.balaoPrimeiroVencimento}
+                        onChange={(e) =>
+                          setPropostaCliente((anterior) => ({
+                            ...anterior,
+                            balaoPrimeiroVencimento: e.target.value,
                           }))
                         }
                       />
