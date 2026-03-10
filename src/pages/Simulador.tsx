@@ -523,6 +523,19 @@ export default function Simulador() {
     return lotesSelecionados.map((lote) => String(lote.lote ?? "-")).join(", ");
   }, [lotesSelecionados]);
 
+  const unidadesSelecionadasPdf = useMemo(() => {
+    return lotesSelecionados.map((lote) => ({
+      quadra: String(lote.quadra ?? "-"),
+      lote: String(lote.lote ?? "-"),
+      valor: brl(numeroSeguro(lote.valor)),
+    }));
+  }, [lotesSelecionados]);
+
+  const valorAprovadoContraproposta = useMemo(() => {
+    const valorDigitado = numeroSeguro(contrapropostaBomm.valorAprovado);
+    return valorDigitado > 0 ? valorDigitado : valorTerreno;
+  }, [contrapropostaBomm.valorAprovado, valorTerreno]);
+
   const resumoContraproposta = useMemo(() => {
     const valorPermutaBomm =
       contrapropostaBomm.temPermuta && contrapropostaBomm.permutaAceita
@@ -535,7 +548,7 @@ export default function Simulador() {
         : 0;
 
     const calculo = calcularResumoFinanceiro(
-      numeroSeguro(contrapropostaBomm.valorAprovado),
+      valorAprovadoContraproposta,
       contrapropostaBomm.condicao,
       valorPermutaBomm,
       valorVeiculoBomm
@@ -543,7 +556,7 @@ export default function Simulador() {
 
     const linhas: string[] = [];
     linhas.push(`• Valor total dos terrenos: ${brl(valorTerreno)}`);
-    linhas.push(`• Valor aprovado: ${brl(contrapropostaBomm.valorAprovado)}`);
+    linhas.push(`• Valor aprovado: ${brl(valorAprovadoContraproposta)}`);
 
     if (contrapropostaBomm.condicao.entradaTipo === "percentual") {
       linhas.push(
@@ -581,7 +594,7 @@ export default function Simulador() {
       linhas,
       calculo,
     };
-  }, [contrapropostaBomm, valorTerreno]);
+  }, [contrapropostaBomm, valorAprovadoContraproposta, valorTerreno]);
 
   const mensagemWhatsApp = useMemo(() => {
     const linhas: string[] = [];
@@ -744,11 +757,6 @@ export default function Simulador() {
   function gerarPdf() {
     if (modoDocumento === "proposta") {
       const dataPdf = propostaCliente.data || dataAtualInput();
-      const entradaProposta =
-        propostaCliente.condicao.entradaTipo === "percentual"
-          ? `${propostaCliente.condicao.entradaValor}%`
-          : brl(resumoPropostaCliente.calculo.entrada);
-
       const detalhesNegociacao = [...resumoPropostaCliente.linhas];
 
       if (propostaCliente.observacoes) {
@@ -798,28 +806,7 @@ export default function Simulador() {
             }
           : undefined,
         observacao: propostaCliente.observacoes || "-",
-        unidades: lotesSelecionados.map((lote) => ({
-          quadra: String(lote.quadra ?? "-"),
-          lote: String(lote.lote ?? "-"),
-          valor: brl(numeroSeguro(lote.valor)),
-        })),
-        pagamento: [
-          {
-            tipo: "Entrada",
-            quantidade: entradaProposta,
-            valor: brl(resumoPropostaCliente.calculo.entrada),
-          },
-          {
-            tipo: "Parcelas",
-            quantidade: `${propostaCliente.condicao.parcelasMeses}x`,
-            valor: brl(resumoPropostaCliente.calculo.valorParcela),
-          },
-          {
-            tipo: "Balões",
-            quantidade: `${propostaCliente.condicao.baloesSemestrais}x`,
-            valor: brl(resumoPropostaCliente.calculo.valorBalao),
-          },
-        ],
+        unidades: unidadesSelecionadasPdf,
         detalhesNegociacao,
       });
       return;
@@ -840,8 +827,9 @@ export default function Simulador() {
         corretor: corretor || "-",
         creci: creci || "-",
         imobiliaria: imobiliaria || "-",
+        unidades: unidadesSelecionadasPdf,
         condicaoAprovada: {
-          valor: brl(contrapropostaBomm.valorAprovado),
+          valor: brl(valorAprovadoContraproposta),
           entrada:
             contrapropostaBomm.condicao.entradaTipo === "percentual"
               ? `${contrapropostaBomm.condicao.entradaValor}% (${brl(resumoContraproposta.calculo.entrada)})`

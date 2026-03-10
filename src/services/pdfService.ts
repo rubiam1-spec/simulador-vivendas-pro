@@ -3,11 +3,13 @@ import jsPDF from "jspdf"
 import logoBomm from "../assets/logo-bomm.png"
 import logoVivendas from "../assets/logo-vivendas.png"
 
-export type PdfPropostaPayload = {
-  data: string
+type UnidadePdf = {
   quadra: string
   lote: string
   valor: string
+}
+
+type IdentificacaoPdf = {
   clienteNome: string
   clienteCpf?: string
   clienteTelefone?: string
@@ -17,6 +19,19 @@ export type PdfPropostaPayload = {
   corretor: string
   creci?: string
   imobiliaria: string
+}
+
+type Field = {
+  label: string
+  value: string
+}
+
+export type PdfPropostaPayload = IdentificacaoPdf & {
+  data: string
+  quadra: string
+  lote: string
+  valor: string
+  unidades: UnidadePdf[]
   entrada?: {
     valor: string
     quantidadeParcelas: string
@@ -39,33 +54,15 @@ export type PdfPropostaPayload = {
     descricao: string
   }
   observacao?: string
-  unidades: Array<{
-    quadra: string
-    lote: string
-    valor: string
-  }>
-  pagamento: Array<{
-    tipo: string
-    quantidade: string
-    valor: string
-  }>
-  detalhesNegociacao: string | string[]
+  detalhesNegociacao?: string | string[]
 }
 
-export type PdfContrapropostaPayload = {
+export type PdfContrapropostaPayload = IdentificacaoPdf & {
   data: string
   quadra: string
   lote: string
   valor: string
-  clienteNome: string
-  clienteCpf?: string
-  clienteTelefone?: string
-  clienteEmail?: string
-  clienteProfissao?: string
-  clienteEstadoCivil?: string
-  corretor: string
-  creci?: string
-  imobiliaria: string
+  unidades: UnidadePdf[]
   condicaoAprovada: {
     valor: string
     entrada: string
@@ -83,14 +80,60 @@ export type PdfContrapropostaPayload = {
   observacao?: string
 }
 
-type Field = {
-  label: string
-  value: string
+function texto(valor?: string) {
+  const limpo = (valor || "").trim()
+  return limpo ? limpo : "-"
 }
 
-function addPageChrome(doc: jsPDF, title: string, data: string) {
+function consolidarLotes(unidades: UnidadePdf[]) {
+  if (!unidades.length) {
+    return {
+      quadra: "-",
+      lote: "-",
+    }
+  }
+
+  return {
+    quadra: Array.from(new Set(unidades.map((unidade) => texto(unidade.quadra)))).join(", "),
+    lote: unidades.map((unidade) => texto(unidade.lote)).join(", "),
+  }
+}
+
+function resolverDadosLote(payload: {
+  quadra: string
+  lote: string
+  valor: string
+  unidades?: UnidadePdf[]
+}) {
+  const unidades = payload.unidades || []
+  const consolidado = consolidarLotes(unidades)
+
+  return {
+    quadra: texto(payload.quadra !== "-" ? payload.quadra : consolidado.quadra),
+    lote: texto(payload.lote !== "-" ? payload.lote : consolidado.lote),
+    valor: texto(payload.valor),
+  }
+}
+
+function resolverObservacao(
+  observacao?: string,
+  detalheExtra?: string | string[]
+) {
+  const principal = (observacao || "").trim()
+  if (principal) return principal
+
+  if (Array.isArray(detalheExtra)) {
+    const linhas = detalheExtra.map((linha) => linha.trim()).filter(Boolean)
+    return linhas.length ? linhas.join("\n") : "-"
+  }
+
+  const detalhe = (detalheExtra || "").trim()
+  return detalhe || "-"
+}
+
+function addPageChrome(doc: jsPDF, titulo: string, data: string) {
   doc.setFillColor(22, 49, 39)
-  doc.rect(0, 0, 595, 72, "F")
+  doc.rect(0, 0, 595, 74, "F")
 
   try {
     doc.addImage(logoVivendas, "PNG", 42, 18, 110, 34)
@@ -99,22 +142,33 @@ function addPageChrome(doc: jsPDF, title: string, data: string) {
     doc.setTextColor(255, 255, 255)
     doc.setFont("helvetica", "bold")
     doc.setFontSize(18)
-    doc.text("Vivendas do Bosque", 42, 36)
-    doc.text("BOMM", 500, 36)
+    doc.text("Vivendas do Bosque", 42, 38)
+    doc.text("BOMM", 500, 38)
   }
 
-  doc.setTextColor(255, 255, 255)
+  doc.setTextColor(22, 49, 39)
   doc.setFont("helvetica", "bold")
   doc.setFontSize(18)
-  doc.text(title, 42, 94)
+  doc.text(titulo, 42, 98)
 
   doc.setFont("helvetica", "normal")
   doc.setFontSize(10)
   doc.setTextColor(90, 107, 99)
-  doc.text(`Data do documento: ${data || "-"}`, 42, 112)
+  doc.text(`Data do documento: ${texto(data)}`, 42, 116)
 
   doc.setDrawColor(206, 214, 210)
-  doc.line(42, 122, 553, 122)
+  doc.line(42, 126, 553, 126)
+}
+
+function addFooter(doc: jsPDF) {
+  doc.setFont("helvetica", "normal")
+  doc.setFontSize(8)
+  doc.setTextColor(112, 124, 118)
+  doc.text(
+    "Parcelas corrigidas por INCC até a entrega e, após a entrega, por IPCA.",
+    42,
+    812
+  )
 }
 
 function drawSectionTitle(doc: jsPDF, title: string, y: number) {
@@ -126,14 +180,7 @@ function drawSectionTitle(doc: jsPDF, title: string, y: number) {
   doc.text(title.toUpperCase(), 54, y + 13)
 }
 
-function drawFieldBox(
-  doc: jsPDF,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  field: Field
-) {
+function drawFieldBox(doc: jsPDF, x: number, y: number, w: number, h: number, field: Field) {
   doc.setDrawColor(198, 206, 202)
   doc.setFillColor(255, 255, 255)
   doc.roundedRect(x, y, w, h, 5, 5, "FD")
@@ -147,8 +194,8 @@ function drawFieldBox(
   doc.setFontSize(10)
   doc.setTextColor(35, 43, 39)
 
-  const valueLines = doc.splitTextToSize(field.value || "-", w - 20)
-  doc.text(valueLines, x + 10, y + 27)
+  const linhas = doc.splitTextToSize(texto(field.value), w - 20)
+  doc.text(linhas, x + 10, y + 27)
 }
 
 function drawFieldRow(
@@ -168,12 +215,7 @@ function drawFieldRow(
   })
 }
 
-function drawBigBox(
-  doc: jsPDF,
-  y: number,
-  text: string,
-  height: number
-) {
+function drawObservationBox(doc: jsPDF, y: number, text: string, height: number) {
   doc.setDrawColor(198, 206, 202)
   doc.setFillColor(255, 255, 255)
   doc.roundedRect(42, y, 511, height, 5, 5, "FD")
@@ -181,185 +223,133 @@ function drawBigBox(
   doc.setFont("helvetica", "normal")
   doc.setFontSize(10)
   doc.setTextColor(35, 43, 39)
-  doc.text(doc.splitTextToSize(text || "-", 491), 52, y + 22)
+  doc.text(doc.splitTextToSize(texto(text), 491), 52, y + 22)
 }
 
-function drawDadosLote(doc: jsPDF, y: number, payload: { quadra: string; lote: string; valor: string }) {
-  drawSectionTitle(doc, "Dados do lote", y)
+function drawDadosLote(
+  doc: jsPDF,
+  y: number,
+  payload: { quadra: string; lote: string; valor: string; unidades?: UnidadePdf[] }
+) {
+  const dadosLote = resolverDadosLote(payload)
+
+  drawSectionTitle(doc, "Dados do Lote", y)
   y += 30
   drawFieldRow(doc, y, [
-    { label: "Quadra", value: payload.quadra || "-" },
-    { label: "Lote", value: payload.lote || "-" },
-    { label: "Valor", value: payload.valor || "-" },
+    { label: "Quadra", value: dadosLote.quadra },
+    { label: "Lote", value: dadosLote.lote },
+    { label: "Valor", value: dadosLote.valor },
   ])
   return y + 58
 }
 
-function drawIdentificacaoCliente(
-  doc: jsPDF,
-  y: number,
-  payload: {
-    clienteNome: string
-    clienteCpf?: string
-    clienteTelefone?: string
-    clienteEmail?: string
-    clienteProfissao?: string
-    clienteEstadoCivil?: string
-  }
-) {
+function drawIdentificacaoCliente(doc: jsPDF, y: number, payload: IdentificacaoPdf) {
   drawSectionTitle(doc, "Identificação do Cliente", y)
   y += 30
   drawFieldRow(doc, y, [
-    { label: "Nome", value: payload.clienteNome || "-" },
+    { label: "Nome", value: payload.clienteNome },
     { label: "CPF", value: payload.clienteCpf || "-" },
   ])
   y += 52
   drawFieldRow(doc, y, [
     { label: "Telefone", value: payload.clienteTelefone || "-" },
-    { label: "Email", value: payload.clienteEmail || "-" },
+    { label: "E-mail", value: payload.clienteEmail || "-" },
   ])
   y += 52
   drawFieldRow(doc, y, [
     { label: "Profissão", value: payload.clienteProfissao || "-" },
-    { label: "Estado civil", value: payload.clienteEstadoCivil || "-" },
+    { label: "Estado Civil", value: payload.clienteEstadoCivil || "-" },
   ])
   return y + 58
 }
 
-function drawIdentificacaoCorretor(
-  doc: jsPDF,
-  y: number,
-  payload: { corretor: string; creci?: string; imobiliaria: string }
-) {
+function drawIdentificacaoCorretor(doc: jsPDF, y: number, payload: IdentificacaoPdf) {
   drawSectionTitle(doc, "Identificação do Corretor", y)
   y += 30
   drawFieldRow(doc, y, [
-    { label: "Nome do corretor", value: payload.corretor || "-" },
+    { label: "Nome do Corretor", value: payload.corretor },
     { label: "CRECI", value: payload.creci || "-" },
-    { label: "Imobiliária", value: payload.imobiliaria || "-" },
+    { label: "Imobiliária", value: payload.imobiliaria },
   ])
   return y + 58
 }
 
-function addFooter(doc: jsPDF) {
-  doc.setFont("helvetica", "normal")
-  doc.setFontSize(8)
-  doc.setTextColor(112, 124, 118)
-  doc.text(
-    "Parcelas corrigidas por INCC até a entrega e, após a entrega, por IPCA.",
-    42,
-    812
-  )
+function drawPermuta(
+  doc: jsPDF,
+  y: number,
+  titulo: string,
+  permuta?: { valor: string; descricao: string }
+) {
+  drawSectionTitle(doc, titulo, y)
+  y += 30
+  drawFieldRow(doc, y, [
+    { label: "Valor da Permuta", value: permuta?.valor || "-" },
+    { label: "Descrição da Permuta", value: permuta?.descricao || "-" },
+  ], [44, 60])
+  return y + 74
 }
 
-export function gerarPdfProposta(dados: PdfPropostaPayload) {
+function drawObservacao(doc: jsPDF, y: number, observacao: string) {
+  drawSectionTitle(doc, "Observação", y)
+  y += 30
+  drawObservationBox(doc, y, observacao, 90)
+  return y + 104
+}
+
+function createDocument(titulo: string, data: string) {
   const doc = new jsPDF({
     unit: "pt",
     format: "a4",
   })
 
-  const detalhesNegociacao = Array.isArray(dados.detalhesNegociacao)
-    ? dados.detalhesNegociacao.join("\n")
-    : dados.detalhesNegociacao || "-"
+  addPageChrome(doc, titulo, data)
+  return doc
+}
 
-  addPageChrome(doc, "TERMO DE PROPOSTA", dados.data)
+export function gerarPdfProposta(dados: PdfPropostaPayload) {
+  const doc = createDocument("TERMO DE PROPOSTA", dados.data)
+  const observacao = resolverObservacao(dados.observacao, dados.detalhesNegociacao)
 
-  let y = 138
+  let y = 142
   y = drawDadosLote(doc, y, dados)
   y = drawIdentificacaoCliente(doc, y, dados)
   y = drawIdentificacaoCorretor(doc, y, dados)
 
-  drawSectionTitle(doc, "Estrutura de pagamento", y)
+  drawSectionTitle(doc, "Estrutura de Pagamento", y)
   y += 30
-  drawFieldRow(
-    doc,
-    y,
-    [
-      { label: "Entrada total", value: dados.entrada?.valor || "-" },
-      {
-        label: "Entrada: qtd. parcelas",
-        value: dados.entrada?.quantidadeParcelas || "-",
-      },
-      {
-        label: "Entrada: valor parcela",
-        value: dados.entrada?.valorParcela || "-",
-      },
-      {
-        label: "Entrada: primeiro vencimento",
-        value: dados.entrada?.primeiroVencimento || "-",
-      },
-    ],
-    [44, 44, 44, 44]
-  )
+  drawFieldRow(doc, y, [
+    { label: "Entrada Total", value: dados.entrada?.valor || "-" },
+    { label: "Entrada: Qtd. Parcelas", value: dados.entrada?.quantidadeParcelas || "-" },
+    { label: "Entrada: Valor da Parcela", value: dados.entrada?.valorParcela || "-" },
+    { label: "Entrada: Primeiro Vencimento", value: dados.entrada?.primeiroVencimento || "-" },
+  ], [44, 44, 44, 44])
   y += 54
   drawFieldRow(doc, y, [
-    {
-      label: "Mensais: qtd. parcelas",
-      value: dados.mensais?.quantidadeParcelas || "-",
-    },
-    {
-      label: "Mensais: valor parcela",
-      value: dados.mensais?.valorParcela || "-",
-    },
-    {
-      label: "Mensais: primeiro vencimento",
-      value: dados.mensais?.primeiroVencimento || "-",
-    },
+    { label: "Mensais: Qtd. Parcelas", value: dados.mensais?.quantidadeParcelas || "-" },
+    { label: "Mensais: Valor da Parcela", value: dados.mensais?.valorParcela || "-" },
+    { label: "Mensais: Primeiro Vencimento", value: dados.mensais?.primeiroVencimento || "-" },
   ])
   y += 52
-  drawFieldRow(
-    doc,
-    y,
-    [
-      { label: "Balão: tipo", value: dados.balao?.tipo || "-" },
-      {
-        label: "Balão: qtd. parcelas",
-        value: dados.balao?.quantidadeParcelas || "-",
-      },
-      {
-        label: "Balão: valor parcela",
-        value: dados.balao?.valorParcela || "-",
-      },
-      {
-        label: "Balão: primeiro vencimento",
-        value: dados.balao?.primeiroVencimento || "-",
-      },
-    ],
-    [44, 44, 44, 44]
-  )
+  drawFieldRow(doc, y, [
+    { label: "Balão: Tipo", value: dados.balao?.tipo || "-" },
+    { label: "Balão: Qtd. Parcelas", value: dados.balao?.quantidadeParcelas || "-" },
+    { label: "Balão: Valor da Parcela", value: dados.balao?.valorParcela || "-" },
+    { label: "Balão: Primeiro Vencimento", value: dados.balao?.primeiroVencimento || "-" },
+  ], [44, 44, 44, 44])
   y += 60
 
-  drawSectionTitle(doc, "Permuta", y)
-  y += 30
-  drawFieldRow(doc, y, [
-    {
-      label: "Valor da permuta",
-      value: dados.permuta?.valor || "-",
-    },
-    {
-      label: "Descrição da permuta",
-      value: dados.permuta?.descricao || "-",
-    },
-  ], [44, 60])
-  y += 74
-
-  drawSectionTitle(doc, "Observação", y)
-  y += 30
-  drawBigBox(doc, y, dados.observacao || detalhesNegociacao, 90)
+  y = drawPermuta(doc, y, "Permuta", dados.permuta)
+  drawObservacao(doc, y, observacao)
 
   addFooter(doc)
   doc.save("proposta-vivendas.pdf")
 }
 
 export function gerarPdfContraproposta(dados: PdfContrapropostaPayload) {
-  const doc = new jsPDF({
-    unit: "pt",
-    format: "a4",
-  })
+  const doc = createDocument("TERMO DE CONTRAPROPOSTA", dados.data)
+  const observacao = resolverObservacao(dados.observacao)
 
-  addPageChrome(doc, "TERMO DE CONTRAPROPOSTA", dados.data)
-
-  let y = 138
+  let y = 142
   y = drawDadosLote(doc, y, dados)
   y = drawIdentificacaoCliente(doc, y, dados)
   y = drawIdentificacaoCorretor(doc, y, dados)
@@ -367,58 +357,25 @@ export function gerarPdfContraproposta(dados: PdfContrapropostaPayload) {
   drawSectionTitle(doc, "Condição Aprovada", y)
   y += 30
   drawFieldRow(doc, y, [
-    { label: "Valor aprovado", value: dados.condicaoAprovada.valor || "-" },
-    { label: "Entrada", value: dados.condicaoAprovada.entrada || "-" },
+    { label: "Valor Aprovado", value: dados.condicaoAprovada.valor },
+    { label: "Entrada", value: dados.condicaoAprovada.entrada },
   ])
   y += 52
   drawFieldRow(doc, y, [
-    {
-      label: "Mensais: qtd. parcelas",
-      value: dados.condicaoAprovada.mensaisQuantidade || "-",
-    },
-    {
-      label: "Mensais: valor parcela",
-      value: dados.condicaoAprovada.mensaisValor || "-",
-    },
-    {
-      label: "Validade",
-      value: dados.condicaoAprovada.validade || "-",
-    },
+    { label: "Mensais: Qtd. Parcelas", value: dados.condicaoAprovada.mensaisQuantidade },
+    { label: "Mensais: Valor da Parcela", value: dados.condicaoAprovada.mensaisValor },
+    { label: "Validade", value: dados.condicaoAprovada.validade || "-" },
   ])
   y += 52
   drawFieldRow(doc, y, [
-    {
-      label: "Balão: tipo",
-      value: dados.condicaoAprovada.balaoTipo || "-",
-    },
-    {
-      label: "Balão: qtd. parcelas",
-      value: dados.condicaoAprovada.balaoQuantidade || "-",
-    },
-    {
-      label: "Balão: valor parcela",
-      value: dados.condicaoAprovada.balaoValor || "-",
-    },
+    { label: "Balão: Tipo", value: dados.condicaoAprovada.balaoTipo },
+    { label: "Balão: Qtd. Parcelas", value: dados.condicaoAprovada.balaoQuantidade },
+    { label: "Balão: Valor da Parcela", value: dados.condicaoAprovada.balaoValor },
   ])
   y += 58
 
-  drawSectionTitle(doc, "Permuta aceita", y)
-  y += 30
-  drawFieldRow(doc, y, [
-    {
-      label: "Valor da permuta",
-      value: dados.permuta?.valor || "-",
-    },
-    {
-      label: "Descrição da permuta",
-      value: dados.permuta?.descricao || "-",
-    },
-  ], [44, 60])
-  y += 74
-
-  drawSectionTitle(doc, "Observação", y)
-  y += 30
-  drawBigBox(doc, y, dados.observacao || "-", 90)
+  y = drawPermuta(doc, y, "Permuta Aceita", dados.permuta)
+  drawObservacao(doc, y, observacao)
 
   addFooter(doc)
   doc.save("contraproposta-vivendas.pdf")
