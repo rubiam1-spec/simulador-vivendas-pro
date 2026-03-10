@@ -1227,6 +1227,201 @@ export default function Simulador() {
         ? "Registre a proposta recebida do cliente com organização."
         : "Compare a proposta do cliente com a condição aprovada pela BOMM.";
 
+  const etapaAtual = useMemo(() => {
+    if (modoDocumento === "simulacao") {
+      if (!cliente.trim() && !quantidadeLotesSelecionados) return 1;
+      if (!quantidadeLotesSelecionados) return 2;
+      if (!mensagemWhatsApp.trim()) return 3;
+      return 4;
+    }
+
+    if (!cliente.trim()) return 1;
+    if (!quantidadeLotesSelecionados) return 2;
+    if (
+      modoDocumento === "proposta" &&
+      numeroSeguro(propostaCliente.valorOfertado) <= 0 &&
+      !propostaCliente.observacoes.trim()
+    ) {
+      return 3;
+    }
+    if (
+      modoDocumento === "contraproposta" &&
+      numeroSeguro(contrapropostaBomm.valorAprovado) <= 0 &&
+      !contrapropostaBomm.observacoes.trim()
+    ) {
+      return 3;
+    }
+    return 4;
+  }, [
+    modoDocumento,
+    cliente,
+    quantidadeLotesSelecionados,
+    mensagemWhatsApp,
+    propostaCliente.valorOfertado,
+    propostaCliente.observacoes,
+    contrapropostaBomm.valorAprovado,
+    contrapropostaBomm.observacoes,
+  ]);
+
+  const stepItems = useMemo(() => {
+    if (modoDocumento === "proposta") {
+      return [
+        {
+          id: 1,
+          eyebrow: "Passo 1",
+          title: "Contexto e cliente",
+          description: "Defina o atendimento e identifique o proponente.",
+        },
+        {
+          id: 2,
+          eyebrow: "Passo 2",
+          title: "Unidades e origem",
+          description: "Selecione os lotes e registre os dados do corretor.",
+        },
+        {
+          id: 3,
+          eyebrow: "Passo 3",
+          title: "Condição proposta",
+          description: "Monte a proposta comercial e os ativos envolvidos.",
+        },
+        {
+          id: 4,
+          eyebrow: "Passo 4",
+          title: "Saída institucional",
+          description: "Revise o texto final e gere o PDF da proposta.",
+        },
+      ];
+    }
+
+    if (modoDocumento === "contraproposta") {
+      return [
+        {
+          id: 1,
+          eyebrow: "Passo 1",
+          title: "Contexto e cliente",
+          description: "Defina o atendimento e identifique o comprador.",
+        },
+        {
+          id: 2,
+          eyebrow: "Passo 2",
+          title: "Unidades e intermediação",
+          description: "Selecione os lotes e registre corretor e imobiliária.",
+        },
+        {
+          id: 3,
+          eyebrow: "Passo 3",
+          title: "Condição aprovada",
+          description: "Estruture a resposta da BOMM com validade e ativos.",
+        },
+        {
+          id: 4,
+          eyebrow: "Passo 4",
+          title: "Saída institucional",
+          description: "Revise o comparativo e gere o PDF final.",
+        },
+      ];
+    }
+
+    return [
+      {
+        id: 1,
+        eyebrow: "Passo 1",
+        title: "Modo e cliente",
+        description: "Defina o documento e o contexto do atendimento.",
+      },
+      {
+        id: 2,
+        eyebrow: "Passo 2",
+        title: "Lotes e ativos",
+        description: "Selecione unidades e abatimentos do negócio.",
+      },
+      {
+        id: 3,
+        eyebrow: "Passo 3",
+        title: "Condição financeira",
+        description: "Estruture entrada, saldo final, mensais e balões.",
+      },
+      {
+        id: 4,
+        eyebrow: "Passo 4",
+        title: "Saída final",
+        description: "Revise a narrativa e gere mensagem ou PDF.",
+      },
+    ];
+  }, [modoDocumento]);
+
+  const flowItems = useMemo(
+    () => [
+      {
+        label: "Valor total",
+        value: brl(valorTerreno),
+        hint: `${quantidadeLotesSelecionados} lote(s) selecionado(s)`,
+        tone: "isPrimary",
+      },
+      {
+        label: "Entrada",
+        value: brl(valorEntrada),
+        hint: `${entradaPercentual}% do valor do negócio`,
+        tone: "isPrimary",
+      },
+      {
+        label: "Saldo final",
+        value: temSaldoFinal ? brl(valorSaldoFinalCalculado) : "Não aplicado",
+        hint: temSaldoFinal
+          ? `${saldoFinalTipo === "percentual" ? `${saldoFinalPercentual}%` : "valor livre"} • ${saldoFinalVencimento || "2027-09-30"}`
+          : "Opcional na entrega do condomínio",
+        tone: temSaldoFinal ? "isAccent" : "isMuted",
+      },
+      {
+        label: "Permuta",
+        value: temPermuta && permutaAplicada > 0 ? brl(permutaAplicada) : "Não aplicada",
+        hint: temPermuta ? descricaoPermuta || "Permuta informada" : "Sem abatimento",
+        tone: temPermuta && permutaAplicada > 0 ? "isApplied" : "isMuted",
+      },
+      {
+        label: "Veículo",
+        value: temVeiculo && veiculoAplicado > 0 ? brl(veiculoAplicado) : "Não aplicado",
+        hint: temVeiculo ? modeloVeiculo || "Veículo informado" : "Sem abatimento",
+        tone: temVeiculo && veiculoAplicado > 0 ? "isApplied" : "isMuted",
+      },
+      {
+        label: "Base p/ mensais e balões",
+        value: brl(resumoSimulacao.baseParcelasEBaloes),
+        hint: `${parcelasMeses} mensais • ${baloesSemestrais} balões`,
+        tone: "isFinal",
+      },
+    ],
+    [
+      valorTerreno,
+      quantidadeLotesSelecionados,
+      valorEntrada,
+      entradaPercentual,
+      temSaldoFinal,
+      valorSaldoFinalCalculado,
+      saldoFinalTipo,
+      saldoFinalPercentual,
+      saldoFinalVencimento,
+      temPermuta,
+      permutaAplicada,
+      descricaoPermuta,
+      temVeiculo,
+      veiculoAplicado,
+      modeloVeiculo,
+      resumoSimulacao.baseParcelasEBaloes,
+      parcelasMeses,
+      baloesSemestrais,
+    ]
+  );
+
+  const lotesSelecionadosResumo = useMemo(
+    () =>
+      lotesSelecionados.map((lote) => ({
+        key: chaveLote(lote),
+        label: `Q${lote.quadra} • L${lote.lote}`,
+      })),
+    [lotesSelecionados]
+  );
+
   return (
     <div className="simPage">
       <div className="luxWrap">
@@ -1255,6 +1450,27 @@ export default function Simulador() {
             <h1 className="luxTitle">Dados do Cliente</h1>
             <p className="luxHeroText">{descricaoModo}</p>
           </section>
+
+          <section className="luxStepBar" aria-label="Etapas do fluxo">
+            {stepItems.map((step) => {
+              const status =
+                step.id < etapaAtual ? "isDone" : step.id === etapaAtual ? "isActive" : "";
+
+              return (
+                <div key={step.id} className={["luxStep", status].join(" ").trim()}>
+                  <div className="luxStepIndex">{step.id}</div>
+                  <div className="luxStepBody">
+                    <div className="luxStepEyebrow">{step.eyebrow}</div>
+                    <div className="luxStepTitle">{step.title}</div>
+                    <div className="luxStepText">{step.description}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </section>
+
+          <div className="luxWorkspace">
+            <div className="luxContent">
 
           <section className="luxSection">
             <div className="luxSectionInner">
@@ -1841,32 +2057,52 @@ export default function Simulador() {
                 </section>
 
                 <section className="luxSection">
-                  <div className="luxSectionInner">
+                  <div className="luxSectionInner luxResultPanel">
                     <div className="luxKicker">Resultado</div>
                     <h2 className="luxH2">Mensagem pronta para envio</h2>
 
+                    <div className="luxResultIntro">
+                      <div className="luxResultLead">
+                        Saída principal pronta para revisão, cópia imediata e geração do PDF.
+                      </div>
+                      <div className="luxResultPills">
+                        <span className="luxChip">Mensagem comercial</span>
+                        <span className="luxChip">PDF da simulação</span>
+                      </div>
+                    </div>
+
+                    <div className="luxResultIntro">
+                      <div className="luxResultLead">
+                        Saída institucional pronta para revisão textual e geração do PDF final.
+                      </div>
+                      <div className="luxResultPills">
+                        <span className="luxChip">Comparativo comercial</span>
+                        <span className="luxChip">PDF institucional</span>
+                      </div>
+                    </div>
+
                     <textarea
-                      className="whats luxWhats"
+                      className="whats luxWhats luxWhatsPremium"
                       value={mensagemWhatsApp}
                       onChange={() => {}}
                       readOnly
                     />
 
-                    <div className="luxActions">
-                      <button type="button" className="btn" onClick={copiarMensagem}>
-                        {copiado ? "Copiado!" : "Copiar texto"}
+                    <div className="luxActions luxResultActions">
+                      <button type="button" className="btn luxActionPrimary" onClick={copiarMensagem}>
+                        {copiado ? "Copiado!" : "Copiar mensagem"}
                       </button>
 
-                      <button type="button" className="btn btnGhost" onClick={gerarPdf}>
-                        Gerar PDF Pro
+                      <button type="button" className="btn btnGhost luxActionSecondary" onClick={gerarPdf}>
+                        Gerar PDF
                       </button>
 
-                      <span className="luxHint">
+                      <span className="luxHint luxResultHint">
                         INCC até entrega • IPCA após entrega
                       </span>
                     </div>
 
-                    <div className="foot">
+                    <div className="foot luxResultFoot">
                       Próximas evoluções: histórico de simulações • modos de atendimento
                       • propostas comerciais avançadas
                     </div>
@@ -2648,27 +2884,27 @@ export default function Simulador() {
                     <h2 className="luxH2">Mensagem pronta para envio</h2>
 
                     <textarea
-                      className="whats luxWhats"
+                      className="whats luxWhats luxWhatsPremium"
                       value={mensagemWhatsApp}
                       onChange={() => {}}
                       readOnly
                     />
 
-                    <div className="luxActions">
-                      <button type="button" className="btn" onClick={copiarMensagem}>
-                        {copiado ? "Copiado!" : "Copiar texto"}
+                    <div className="luxActions luxResultActions">
+                      <button type="button" className="btn luxActionPrimary" onClick={copiarMensagem}>
+                        {copiado ? "Copiado!" : "Copiar mensagem"}
                       </button>
 
-                      <button type="button" className="btn btnGhost" onClick={gerarPdf}>
-                        Gerar PDF Pro
+                      <button type="button" className="btn btnGhost luxActionSecondary" onClick={gerarPdf}>
+                        Gerar PDF
                       </button>
 
-                      <span className="luxHint">
+                      <span className="luxHint luxResultHint">
                         INCC até entrega • IPCA após entrega
                       </span>
                     </div>
 
-                    <div className="foot">
+                    <div className="foot luxResultFoot">
                       Evolução atual: base pronta para proposta e contra-proposta dentro
                       do mesmo sistema.
                     </div>
@@ -2677,6 +2913,77 @@ export default function Simulador() {
               </div>
             </>
           )}
+            </div>
+
+            <aside className="luxSidebar">
+              <section className="luxFlowPanel">
+                <div className="luxFlowHead">
+                  <div className="luxKicker">Painel lateral</div>
+                  <h2 className="luxH2">FlowPanel</h2>
+                  <p className="luxFlowText">
+                    Ordem real do cálculo: valor total, entrada, saldo final,
+                    permuta, veículo e base final para mensais e balões.
+                  </p>
+                </div>
+
+                <div className="luxFlowList">
+                  {flowItems.map((item, index) => (
+                    <div
+                      key={`${item.label}-${index}`}
+                      className={["luxFlowItem", item.tone].join(" ").trim()}
+                    >
+                      <div className="luxFlowBadge">{index + 1}</div>
+                      <div className="luxFlowBody">
+                        <div className="luxFlowLabel">{item.label}</div>
+                        <div className="luxFlowValue">{item.value}</div>
+                        <div className="luxFlowHint">{item.hint}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="luxFlowPanel luxFlowPanelSoft">
+                <div className="luxFlowHead">
+                  <div className="luxKicker">Seleção atual</div>
+                  <h2 className="luxH2">Lotes escolhidos</h2>
+                </div>
+
+                <div className="luxChipRow">
+                  {lotesSelecionadosResumo.length > 0 ? (
+                    lotesSelecionadosResumo.map((item) => (
+                      <span key={item.key} className="luxChip">
+                        {item.label}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="luxFlowEmpty">
+                      Nenhum lote selecionado até o momento.
+                    </span>
+                  )}
+                </div>
+
+                <div className="luxFlowMeta">
+                  <div className="luxFlowMetaItem">
+                    <span className="luxFlowMetaLabel">Modo</span>
+                    <strong>{modoDocumento}</strong>
+                  </div>
+                  <div className="luxFlowMetaItem">
+                    <span className="luxFlowMetaLabel">Cliente</span>
+                    <strong>{cliente || "Não informado"}</strong>
+                  </div>
+                  <div className="luxFlowMetaItem">
+                    <span className="luxFlowMetaLabel">Saída</span>
+                    <strong>
+                      {modoDocumento === "simulacao"
+                        ? "Mensagem + PDF"
+                        : "PDF institucional"}
+                    </strong>
+                  </div>
+                </div>
+              </section>
+            </aside>
+          </div>
         </main>
       </div>
     </div>
