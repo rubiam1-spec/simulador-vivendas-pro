@@ -85,22 +85,23 @@ type ContrapropostaNormalizada = {
 }
 
 const PAGE_WIDTH = 595
-const HEADER_HEIGHT = 74
-const PAGE_START_Y = 142
+const HEADER_HEIGHT = 108
+const PAGE_START_Y = 176
 const CONTENT_LEFT = 42
 const CONTENT_WIDTH = 511
-const CONTENT_BOTTOM = 780
+const CONTENT_BOTTOM = 748
 const FOOTER_Y = 812
-const SECTION_TITLE_HEIGHT = 20
-const SECTION_BODY_GAP = 10
-const SECTION_HEADER_GAP = 30
-const FIELD_GAP = 11
-const DEFAULT_FIELD_MIN_HEIGHT = 42
-const TEXT_PADDING_X = 10
-const TEXT_PADDING_TOP = 22
+const SECTION_TITLE_HEIGHT = 24
+const SECTION_BODY_GAP = 12
+const SECTION_HEADER_GAP = 34
+const FIELD_GAP = 12
+const DEFAULT_FIELD_MIN_HEIGHT = 46
+const TEXT_PADDING_X = 12
+const TEXT_PADDING_TOP = 24
 const TEXT_LINE_HEIGHT = 14
-const TEXT_SECTION_MIN_BOX_HEIGHT = 58
-const SECTION_SPACING = 14
+const TEXT_SECTION_MIN_BOX_HEIGHT = 64
+const SECTION_SPACING = 18
+const SIGNATURE_SECTION_HEIGHT = 118
 
 export type PdfPropostaPayload = IdentificacaoPdf & {
   data: string
@@ -477,33 +478,66 @@ function createDocument(meta: LayoutMeta) {
   return doc
 }
 
+function addLogo(
+  doc: jsPDF,
+  imageData: string,
+  format: "PNG" | "JPEG",
+  x: number,
+  y: number,
+  maxWidth: number,
+  maxHeight: number
+) {
+  const properties = doc.getImageProperties(imageData)
+  const sourceWidth = properties.width || maxWidth
+  const sourceHeight = properties.height || maxHeight
+  const ratio = Math.min(maxWidth / sourceWidth, maxHeight / sourceHeight)
+  const width = sourceWidth * ratio
+  const height = sourceHeight * ratio
+  const drawX = x + (maxWidth - width) / 2
+  const drawY = y + (maxHeight - height) / 2
+
+  doc.addImage(imageData, format, drawX, drawY, width, height)
+}
+
 function renderPageFrame(doc: jsPDF, meta: LayoutMeta) {
   doc.setFillColor(22, 49, 39)
   doc.rect(0, 0, PAGE_WIDTH, HEADER_HEIGHT, "F")
 
   try {
-    doc.addImage(logoVivendas, "PNG", 42, 18, 110, 34)
-    doc.addImage(logoBomm, "PNG", 478, 20, 72, 28)
+    addLogo(doc, logoVivendas, "PNG", 42, 18, 116, 42)
+    addLogo(doc, logoBomm, "PNG", 445, 18, 108, 42)
   } catch {
     doc.setTextColor(255, 255, 255)
     doc.setFont("helvetica", "bold")
     doc.setFontSize(18)
-    doc.text("Vivendas do Bosque", 42, 38)
-    doc.text("BOMM", 500, 38)
+    doc.text("Vivendas do Bosque", 42, 42)
+    doc.text("BOMM", 500, 42)
   }
+
+  doc.setDrawColor(206, 214, 210)
+  doc.setLineWidth(1)
+  doc.line(CONTENT_LEFT, HEADER_HEIGHT - 16, PAGE_WIDTH - CONTENT_LEFT, HEADER_HEIGHT - 16)
+
+  doc.setFont("helvetica", "normal")
+  doc.setFontSize(9)
+  doc.setTextColor(232, 238, 235)
+  doc.text("VIVENDAS DO BOSQUE", PAGE_WIDTH / 2, 32, { align: "center" })
 
   doc.setTextColor(22, 49, 39)
   doc.setFont("helvetica", "bold")
-  doc.setFontSize(18)
-  doc.text(meta.titulo, 42, 98)
+  doc.setFontSize(20)
+  doc.text(meta.titulo, PAGE_WIDTH / 2, 130, { align: "center" })
 
   doc.setFont("helvetica", "normal")
   doc.setFontSize(10)
   doc.setTextColor(90, 107, 99)
-  doc.text(`Data do documento: ${safeText(meta.data)}`, 42, 116)
+  doc.text(`Empreendimento: Vivendas do Bosque`, CONTENT_LEFT, 148)
+  doc.text(`Data do documento: ${safeText(meta.data)}`, PAGE_WIDTH - CONTENT_LEFT, 148, {
+    align: "right",
+  })
 
   doc.setDrawColor(206, 214, 210)
-  doc.line(42, 126, 553, 126)
+  doc.line(CONTENT_LEFT, 158, PAGE_WIDTH - CONTENT_LEFT, 158)
 
   doc.setFont("helvetica", "normal")
   doc.setFontSize(8)
@@ -529,13 +563,21 @@ function ensureSpace(doc: jsPDF, y: number, requiredHeight: number, meta: Layout
   return startNewPage(doc, meta)
 }
 
+function startSecondaryPage(doc: jsPDF, meta: LayoutMeta, currentY: number) {
+  if (currentY <= PAGE_START_Y + 12) {
+    return currentY
+  }
+
+  return startNewPage(doc, meta)
+}
+
 function drawSectionTitle(doc: jsPDF, title: string, y: number) {
-  doc.setFillColor(240, 244, 242)
-  doc.roundedRect(CONTENT_LEFT, y, CONTENT_WIDTH, SECTION_TITLE_HEIGHT, 6, 6, "F")
+  doc.setFillColor(236, 242, 239)
+  doc.roundedRect(CONTENT_LEFT, y, CONTENT_WIDTH, SECTION_TITLE_HEIGHT, 7, 7, "F")
   doc.setTextColor(22, 49, 39)
   doc.setFont("helvetica", "bold")
-  doc.setFontSize(10)
-  doc.text(title.toUpperCase(), CONTENT_LEFT + 12, y + 13)
+  doc.setFontSize(11)
+  doc.text(title.toUpperCase(), CONTENT_LEFT + 14, y + 16)
 }
 
 function getRowMetrics(
@@ -549,7 +591,7 @@ function getRowMetrics(
     forcedHeights ||
     fields.map((field) => {
       const linhas = doc.splitTextToSize(safeText(field.value), fieldWidth - TEXT_PADDING_X * 2) as string[]
-      return Math.max(DEFAULT_FIELD_MIN_HEIGHT, 28 + linhas.length * 12)
+      return Math.max(DEFAULT_FIELD_MIN_HEIGHT, 30 + linhas.length * 12)
     })
 
   return {
@@ -568,13 +610,13 @@ function drawFieldBox(
   field: Field
 ) {
   doc.setDrawColor(198, 206, 202)
-  doc.setFillColor(255, 255, 255)
+  doc.setFillColor(252, 253, 252)
   doc.roundedRect(x, y, width, height, 5, 5, "FD")
 
   doc.setFont("helvetica", "bold")
   doc.setFontSize(8)
-  doc.setTextColor(99, 114, 107)
-  doc.text(field.label.toUpperCase(), x + TEXT_PADDING_X, y + 12)
+  doc.setTextColor(92, 107, 100)
+  doc.text(field.label.toUpperCase(), x + TEXT_PADDING_X, y + 13)
 
   doc.setFont("helvetica", "normal")
   doc.setFontSize(10)
@@ -585,7 +627,7 @@ function drawFieldBox(
     width - TEXT_PADDING_X * 2
   ) as string[]
 
-  doc.text(linhas, x + TEXT_PADDING_X, y + 27)
+  doc.text(linhas, x + TEXT_PADDING_X, y + 29)
 }
 
 function drawFieldRow(
@@ -670,8 +712,8 @@ function drawTextSection(
     currentY += SECTION_HEADER_GAP
 
     doc.setDrawColor(198, 206, 202)
-    doc.setFillColor(255, 255, 255)
-    doc.roundedRect(CONTENT_LEFT, currentY, CONTENT_WIDTH, boxHeight, 5, 5, "FD")
+    doc.setFillColor(252, 253, 252)
+    doc.roundedRect(CONTENT_LEFT, currentY, CONTENT_WIDTH, boxHeight, 6, 6, "FD")
 
     doc.setFont("helvetica", "normal")
     doc.setFontSize(10)
@@ -833,6 +875,35 @@ function drawPermutaSection(
   return currentY + 4
 }
 
+function drawSignatureSection(doc: jsPDF, y: number, meta: LayoutMeta) {
+  let currentY = ensureSpace(doc, y + 8, SIGNATURE_SECTION_HEIGHT, meta)
+
+  drawSectionTitle(doc, "Assinaturas", currentY)
+  currentY += 44
+
+  const lineY = currentY + 26
+  const assinaturaWidth = 146
+  const gap = 36
+  const startX = CONTENT_LEFT
+
+  ;[
+    { label: "Cliente", x: startX },
+    { label: "Corretor", x: startX + assinaturaWidth + gap },
+    { label: "BOMM Urbanizadora", x: startX + (assinaturaWidth + gap) * 2 },
+  ].forEach((assinatura) => {
+    doc.setDrawColor(146, 158, 152)
+    doc.line(assinatura.x, lineY, assinatura.x + assinaturaWidth, lineY)
+    doc.setFont("helvetica", "bold")
+    doc.setFontSize(9)
+    doc.setTextColor(72, 86, 80)
+    doc.text(assinatura.label, assinatura.x + assinaturaWidth / 2, lineY + 14, {
+      align: "center",
+    })
+  })
+
+  return currentY + 42
+}
+
 function drawProposalLayout(doc: jsPDF, dados: PropostaNormalizada) {
   let y = PAGE_START_Y
 
@@ -841,8 +912,10 @@ function drawProposalLayout(doc: jsPDF, dados: PropostaNormalizada) {
   y = drawCorretorSection(doc, y, dados.identificacao, dados.meta)
   y = drawCondicaoPropostaSection(doc, y, dados.condicao, dados.meta)
   y = drawPermutaSection(doc, y, dados.permuta, dados.meta)
+  y = startSecondaryPage(doc, dados.meta, y)
   y = drawTextSection(doc, y, "Detalhes da Negociação", dados.detalhesNegociacao, dados.meta)
-  drawTextSection(doc, y, "Observação", dados.observacao, dados.meta)
+  y = drawTextSection(doc, y, "Observação", dados.observacao, dados.meta)
+  drawSignatureSection(doc, y, dados.meta)
 }
 
 function drawContrapropostaLayout(doc: jsPDF, dados: ContrapropostaNormalizada) {
@@ -853,8 +926,10 @@ function drawContrapropostaLayout(doc: jsPDF, dados: ContrapropostaNormalizada) 
   y = drawCorretorSection(doc, y, dados.identificacao, dados.meta)
   y = drawCondicaoContrapropostaSection(doc, y, dados.condicao, dados.meta)
   y = drawPermutaSection(doc, y, dados.permuta, dados.meta)
+  y = startSecondaryPage(doc, dados.meta, y)
   y = drawTextSection(doc, y, "Detalhes da Negociação", dados.detalhesNegociacao, dados.meta)
-  drawTextSection(doc, y, "Observação", dados.observacao, dados.meta)
+  y = drawTextSection(doc, y, "Observação", dados.observacao, dados.meta)
+  drawSignatureSection(doc, y, dados.meta)
 }
 
 export function gerarPdfProposta(dados: PdfPropostaPayload) {
