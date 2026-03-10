@@ -78,6 +78,7 @@ export type PdfContrapropostaPayload = IdentificacaoPdf & {
     descricao: string
   }
   observacao?: string
+  detalhesNegociacao?: string | string[]
 }
 
 function texto(valor?: string) {
@@ -115,20 +116,27 @@ function resolverDadosLote(payload: {
   }
 }
 
-function resolverObservacao(
-  observacao?: string,
-  detalheExtra?: string | string[]
-) {
-  const principal = (observacao || "").trim()
-  if (principal) return principal
+function normalizarTextoLongo(valor?: string | string[]) {
+  if (Array.isArray(valor)) {
+    const linhas = valor.map((linha) => linha.replace(/\s+$/, ""))
 
-  if (Array.isArray(detalheExtra)) {
-    const linhas = detalheExtra.map((linha) => linha.trim()).filter(Boolean)
-    return linhas.length ? linhas.join("\n") : "-"
+    while (linhas.length && !linhas[0].trim()) {
+      linhas.shift()
+    }
+
+    while (linhas.length && !linhas[linhas.length - 1].trim()) {
+      linhas.pop()
+    }
+
+    return linhas.join("\n").trim()
   }
 
-  const detalhe = (detalheExtra || "").trim()
-  return detalhe || "-"
+  return (valor || "").trim()
+}
+
+function temConteudoTexto(valor?: string | string[]) {
+  const textoLongo = normalizarTextoLongo(valor)
+  return Boolean(textoLongo && textoLongo !== "-")
 }
 
 function addPageChrome(doc: jsPDF, titulo: string, data: string) {
@@ -215,17 +223,6 @@ function drawFieldRow(
   })
 }
 
-function drawObservationBox(doc: jsPDF, y: number, text: string, height: number) {
-  doc.setDrawColor(198, 206, 202)
-  doc.setFillColor(255, 255, 255)
-  doc.roundedRect(42, y, 511, height, 5, 5, "FD")
-
-  doc.setFont("helvetica", "normal")
-  doc.setFontSize(10)
-  doc.setTextColor(35, 43, 39)
-  doc.text(doc.splitTextToSize(texto(text), 491), 52, y + 22)
-}
-
 function drawDadosLote(
   doc: jsPDF,
   y: number,
@@ -289,11 +286,65 @@ function drawPermuta(
   return y + 74
 }
 
-function drawObservacao(doc: jsPDF, y: number, observacao: string) {
-  drawSectionTitle(doc, "Observação", y)
-  y += 30
-  drawObservationBox(doc, y, observacao, 90)
-  return y + 104
+function ensureTextSectionSpace(
+  doc: jsPDF,
+  y: number,
+  requiredHeight: number,
+  tituloDocumento: string,
+  dataDocumento: string
+) {
+  if (y + requiredHeight <= 780) {
+    return y
+  }
+
+  doc.addPage()
+  addPageChrome(doc, tituloDocumento, dataDocumento)
+  return 142
+}
+
+function drawTextSection(
+  doc: jsPDF,
+  y: number,
+  sectionTitle: string,
+  content: string | string[] | undefined,
+  tituloDocumento: string,
+  dataDocumento: string
+) {
+  if (!temConteudoTexto(content)) {
+    return y
+  }
+
+  const textoBloco = normalizarTextoLongo(content)
+  const lineHeight = 14
+  const linhas = doc.splitTextToSize(textoBloco, 491) as string[]
+  const linhasPorPagina = 43
+  let indice = 0
+
+  while (indice < linhas.length) {
+    const restantes = linhas.length - indice
+    const quantidadeLinhas = Math.min(restantes, linhasPorPagina)
+    const alturaBox = Math.max(58, 24 + quantidadeLinhas * lineHeight)
+    const alturaSecao = 30 + alturaBox + 14
+
+    y = ensureTextSectionSpace(doc, y, alturaSecao, tituloDocumento, dataDocumento)
+
+    drawSectionTitle(doc, sectionTitle, y)
+    y += 30
+
+    doc.setDrawColor(198, 206, 202)
+    doc.setFillColor(255, 255, 255)
+    doc.roundedRect(42, y, 511, alturaBox, 5, 5, "FD")
+
+    doc.setFont("helvetica", "normal")
+    doc.setFontSize(10)
+    doc.setTextColor(35, 43, 39)
+    doc.text(linhas.slice(indice, indice + quantidadeLinhas), 52, y + 22)
+
+    indice += quantidadeLinhas
+    y += alturaBox + 14
+  }
+
+  return y
 }
 
 function createDocument(titulo: string, data: string) {
@@ -308,7 +359,8 @@ function createDocument(titulo: string, data: string) {
 
 export function gerarPdfProposta(dados: PdfPropostaPayload) {
   const doc = createDocument("TERMO DE PROPOSTA", dados.data)
-  const observacao = resolverObservacao(dados.observacao, dados.detalhesNegociacao)
+  const observacao = normalizarTextoLongo(dados.observacao)
+  const detalhesNegociacao = normalizarTextoLongo(dados.detalhesNegociacao)
 
   let y = 142
   y = drawDadosLote(doc, y, dados)
@@ -339,7 +391,22 @@ export function gerarPdfProposta(dados: PdfPropostaPayload) {
   y += 60
 
   y = drawPermuta(doc, y, "Permuta", dados.permuta)
-  drawObservacao(doc, y, observacao)
+  y = drawTextSection(
+    doc,
+    y,
+    "Detalhes da Negociação",
+    detalhesNegociacao,
+    "TERMO DE PROPOSTA",
+    dados.data
+  )
+  y = drawTextSection(
+    doc,
+    y,
+    "Observação",
+    observacao,
+    "TERMO DE PROPOSTA",
+    dados.data
+  )
 
   addFooter(doc)
   doc.save("proposta-vivendas.pdf")
@@ -347,7 +414,8 @@ export function gerarPdfProposta(dados: PdfPropostaPayload) {
 
 export function gerarPdfContraproposta(dados: PdfContrapropostaPayload) {
   const doc = createDocument("TERMO DE CONTRAPROPOSTA", dados.data)
-  const observacao = resolverObservacao(dados.observacao)
+  const observacao = normalizarTextoLongo(dados.observacao)
+  const detalhesNegociacao = normalizarTextoLongo(dados.detalhesNegociacao)
 
   let y = 142
   y = drawDadosLote(doc, y, dados)
@@ -375,7 +443,22 @@ export function gerarPdfContraproposta(dados: PdfContrapropostaPayload) {
   y += 58
 
   y = drawPermuta(doc, y, "Permuta Aceita", dados.permuta)
-  drawObservacao(doc, y, observacao)
+  y = drawTextSection(
+    doc,
+    y,
+    "Detalhes da Negociação",
+    detalhesNegociacao,
+    "TERMO DE CONTRAPROPOSTA",
+    dados.data
+  )
+  y = drawTextSection(
+    doc,
+    y,
+    "Observação",
+    observacao,
+    "TERMO DE CONTRAPROPOSTA",
+    dados.data
+  )
 
   addFooter(doc)
   doc.save("contraproposta-vivendas.pdf")

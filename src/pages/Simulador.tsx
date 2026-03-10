@@ -757,11 +757,9 @@ export default function Simulador() {
   function gerarPdf() {
     if (modoDocumento === "proposta") {
       const dataPdf = propostaCliente.data || dataAtualInput();
-      const detalhesNegociacao = [...resumoPropostaCliente.linhas];
-
-      if (propostaCliente.observacoes) {
-        detalhesNegociacao.push(`Observações: ${propostaCliente.observacoes}`);
-      }
+      const detalhesNegociacao = resumoPropostaCliente.linhas.filter(
+        (linha) => !linha.trim().toLowerCase().startsWith("observa")
+      );
 
       gerarPdfProposta({
         data: dataPdf,
@@ -848,6 +846,9 @@ export default function Simulador() {
             }
           : undefined,
         observacao: contrapropostaBomm.observacoes || "-",
+        detalhesNegociacao: resumoContraproposta.linhas.filter(
+          (linha) => !linha.trim().toLowerCase().startsWith("observa")
+        ),
       });
       return;
     }
