@@ -85,8 +85,9 @@ type ContrapropostaNormalizada = {
 }
 
 const PAGE_WIDTH = 595
-const HEADER_HEIGHT = 108
-const PAGE_START_Y = 176
+const PAGE_HEIGHT = 842
+const HEADER_HEIGHT = 114
+const PAGE_START_Y = 178
 const CONTENT_LEFT = 42
 const CONTENT_WIDTH = 511
 const CONTENT_BOTTOM = 748
@@ -99,9 +100,20 @@ const DEFAULT_FIELD_MIN_HEIGHT = 46
 const TEXT_PADDING_X = 12
 const TEXT_PADDING_TOP = 24
 const TEXT_LINE_HEIGHT = 14
-const TEXT_SECTION_MIN_BOX_HEIGHT = 64
+const TEXT_SECTION_MIN_BOX_HEIGHT = 72
 const SECTION_SPACING = 18
-const SIGNATURE_SECTION_HEIGHT = 118
+const SIGNATURE_SECTION_HEIGHT = 124
+
+const COLORS = {
+  greenDark: [27, 67, 50] as const,
+  greenMid: [45, 106, 79] as const,
+  greenAccent: [82, 183, 136] as const,
+  grayDark: [31, 41, 55] as const,
+  grayMid: [107, 114, 128] as const,
+  grayBorder: [229, 231, 235] as const,
+  cardBg: [249, 250, 251] as const,
+  white: [255, 255, 255] as const,
+}
 
 export type PdfPropostaPayload = IdentificacaoPdf & {
   data: string
@@ -297,8 +309,8 @@ function resolveLotData(payload: {
         : valorPrincipal > 0
           ? cleanString(payload.valor)
           : valorFallback > 0
-          ? consolidado.valorTotal
-          : "-",
+            ? consolidado.valorTotal
+            : "-",
   }
 }
 
@@ -336,10 +348,7 @@ function normalizePermuta(permuta?: { valor: string; descricao: string }): Permu
   return { valor, descricao }
 }
 
-function sanitizeDetails(
-  detalhes?: string | string[],
-  observacao?: string
-) {
+function sanitizeDetails(detalhes?: string | string[], observacao?: string) {
   const textoDetalhes = normalizeLongText(detalhes)
   if (!textoDetalhes || textoDetalhes === "-") {
     return undefined
@@ -468,6 +477,12 @@ function normalizeContrapropostaData(
   }
 }
 
+function setColor(doc: jsPDF, type: "fill" | "draw" | "text", rgb: readonly number[]) {
+  if (type === "fill") doc.setFillColor(rgb[0], rgb[1], rgb[2])
+  if (type === "draw") doc.setDrawColor(rgb[0], rgb[1], rgb[2])
+  if (type === "text") doc.setTextColor(rgb[0], rgb[1], rgb[2])
+}
+
 function createDocument(meta: LayoutMeta) {
   const doc = new jsPDF({
     unit: "pt",
@@ -493,60 +508,73 @@ function addLogo(
   const ratio = Math.min(maxWidth / sourceWidth, maxHeight / sourceHeight)
   const width = sourceWidth * ratio
   const height = sourceHeight * ratio
-  const drawX = x + (maxWidth - width) / 2
-  const drawY = y + (maxHeight - height) / 2
 
-  doc.addImage(imageData, format, drawX, drawY, width, height)
+  doc.addImage(
+    imageData,
+    format,
+    x + (maxWidth - width) / 2,
+    y + (maxHeight - height) / 2,
+    width,
+    height
+  )
 }
 
 function renderPageFrame(doc: jsPDF, meta: LayoutMeta) {
-  doc.setFillColor(22, 49, 39)
+  setColor(doc, "fill", COLORS.white)
+  doc.rect(0, 0, PAGE_WIDTH, PAGE_HEIGHT, "F")
+
+  setColor(doc, "fill", COLORS.greenDark)
   doc.rect(0, 0, PAGE_WIDTH, HEADER_HEIGHT, "F")
 
   try {
-    addLogo(doc, logoVivendas, "PNG", 42, 18, 116, 42)
-    addLogo(doc, logoBomm, "PNG", 445, 18, 108, 42)
+    addLogo(doc, logoVivendas, "PNG", CONTENT_LEFT, 20, 128, 44)
+    addLogo(doc, logoBomm, "PNG", PAGE_WIDTH - CONTENT_LEFT - 118, 20, 118, 44)
   } catch {
-    doc.setTextColor(255, 255, 255)
+    setColor(doc, "text", COLORS.white)
     doc.setFont("helvetica", "bold")
     doc.setFontSize(18)
-    doc.text("Vivendas do Bosque", 42, 42)
-    doc.text("BOMM", 500, 42)
+    doc.text("Vivendas do Bosque", CONTENT_LEFT, 42)
+    doc.text("BOMM", PAGE_WIDTH - CONTENT_LEFT, 42, { align: "right" })
   }
 
-  doc.setDrawColor(206, 214, 210)
-  doc.setLineWidth(1)
-  doc.line(CONTENT_LEFT, HEADER_HEIGHT - 16, PAGE_WIDTH - CONTENT_LEFT, HEADER_HEIGHT - 16)
-
-  doc.setFont("helvetica", "normal")
-  doc.setFontSize(9)
-  doc.setTextColor(232, 238, 235)
-  doc.text("VIVENDAS DO BOSQUE", PAGE_WIDTH / 2, 32, { align: "center" })
-
-  doc.setTextColor(22, 49, 39)
-  doc.setFont("helvetica", "bold")
-  doc.setFontSize(20)
-  doc.text(meta.titulo, PAGE_WIDTH / 2, 130, { align: "center" })
-
+  setColor(doc, "text", COLORS.white)
   doc.setFont("helvetica", "normal")
   doc.setFontSize(10)
-  doc.setTextColor(90, 107, 99)
-  doc.text(`Empreendimento: Vivendas do Bosque`, CONTENT_LEFT, 148)
-  doc.text(`Data do documento: ${safeText(meta.data)}`, PAGE_WIDTH - CONTENT_LEFT, 148, {
+  doc.text("Empreendimento", PAGE_WIDTH / 2, 30, { align: "center" })
+
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(22)
+  doc.text(meta.titulo, PAGE_WIDTH / 2, 58, { align: "center" })
+
+  doc.setFont("helvetica", "normal")
+  doc.setFontSize(11)
+  doc.text("Vivendas do Bosque", PAGE_WIDTH / 2, 78, { align: "center" })
+
+  setColor(doc, "draw", COLORS.greenAccent)
+  doc.setLineWidth(1.1)
+  doc.line(CONTENT_LEFT, HEADER_HEIGHT - 18, PAGE_WIDTH - CONTENT_LEFT, HEADER_HEIGHT - 18)
+
+  setColor(doc, "text", COLORS.grayMid)
+  doc.setFont("helvetica", "normal")
+  doc.setFontSize(10)
+  doc.text("Empreendimento: Vivendas do Bosque", CONTENT_LEFT, 146)
+  doc.text(`Data do documento: ${safeText(meta.data)}`, PAGE_WIDTH - CONTENT_LEFT, 146, {
     align: "right",
   })
 
-  doc.setDrawColor(206, 214, 210)
-  doc.line(CONTENT_LEFT, 158, PAGE_WIDTH - CONTENT_LEFT, 158)
+  setColor(doc, "draw", COLORS.grayBorder)
+  doc.setLineWidth(1)
+  doc.line(CONTENT_LEFT, 156, PAGE_WIDTH - CONTENT_LEFT, 156)
 
   doc.setFont("helvetica", "normal")
-  doc.setFontSize(8)
-  doc.setTextColor(112, 124, 118)
+  doc.setFontSize(7)
+  setColor(doc, "text", COLORS.grayMid)
   doc.text(
     "Parcelas corrigidas por INCC até a entrega e, após a entrega, por IPCA.",
-    42,
+    CONTENT_LEFT,
     FOOTER_Y
   )
+  doc.text("BOMM Urbanizadora", PAGE_WIDTH - CONTENT_LEFT, FOOTER_Y, { align: "right" })
 }
 
 function startNewPage(doc: jsPDF, meta: LayoutMeta) {
@@ -563,35 +591,32 @@ function ensureSpace(doc: jsPDF, y: number, requiredHeight: number, meta: Layout
   return startNewPage(doc, meta)
 }
 
-function startSecondaryPage(doc: jsPDF, meta: LayoutMeta, currentY: number) {
-  if (currentY <= PAGE_START_Y + 12) {
-    return currentY
-  }
-
-  return startNewPage(doc, meta)
-}
-
 function drawSectionTitle(doc: jsPDF, title: string, y: number) {
-  doc.setFillColor(236, 242, 239)
-  doc.roundedRect(CONTENT_LEFT, y, CONTENT_WIDTH, SECTION_TITLE_HEIGHT, 7, 7, "F")
-  doc.setTextColor(22, 49, 39)
+  setColor(doc, "fill", COLORS.cardBg)
+  doc.roundedRect(CONTENT_LEFT, y, CONTENT_WIDTH, SECTION_TITLE_HEIGHT, 8, 8, "F")
+  setColor(doc, "draw", COLORS.greenAccent)
+  doc.setLineWidth(1)
+  doc.line(CONTENT_LEFT, y + SECTION_TITLE_HEIGHT, CONTENT_LEFT + 70, y + SECTION_TITLE_HEIGHT)
+  setColor(doc, "text", COLORS.greenDark)
   doc.setFont("helvetica", "bold")
   doc.setFontSize(11)
   doc.text(title.toUpperCase(), CONTENT_LEFT + 14, y + 16)
 }
 
-function getRowMetrics(
-  doc: jsPDF,
-  fields: Field[],
-  forcedHeights?: number[]
-) {
+function drawCard(doc: jsPDF, x: number, y: number, width: number, height: number) {
+  setColor(doc, "draw", COLORS.grayBorder)
+  setColor(doc, "fill", COLORS.cardBg)
+  doc.roundedRect(x, y, width, height, 8, 8, "FD")
+}
+
+function getRowMetrics(doc: jsPDF, fields: Field[], forcedHeights?: number[]) {
   const totalGap = FIELD_GAP * (fields.length - 1)
   const fieldWidth = (CONTENT_WIDTH - totalGap) / fields.length
   const heights =
     forcedHeights ||
     fields.map((field) => {
       const linhas = doc.splitTextToSize(safeText(field.value), fieldWidth - TEXT_PADDING_X * 2) as string[]
-      return Math.max(DEFAULT_FIELD_MIN_HEIGHT, 30 + linhas.length * 12)
+      return Math.max(DEFAULT_FIELD_MIN_HEIGHT, 32 + linhas.length * 12)
     })
 
   return {
@@ -609,25 +634,19 @@ function drawFieldBox(
   height: number,
   field: Field
 ) {
-  doc.setDrawColor(198, 206, 202)
-  doc.setFillColor(252, 253, 252)
-  doc.roundedRect(x, y, width, height, 5, 5, "FD")
+  drawCard(doc, x, y, width, height)
 
   doc.setFont("helvetica", "bold")
-  doc.setFontSize(8)
-  doc.setTextColor(92, 107, 100)
-  doc.text(field.label.toUpperCase(), x + TEXT_PADDING_X, y + 13)
+  doc.setFontSize(7.5)
+  setColor(doc, "text", COLORS.grayMid)
+  doc.text(field.label.toUpperCase(), x + TEXT_PADDING_X, y + 14)
 
   doc.setFont("helvetica", "normal")
-  doc.setFontSize(10)
-  doc.setTextColor(35, 43, 39)
+  doc.setFontSize(9.5)
+  setColor(doc, "text", COLORS.grayDark)
 
-  const linhas = doc.splitTextToSize(
-    safeText(field.value),
-    width - TEXT_PADDING_X * 2
-  ) as string[]
-
-  doc.text(linhas, x + TEXT_PADDING_X, y + 29)
+  const linhas = doc.splitTextToSize(safeText(field.value), width - TEXT_PADDING_X * 2) as string[]
+  doc.text(linhas, x + TEXT_PADDING_X, y + 31)
 }
 
 function drawFieldRow(
@@ -700,24 +719,17 @@ function drawTextSection(
     )
 
     const availableBoxHeight = CONTENT_BOTTOM - (currentY + SECTION_HEADER_GAP)
-    const maxLines = Math.max(
-      1,
-      Math.floor((availableBoxHeight - 24) / TEXT_LINE_HEIGHT)
-    )
-    const chunkSize = Math.min(linhas.length - indice, maxLines)
-    const chunk = linhas.slice(indice, indice + chunkSize)
-    const boxHeight = Math.max(TEXT_SECTION_MIN_BOX_HEIGHT, 24 + chunk.length * TEXT_LINE_HEIGHT)
+    const maxLines = Math.max(1, Math.floor((availableBoxHeight - 28) / TEXT_LINE_HEIGHT))
+    const chunk = linhas.slice(indice, indice + maxLines)
+    const boxHeight = Math.max(TEXT_SECTION_MIN_BOX_HEIGHT, 28 + chunk.length * TEXT_LINE_HEIGHT)
 
     drawSectionTitle(doc, title, currentY)
     currentY += SECTION_HEADER_GAP
-
-    doc.setDrawColor(198, 206, 202)
-    doc.setFillColor(252, 253, 252)
-    doc.roundedRect(CONTENT_LEFT, currentY, CONTENT_WIDTH, boxHeight, 6, 6, "FD")
+    drawCard(doc, CONTENT_LEFT, currentY, CONTENT_WIDTH, boxHeight)
 
     doc.setFont("helvetica", "normal")
-    doc.setFontSize(10)
-    doc.setTextColor(35, 43, 39)
+    doc.setFontSize(9)
+    setColor(doc, "text", COLORS.grayDark)
     doc.text(chunk, CONTENT_LEFT + TEXT_PADDING_X, currentY + TEXT_PADDING_TOP)
 
     indice += chunk.length
@@ -727,8 +739,22 @@ function drawTextSection(
   return currentY
 }
 
+function drawExecutiveSummary(doc: jsPDF, y: number, fields: Field[], meta: LayoutMeta) {
+  let currentY = ensureSpace(doc, y, 116, meta)
+
+  drawSectionTitle(doc, "Resumo Executivo", currentY)
+  currentY += SECTION_HEADER_GAP
+  currentY = drawFieldRow(doc, currentY, fields.slice(0, 3), meta, [52, 52, 52])
+
+  if (fields.length > 3) {
+    currentY = drawFieldRow(doc, currentY, fields.slice(3), meta)
+  }
+
+  return currentY + 8
+}
+
 function drawLoteSection(doc: jsPDF, y: number, lote: DadosLoteNormalizados, meta: LayoutMeta) {
-  let currentY = ensureSpace(doc, y, 88, meta)
+  let currentY = ensureSpace(doc, y, 96, meta)
 
   drawSectionTitle(doc, "Dados do Lote", currentY)
   currentY += SECTION_HEADER_GAP
@@ -742,10 +768,10 @@ function drawLoteSection(doc: jsPDF, y: number, lote: DadosLoteNormalizados, met
       { label: "Valor Total", value: lote.valor },
     ],
     meta,
-    [44, 44, 44, 44]
+    [50, 50, 50, 50]
   )
 
-  return currentY + 4
+  return currentY + 8
 }
 
 function drawClienteSection(
@@ -754,7 +780,7 @@ function drawClienteSection(
   identificacao: IdentificacaoNormalizada,
   meta: LayoutMeta
 ) {
-  let currentY = ensureSpace(doc, y, 178, meta)
+  let currentY = ensureSpace(doc, y, 192, meta)
 
   drawSectionTitle(doc, "Identificação do Cliente", currentY)
   currentY += SECTION_HEADER_GAP
@@ -786,7 +812,7 @@ function drawClienteSection(
     meta
   )
 
-  return currentY + 4
+  return currentY + 8
 }
 
 function drawCorretorSection(
@@ -795,7 +821,7 @@ function drawCorretorSection(
   identificacao: IdentificacaoNormalizada,
   meta: LayoutMeta
 ) {
-  let currentY = ensureSpace(doc, y, 88, meta)
+  let currentY = ensureSpace(doc, y, 96, meta)
 
   drawSectionTitle(doc, "Identificação do Corretor", currentY)
   currentY += SECTION_HEADER_GAP
@@ -810,7 +836,7 @@ function drawCorretorSection(
     meta
   )
 
-  return currentY + 4
+  return currentY + 8
 }
 
 function drawCondicaoPropostaSection(
@@ -819,15 +845,15 @@ function drawCondicaoPropostaSection(
   condicao: CondicaoPropostaNormalizada,
   meta: LayoutMeta
 ) {
-  let currentY = ensureSpace(doc, y, 190, meta)
+  let currentY = ensureSpace(doc, y, 220, meta)
 
   drawSectionTitle(doc, "Condição Financeira", currentY)
   currentY += SECTION_HEADER_GAP
-  currentY = drawFieldRow(doc, currentY, condicao.entrada, meta, [44, 44, 44, 44])
+  currentY = drawFieldRow(doc, currentY, condicao.entrada, meta, [54, 54, 54, 54])
   currentY = drawFieldRow(doc, currentY, condicao.mensais, meta)
-  currentY = drawFieldRow(doc, currentY, condicao.balao, meta, [44, 44, 44, 44])
+  currentY = drawFieldRow(doc, currentY, condicao.balao, meta, [54, 54, 54, 54])
 
-  return currentY + 4
+  return currentY + 8
 }
 
 function drawCondicaoContrapropostaSection(
@@ -836,7 +862,7 @@ function drawCondicaoContrapropostaSection(
   condicao: CondicaoContrapropostaNormalizada,
   meta: LayoutMeta
 ) {
-  let currentY = ensureSpace(doc, y, 160, meta)
+  let currentY = ensureSpace(doc, y, 194, meta)
 
   drawSectionTitle(doc, "Condição Financeira", currentY)
   currentY += SECTION_HEADER_GAP
@@ -844,7 +870,7 @@ function drawCondicaoContrapropostaSection(
   currentY = drawFieldRow(doc, currentY, condicao.mensais, meta)
   currentY = drawFieldRow(doc, currentY, condicao.balao, meta)
 
-  return currentY + 4
+  return currentY + 8
 }
 
 function drawPermutaSection(
@@ -857,7 +883,7 @@ function drawPermutaSection(
     return y
   }
 
-  let currentY = ensureSpace(doc, y, 106, meta)
+  let currentY = ensureSpace(doc, y, 118, meta)
 
   drawSectionTitle(doc, "Permuta", currentY)
   currentY += SECTION_HEADER_GAP
@@ -869,50 +895,83 @@ function drawPermutaSection(
       { label: "Descrição da Permuta", value: permuta.descricao },
     ],
     meta,
-    [44, 60]
+    [54, 72]
   )
 
-  return currentY + 4
+  return currentY + 8
+}
+
+function drawNumberSummary(doc: jsPDF, y: number, fields: Field[], meta: LayoutMeta) {
+  let currentY = ensureSpace(doc, y, 110, meta)
+
+  drawSectionTitle(doc, "Principais Números", currentY)
+  currentY += SECTION_HEADER_GAP
+  currentY = drawFieldRow(doc, currentY, fields, meta)
+  return currentY + 8
 }
 
 function drawSignatureSection(doc: jsPDF, y: number, meta: LayoutMeta) {
   let currentY = ensureSpace(doc, y + 8, SIGNATURE_SECTION_HEIGHT, meta)
 
   drawSectionTitle(doc, "Assinaturas", currentY)
-  currentY += 44
+  currentY += 48
 
-  const lineY = currentY + 26
+  const lineY = currentY + 28
   const assinaturaWidth = 146
   const gap = 36
   const startX = CONTENT_LEFT
 
   ;[
-    { label: "Cliente", x: startX },
+    { label: "Cliente / Proponente", x: startX },
     { label: "Corretor", x: startX + assinaturaWidth + gap },
     { label: "BOMM Urbanizadora", x: startX + (assinaturaWidth + gap) * 2 },
   ].forEach((assinatura) => {
-    doc.setDrawColor(146, 158, 152)
+    setColor(doc, "draw", COLORS.grayMid)
     doc.line(assinatura.x, lineY, assinatura.x + assinaturaWidth, lineY)
     doc.setFont("helvetica", "bold")
-    doc.setFontSize(9)
-    doc.setTextColor(72, 86, 80)
+    doc.setFontSize(8.5)
+    setColor(doc, "text", COLORS.grayDark)
     doc.text(assinatura.label, assinatura.x + assinaturaWidth / 2, lineY + 14, {
       align: "center",
     })
   })
 
-  return currentY + 42
+  return currentY + 48
 }
 
 function drawProposalLayout(doc: jsPDF, dados: PropostaNormalizada) {
   let y = PAGE_START_Y
 
+  y = drawExecutiveSummary(
+    doc,
+    y,
+    [
+      { label: "Valor Total", value: dados.lote.valor },
+      { label: "Entrada", value: dados.condicao.entrada[0]?.value || "-" },
+      { label: "Mensais", value: dados.condicao.mensais[1]?.value || "-" },
+      { label: "Balão", value: dados.condicao.balao[2]?.value || "-" },
+    ],
+    dados.meta
+  )
   y = drawLoteSection(doc, y, dados.lote, dados.meta)
   y = drawClienteSection(doc, y, dados.identificacao, dados.meta)
   y = drawCorretorSection(doc, y, dados.identificacao, dados.meta)
+
+  y = startNewPage(doc, dados.meta)
   y = drawCondicaoPropostaSection(doc, y, dados.condicao, dados.meta)
   y = drawPermutaSection(doc, y, dados.permuta, dados.meta)
-  y = startSecondaryPage(doc, dados.meta, y)
+  y = drawNumberSummary(
+    doc,
+    y,
+    [
+      { label: "Entrada Total", value: dados.condicao.entrada[0]?.value || "-" },
+      { label: "Mensais", value: dados.condicao.mensais[1]?.value || "-" },
+      { label: "Balão", value: dados.condicao.balao[2]?.value || "-" },
+    ],
+    dados.meta
+  )
+
+  y = startNewPage(doc, dados.meta)
   y = drawTextSection(doc, y, "Detalhes da Negociação", dados.detalhesNegociacao, dados.meta)
   y = drawTextSection(doc, y, "Observação", dados.observacao, dados.meta)
   drawSignatureSection(doc, y, dados.meta)
@@ -921,12 +980,36 @@ function drawProposalLayout(doc: jsPDF, dados: PropostaNormalizada) {
 function drawContrapropostaLayout(doc: jsPDF, dados: ContrapropostaNormalizada) {
   let y = PAGE_START_Y
 
+  y = drawExecutiveSummary(
+    doc,
+    y,
+    [
+      { label: "Valor do Negócio", value: dados.lote.valor },
+      { label: "Valor Aprovado", value: dados.condicao.aprovacao[0]?.value || "-" },
+      { label: "Entrada", value: dados.condicao.aprovacao[1]?.value || "-" },
+      { label: "Validade", value: dados.condicao.mensais[2]?.value || "-" },
+    ],
+    dados.meta
+  )
   y = drawLoteSection(doc, y, dados.lote, dados.meta)
   y = drawClienteSection(doc, y, dados.identificacao, dados.meta)
   y = drawCorretorSection(doc, y, dados.identificacao, dados.meta)
+
+  y = startNewPage(doc, dados.meta)
   y = drawCondicaoContrapropostaSection(doc, y, dados.condicao, dados.meta)
   y = drawPermutaSection(doc, y, dados.permuta, dados.meta)
-  y = startSecondaryPage(doc, dados.meta, y)
+  y = drawNumberSummary(
+    doc,
+    y,
+    [
+      { label: "Valor Aprovado", value: dados.condicao.aprovacao[0]?.value || "-" },
+      { label: "Mensais", value: dados.condicao.mensais[1]?.value || "-" },
+      { label: "Balão", value: dados.condicao.balao[2]?.value || "-" },
+    ],
+    dados.meta
+  )
+
+  y = startNewPage(doc, dados.meta)
   y = drawTextSection(doc, y, "Detalhes da Negociação", dados.detalhesNegociacao, dados.meta)
   y = drawTextSection(doc, y, "Observação", dados.observacao, dados.meta)
   drawSignatureSection(doc, y, dados.meta)

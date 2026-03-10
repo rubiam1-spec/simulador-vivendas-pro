@@ -14,6 +14,7 @@ type StatusFiltro = "todos" | "disponivel" | "indisponivel";
 type ModoDocumento = "simulacao" | "proposta" | "contraproposta";
 type TipoEntrada = "percentual" | "valor";
 type TipoBalao = "anual" | "semestral";
+type FormaSaldoFinal = "quitacao" | "financiamento" | "a_definir";
 
 type CondicaoPagamento = {
   entradaTipo: TipoEntrada;
@@ -22,6 +23,12 @@ type CondicaoPagamento = {
   baloesSemestrais: number;
   percentualParcelas: number;
   percentualBaloes: number;
+  temSaldoFinal: boolean;
+  saldoFinalTipo: TipoEntrada;
+  saldoFinalPercentual: number;
+  saldoFinalValor: number;
+  saldoFinalVencimento: string;
+  saldoFinalForma: FormaSaldoFinal;
 };
 
 type AtivoNegociado = {
@@ -108,6 +115,12 @@ function criarCondicaoPadrao(): CondicaoPagamento {
     baloesSemestrais: 6,
     percentualParcelas: 30,
     percentualBaloes: 70,
+    temSaldoFinal: false,
+    saldoFinalTipo: "percentual",
+    saldoFinalPercentual: 30,
+    saldoFinalValor: 0,
+    saldoFinalVencimento: "2027-09-30",
+    saldoFinalForma: "a_definir",
   };
 }
 
@@ -127,12 +140,22 @@ function calcularResumoFinanceiro(
 ) {
   const entrada = calcularEntrada(valorBase, condicao);
   const saldoInicial = Math.max(valorBase - entrada, 0);
-  const saldoFinal = Math.max(saldoInicial - valorPermuta - valorVeiculo, 0);
+  const saldoAposAtivos = Math.max(saldoInicial - valorPermuta - valorVeiculo, 0);
+  const valorSaldoFinal = condicao.temSaldoFinal
+    ? condicao.saldoFinalTipo === "valor"
+      ? Math.min(Math.max(0, numeroSeguro(condicao.saldoFinalValor)), saldoAposAtivos)
+      : Math.min(
+          Math.max(0, saldoAposAtivos * (numeroSeguro(condicao.saldoFinalPercentual) / 100)),
+          saldoAposAtivos
+        )
+    : 0;
+  const baseParcelasEBaloes = Math.max(saldoAposAtivos - valorSaldoFinal, 0);
+  const saldoFinal = baseParcelasEBaloes;
 
   const baseParcelas =
-    saldoFinal * (Math.max(0, numeroSeguro(condicao.percentualParcelas)) / 100);
+    baseParcelasEBaloes * (Math.max(0, numeroSeguro(condicao.percentualParcelas)) / 100);
   const baseBaloes =
-    saldoFinal * (Math.max(0, numeroSeguro(condicao.percentualBaloes)) / 100);
+    baseParcelasEBaloes * (Math.max(0, numeroSeguro(condicao.percentualBaloes)) / 100);
 
   const valorParcela =
     condicao.parcelasMeses > 0 ? baseParcelas / condicao.parcelasMeses : 0;
@@ -143,7 +166,10 @@ function calcularResumoFinanceiro(
   return {
     entrada,
     saldoInicial,
+    saldoAposAtivos,
     saldoFinal,
+    valorSaldoFinal,
+    baseParcelasEBaloes,
     baseParcelas,
     baseBaloes,
     valorParcela,
@@ -180,6 +206,13 @@ export default function Simulador() {
   const [entradaPercentual, setEntradaPercentual] = useState(20);
   const [parcelasMeses, setParcelasMeses] = useState(36);
   const [baloesSemestrais, setBaloesSemestrais] = useState(6);
+  const [temSaldoFinal, setTemSaldoFinal] = useState(false);
+  const [saldoFinalTipo, setSaldoFinalTipo] = useState<TipoEntrada>("percentual");
+  const [saldoFinalPercentual, setSaldoFinalPercentual] = useState(30);
+  const [saldoFinalValor, setSaldoFinalValor] = useState(0);
+  const [saldoFinalVencimento, setSaldoFinalVencimento] = useState("2027-09-30");
+  const [saldoFinalForma, setSaldoFinalForma] =
+    useState<FormaSaldoFinal>("a_definir");
 
   const [temPermuta, setTemPermuta] = useState(false);
   const [descricaoPermuta, setDescricaoPermuta] = useState("");
@@ -362,25 +395,53 @@ export default function Simulador() {
     );
   }, [lotesSelecionados]);
 
-  const valorEntrada = valorTerreno * (numeroSeguro(entradaPercentual) / 100);
-  const saldoInicial = Math.max(valorTerreno - valorEntrada, 0);
-
   const permutaAplicada = temPermuta ? numeroSeguro(valorPermuta) : 0;
   const veiculoAplicado = temVeiculo ? numeroSeguro(valorVeiculo) : 0;
 
-  const saldoFinal = Math.max(
-    saldoInicial - permutaAplicada - veiculoAplicado,
-    0
+  const condicaoSimulacao = useMemo<CondicaoPagamento>(
+    () => ({
+      entradaTipo: "percentual",
+      entradaValor: entradaPercentual,
+      parcelasMeses,
+      baloesSemestrais,
+      percentualParcelas: 30,
+      percentualBaloes: 70,
+      temSaldoFinal,
+      saldoFinalTipo,
+      saldoFinalPercentual,
+      saldoFinalValor,
+      saldoFinalVencimento,
+      saldoFinalForma,
+    }),
+    [
+      entradaPercentual,
+      parcelasMeses,
+      baloesSemestrais,
+      temSaldoFinal,
+      saldoFinalTipo,
+      saldoFinalPercentual,
+      saldoFinalValor,
+      saldoFinalVencimento,
+      saldoFinalForma,
+    ]
   );
 
-  const baseParcelas = saldoFinal * 0.3;
-  const baseBaloes = saldoFinal * 0.7;
+  const resumoSimulacao = useMemo(
+    () =>
+      calcularResumoFinanceiro(
+        valorTerreno,
+        condicaoSimulacao,
+        permutaAplicada,
+        veiculoAplicado
+      ),
+    [valorTerreno, condicaoSimulacao, permutaAplicada, veiculoAplicado]
+  );
 
-  const valorParcela =
-    parcelasMeses > 0 ? baseParcelas / numeroSeguro(parcelasMeses) : 0;
-
-  const valorBalao =
-    baloesSemestrais > 0 ? baseBaloes / numeroSeguro(baloesSemestrais) : 0;
+  const valorEntrada = resumoSimulacao.entrada;
+  const saldoFinal = resumoSimulacao.saldoFinal;
+  const valorSaldoFinalCalculado = resumoSimulacao.valorSaldoFinal;
+  const valorParcela = resumoSimulacao.valorParcela;
+  const valorBalao = resumoSimulacao.valorBalao;
 
   useEffect(() => {
     setContrapropostaBomm((anterior) => ({
@@ -407,6 +468,12 @@ export default function Simulador() {
         baloesSemestrais,
         percentualParcelas: 30,
         percentualBaloes: 70,
+        temSaldoFinal,
+        saldoFinalTipo,
+        saldoFinalPercentual,
+        saldoFinalValor,
+        saldoFinalVencimento,
+        saldoFinalForma,
       },
     }));
   }, [
@@ -420,6 +487,12 @@ export default function Simulador() {
     entradaPercentual,
     parcelasMeses,
     baloesSemestrais,
+    temSaldoFinal,
+    saldoFinalTipo,
+    saldoFinalPercentual,
+    saldoFinalValor,
+    saldoFinalVencimento,
+    saldoFinalForma,
   ]);
 
   const resumoNegociacao = useMemo(() => {
@@ -440,6 +513,23 @@ export default function Simulador() {
       );
     }
 
+    if (temSaldoFinal && valorSaldoFinalCalculado > 0) {
+      partes.push(
+        `• Saldo final na entrega (${saldoFinalTipo === "percentual" ? `${saldoFinalPercentual}%` : "valor informado"}): ${brl(valorSaldoFinalCalculado)}`
+      );
+      partes.push(`• Vencimento do saldo final: ${saldoFinalVencimento || "2027-09-30"}`);
+      partes.push(
+        `• Forma prevista do saldo final: ${
+          saldoFinalForma === "quitacao"
+            ? "quitação"
+            : saldoFinalForma === "financiamento"
+              ? "financiamento"
+              : "a definir"
+        }`
+      );
+    }
+
+    partes.push(`• Base para mensais e balões: ${brl(resumoSimulacao.baseParcelasEBaloes)}`);
     partes.push(`• Saldo remanescente: ${brl(saldoFinal)}`);
 
     return partes;
@@ -453,6 +543,13 @@ export default function Simulador() {
     temVeiculo,
     veiculoAplicado,
     modeloVeiculo,
+    temSaldoFinal,
+    saldoFinalTipo,
+    saldoFinalPercentual,
+    saldoFinalVencimento,
+    saldoFinalForma,
+    valorSaldoFinalCalculado,
+    resumoSimulacao.baseParcelasEBaloes,
     saldoFinal,
   ]);
 
@@ -494,6 +591,16 @@ export default function Simulador() {
     if (valorVeiculoCliente > 0) {
       linhas.push(
         `• Veículo proposto: ${propostaCliente.veiculo?.descricao || "Veículo informado"} — ${brl(valorVeiculoCliente)}`
+      );
+    }
+
+    if (propostaCliente.condicao.temSaldoFinal && calculo.valorSaldoFinal > 0) {
+      linhas.push(
+        `• Saldo final na entrega: ${brl(calculo.valorSaldoFinal)} (${propostaCliente.condicao.saldoFinalForma === "quitacao"
+          ? "quitação"
+          : propostaCliente.condicao.saldoFinalForma === "financiamento"
+            ? "financiamento"
+            : "a definir"})`
       );
     }
 
@@ -578,6 +685,16 @@ export default function Simulador() {
       );
     }
 
+    if (contrapropostaBomm.condicao.temSaldoFinal && calculo.valorSaldoFinal > 0) {
+      linhas.push(
+        `• Saldo final na entrega: ${brl(calculo.valorSaldoFinal)} (${contrapropostaBomm.condicao.saldoFinalForma === "quitacao"
+          ? "quitação"
+          : contrapropostaBomm.condicao.saldoFinalForma === "financiamento"
+            ? "financiamento"
+            : "a definir"})`
+      );
+    }
+
     linhas.push(`• Saldo remanescente: ${brl(calculo.saldoFinal)}`);
     linhas.push(
       `• ${contrapropostaBomm.condicao.parcelasMeses} parcelas mensais de ${brl(calculo.valorParcela)}`
@@ -630,6 +747,24 @@ export default function Simulador() {
       if (temVeiculo && veiculoAplicado > 0) {
         linhas.push(
           `• Veículo: ${modeloVeiculo || "Veículo informado"} — ${brl(veiculoAplicado)}`
+        );
+      }
+
+      if (temSaldoFinal && valorSaldoFinalCalculado > 0) {
+        linhas.push(
+          `• Saldo final na entrega: ${brl(valorSaldoFinalCalculado)}`
+        );
+        linhas.push(
+          `• Vencimento previsto: ${saldoFinalVencimento || "2027-09-30"}`
+        );
+        linhas.push(
+          `• Forma prevista: ${
+            saldoFinalForma === "quitacao"
+              ? "quitação"
+              : saldoFinalForma === "financiamento"
+                ? "financiamento"
+                : "a definir"
+          }`
         );
       }
 
@@ -733,6 +868,10 @@ export default function Simulador() {
     temVeiculo,
     veiculoAplicado,
     modeloVeiculo,
+    temSaldoFinal,
+    valorSaldoFinalCalculado,
+    saldoFinalVencimento,
+    saldoFinalForma,
     saldoFinal,
     parcelasMeses,
     valorParcela,
@@ -967,6 +1106,19 @@ export default function Simulador() {
       [
         `• ${parcelasMeses} parcelas mensais de ${brl(valorParcela)}`,
         `• ${baloesSemestrais} balões semestrais de ${brl(valorBalao)}`,
+        ...(temSaldoFinal && valorSaldoFinalCalculado > 0
+          ? [
+              `• Saldo final na entrega: ${brl(valorSaldoFinalCalculado)}`,
+              `• Vencimento: ${saldoFinalVencimento || "2027-09-30"}`,
+              `• Forma prevista: ${
+                saldoFinalForma === "quitacao"
+                  ? "quitação"
+                  : saldoFinalForma === "financiamento"
+                    ? "financiamento"
+                    : "a definir"
+              }`,
+            ]
+          : []),
         "• Correção via INCC durante a obra e, após a entrega, IPCA.",
       ].forEach((linha) => {
         doc.text(linha, margemX, y);
@@ -1436,7 +1588,9 @@ export default function Simulador() {
                       <div className="luxMiniCard">
                         <div className="luxMiniLabel">Saldo remanescente</div>
                         <div className="luxMiniValue">{brl(saldoFinal)}</div>
-                        <div className="luxMiniHint">após abatimentos</div>
+                        <div className="luxMiniHint">
+                          {temSaldoFinal ? "após abatimentos e saldo final" : "após abatimentos"}
+                        </div>
                       </div>
                     </div>
 
@@ -1487,6 +1641,96 @@ export default function Simulador() {
                           }
                         />
                         <div className="mini">Balão: {brl(valorBalao)}</div>
+                      </div>
+                    </div>
+
+                    <div className="luxSpacer" />
+
+                    <div className="luxKicker">Pagamento futuro</div>
+                    <h3 className="luxH2" style={{ fontSize: 22 }}>
+                      Saldo final na entrega
+                    </h3>
+
+                    <div className="luxGrid3">
+                      <div className="luxField">
+                        <label>Ativar saldo final?</label>
+                        <select
+                          value={temSaldoFinal ? "sim" : "nao"}
+                          onChange={(e) => setTemSaldoFinal(e.target.value === "sim")}
+                        >
+                          <option value="nao">Não</option>
+                          <option value="sim">Sim</option>
+                        </select>
+                      </div>
+
+                      <div className="luxField">
+                        <label>Tipo</label>
+                        <select
+                          value={saldoFinalTipo}
+                          onChange={(e) => setSaldoFinalTipo(e.target.value as TipoEntrada)}
+                          disabled={!temSaldoFinal}
+                        >
+                          <option value="percentual">Percentual</option>
+                          <option value="valor">Valor</option>
+                        </select>
+                      </div>
+
+                      <div className="luxField">
+                        <label>Forma prevista</label>
+                        <select
+                          value={saldoFinalForma}
+                          onChange={(e) =>
+                            setSaldoFinalForma(e.target.value as FormaSaldoFinal)
+                          }
+                          disabled={!temSaldoFinal}
+                        >
+                          <option value="quitacao">Quitação</option>
+                          <option value="financiamento">Financiamento</option>
+                          <option value="a_definir">A definir</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="luxGrid3">
+                      <div className="luxField">
+                        <label>Percentual</label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={toInputNumber(saldoFinalPercentual)}
+                          onChange={(e) =>
+                            setSaldoFinalPercentual(
+                              Math.max(0, Math.min(100, numeroSeguro(e.target.value)))
+                            )
+                          }
+                          disabled={!temSaldoFinal || saldoFinalTipo !== "percentual"}
+                        />
+                      </div>
+
+                      <div className="luxField">
+                        <label>Valor</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={toInputNumber(saldoFinalValor)}
+                          onChange={(e) => setSaldoFinalValor(numeroSeguro(e.target.value))}
+                          disabled={!temSaldoFinal || saldoFinalTipo !== "valor"}
+                        />
+                      </div>
+
+                      <div className="luxField">
+                        <label>Vencimento</label>
+                        <input
+                          type="date"
+                          value={saldoFinalVencimento}
+                          onChange={(e) => setSaldoFinalVencimento(e.target.value)}
+                          disabled={!temSaldoFinal}
+                        />
+                        <div className="mini">
+                          Saldo final: {brl(valorSaldoFinalCalculado)}
+                        </div>
                       </div>
                     </div>
 
