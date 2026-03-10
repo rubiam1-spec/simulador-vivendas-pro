@@ -140,16 +140,20 @@ function calcularResumoFinanceiro(
 ) {
   const entrada = calcularEntrada(valorBase, condicao);
   const saldoInicial = Math.max(valorBase - entrada, 0);
-  const saldoAposAtivos = Math.max(saldoInicial - valorPermuta - valorVeiculo, 0);
+  const saldoAposEntrada = saldoInicial;
   const valorSaldoFinal = condicao.temSaldoFinal
     ? condicao.saldoFinalTipo === "valor"
-      ? Math.min(Math.max(0, numeroSeguro(condicao.saldoFinalValor)), saldoAposAtivos)
+      ? Math.min(Math.max(0, numeroSeguro(condicao.saldoFinalValor)), saldoAposEntrada)
       : Math.min(
-          Math.max(0, saldoAposAtivos * (numeroSeguro(condicao.saldoFinalPercentual) / 100)),
-          saldoAposAtivos
+          Math.max(0, saldoAposEntrada * (numeroSeguro(condicao.saldoFinalPercentual) / 100)),
+          saldoAposEntrada
         )
     : 0;
-  const baseParcelasEBaloes = Math.max(saldoAposAtivos - valorSaldoFinal, 0);
+  const saldoAposSaldoFinal = Math.max(saldoAposEntrada - valorSaldoFinal, 0);
+  const baseParcelasEBaloes = Math.max(
+    saldoAposSaldoFinal - valorPermuta - valorVeiculo,
+    0
+  );
   const saldoFinal = baseParcelasEBaloes;
 
   const baseParcelas =
@@ -166,7 +170,8 @@ function calcularResumoFinanceiro(
   return {
     entrada,
     saldoInicial,
-    saldoAposAtivos,
+    saldoAposEntrada,
+    saldoAposSaldoFinal,
     saldoFinal,
     valorSaldoFinal,
     baseParcelasEBaloes,
@@ -397,6 +402,67 @@ export default function Simulador() {
 
   const permutaAplicada = temPermuta ? numeroSeguro(valorPermuta) : 0;
   const veiculoAplicado = temVeiculo ? numeroSeguro(valorVeiculo) : 0;
+  const condicaoBaseSimulacao = useMemo<CondicaoPagamento>(
+    () => ({
+      entradaTipo: "percentual",
+      entradaValor: entradaPercentual,
+      parcelasMeses,
+      baloesSemestrais,
+      percentualParcelas: 30,
+      percentualBaloes: 70,
+      temSaldoFinal: false,
+      saldoFinalTipo: "percentual",
+      saldoFinalPercentual: 0,
+      saldoFinalValor: 0,
+      saldoFinalVencimento,
+      saldoFinalForma,
+    }),
+    [
+      entradaPercentual,
+      parcelasMeses,
+      baloesSemestrais,
+      saldoFinalVencimento,
+      saldoFinalForma,
+    ]
+  );
+
+  const resumoBaseSimulacao = useMemo(
+    () =>
+      calcularResumoFinanceiro(
+        valorTerreno,
+        condicaoBaseSimulacao,
+        permutaAplicada,
+        veiculoAplicado
+      ),
+    [valorTerreno, condicaoBaseSimulacao, permutaAplicada, veiculoAplicado]
+  );
+
+  const valorSaldoFinalCalculado = useMemo(() => {
+    const saldoAposEntrada = resumoBaseSimulacao.saldoAposEntrada;
+
+    if (!temSaldoFinal) return 0;
+
+    if (saldoFinalTipo === "percentual") {
+      return Math.min(
+        Math.max(
+          0,
+          saldoAposEntrada * (numeroSeguro(saldoFinalPercentual) / 100)
+        ),
+        saldoAposEntrada
+      );
+    }
+
+    return Math.min(
+      Math.max(0, numeroSeguro(saldoFinalValor)),
+      saldoAposEntrada
+    );
+  }, [
+    resumoBaseSimulacao.saldoAposEntrada,
+    temSaldoFinal,
+    saldoFinalTipo,
+    saldoFinalPercentual,
+    saldoFinalValor,
+  ]);
 
   const condicaoSimulacao = useMemo<CondicaoPagamento>(
     () => ({
@@ -408,8 +474,10 @@ export default function Simulador() {
       percentualBaloes: 70,
       temSaldoFinal,
       saldoFinalTipo,
-      saldoFinalPercentual,
-      saldoFinalValor,
+      saldoFinalPercentual:
+        saldoFinalTipo === "percentual" ? saldoFinalPercentual : 0,
+      saldoFinalValor:
+        saldoFinalTipo === "valor" ? saldoFinalValor : 0,
       saldoFinalVencimento,
       saldoFinalForma,
     }),
@@ -439,7 +507,6 @@ export default function Simulador() {
 
   const valorEntrada = resumoSimulacao.entrada;
   const saldoFinal = resumoSimulacao.saldoFinal;
-  const valorSaldoFinalCalculado = resumoSimulacao.valorSaldoFinal;
   const valorParcela = resumoSimulacao.valorParcela;
   const valorBalao = resumoSimulacao.valorBalao;
 
@@ -1667,7 +1734,14 @@ export default function Simulador() {
                         <label>Tipo</label>
                         <select
                           value={saldoFinalTipo}
-                          onChange={(e) => setSaldoFinalTipo(e.target.value as TipoEntrada)}
+                          onChange={(e) => {
+                            const proximoTipo = e.target.value as TipoEntrada;
+                            setSaldoFinalTipo(proximoTipo);
+
+                            if (proximoTipo === "percentual") {
+                              setSaldoFinalValor(0);
+                            }
+                          }}
                           disabled={!temSaldoFinal}
                         >
                           <option value="percentual">Percentual</option>
