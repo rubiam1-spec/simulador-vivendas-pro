@@ -139,7 +139,7 @@ const PAGE_WIDTH = 595;
 const PAGE_HEIGHT = 842;
 const HEADER_HEIGHT = 110;
 const PAGE_START_Y = 148;
-const PAGE_END_Y = 770;
+const PAGE_END_Y = 792;
 const CONTENT_LEFT = 42;
 const CONTENT_WIDTH = 511;
 const FOOTER_Y = 812;
@@ -150,7 +150,7 @@ const FIELD_MIN_HEIGHT = 46;
 const TEXT_PADDING_X = 12;
 const TEXT_PADDING_TOP = 26;
 const TEXT_LINE_HEIGHT = 14;
-const TEXT_SECTION_MIN_HEIGHT = 72;
+const TEXT_SECTION_MIN_HEIGHT = 60;
 const SIGNATURE_HEIGHT = 118;
 
 const COLORS = {
@@ -345,6 +345,39 @@ function addLogo(
   doc.addImage(imageData, format, drawX, drawY, width, height);
 }
 
+function isCurrencyText(value: string) {
+  return /^\s*R\$\s?[\d.\s,]+$/.test(value);
+}
+
+function drawMetricValue(
+  doc: jsPDF,
+  value: string,
+  x: number,
+  y: number,
+  width: number
+) {
+  const innerWidth = width - 24;
+
+  if (isCurrencyText(value)) {
+    let fontSize = 14;
+    doc.setFont("helvetica", "bold");
+    while (fontSize > 10.5) {
+      doc.setFontSize(fontSize);
+      if (doc.getTextWidth(value) <= innerWidth) {
+        break;
+      }
+      fontSize -= 0.5;
+    }
+    doc.text(value, x + 12, y + 34);
+    return;
+  }
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
+  const valueLines = doc.splitTextToSize(value, innerWidth) as string[];
+  doc.text(valueLines, x + 12, y + 34);
+}
+
 function renderPageFrame(doc: jsPDF, meta: LayoutMeta) {
   setColor(doc, "fill", COLORS.white);
   doc.rect(0, 0, PAGE_WIDTH, PAGE_HEIGHT, "F");
@@ -367,14 +400,18 @@ function renderPageFrame(doc: jsPDF, meta: LayoutMeta) {
   doc.setLineWidth(1.2);
   doc.line(CONTENT_LEFT, HEADER_HEIGHT - 18, PAGE_WIDTH - CONTENT_LEFT, HEADER_HEIGHT - 18);
 
+  const titleAreaLeft = CONTENT_LEFT + 150;
+  const titleAreaRight = PAGE_WIDTH - CONTENT_LEFT - 140;
+  const titleAreaCenter = (titleAreaLeft + titleAreaRight) / 2;
+
   setColor(doc, "text", COLORS.white);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(21);
-  doc.text(meta.titulo, PAGE_WIDTH / 2, 58, { align: "center" });
+  doc.setFontSize(20);
+  doc.text(meta.titulo, titleAreaCenter, 60, { align: "center" });
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10.5);
-  doc.text(meta.subtitulo, PAGE_WIDTH / 2, 80, { align: "center" });
+  doc.text(meta.subtitulo, titleAreaCenter, 81, { align: "center" });
 
   setColor(doc, "text", COLORS.grayMid);
   doc.setFont("helvetica", "normal");
@@ -523,10 +560,7 @@ function drawMetricCards(
     doc.text(item.label.toUpperCase(), x + 12, boxY + 14);
 
     setColor(doc, "text", COLORS.greenDark);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
-    const valueLines = doc.splitTextToSize(item.value, width - 24) as string[];
-    doc.text(valueLines, x + 12, boxY + 34);
+    drawMetricValue(doc, item.value, x, boxY, width);
   });
 
   return boxY + height + SECTION_GAP;
@@ -1058,19 +1092,30 @@ function drawSimulacaoLayout(doc: jsPDF, payload: PdfSimulacaoPayload) {
     doc,
     y,
     "Principais números",
-    [
-      { label: "Valor total", value: lotData.valor },
-      { label: "Saldo remanescente", value: safeText(payload.saldoRemanescente) },
-      { label: "Base para mensais e balões", value: safeText(payload.baseParcelasEBaloes) },
-      {
-        label: "Estrutura de balão",
-        value: temBalao ? safeText(payload.balao?.quantidadeParcelas) : "Sem balão",
-      },
-    ],
+    temBalao
+      ? [
+          { label: "Valor total", value: lotData.valor },
+          { label: "Saldo remanescente", value: safeText(payload.saldoRemanescente) },
+          {
+            label: "Base para mensais e balões",
+            value: safeText(payload.baseParcelasEBaloes),
+          },
+          {
+            label: "Estrutura de balão",
+            value: safeText(payload.balao?.quantidadeParcelas),
+          },
+        ]
+      : [
+          { label: "Valor total", value: lotData.valor },
+          { label: "Saldo remanescente", value: safeText(payload.saldoRemanescente) },
+          {
+            label: "Base para mensais",
+            value: safeText(payload.baseParcelasEBaloes),
+          },
+        ],
     meta
   );
 
-  y = startNewPage(doc, meta);
   y = drawTextSection(doc, y, "Detalhes da negociação", textBlocks.detalhes, meta);
   y = drawTextSection(doc, y, "Observação", textBlocks.observacao, meta);
   drawSignatureSection(doc, y, meta);
