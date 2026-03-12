@@ -680,6 +680,163 @@ body::after {
   font-weight: 800;
 }
 
+.luxPillSoft {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.luxCentral {
+  overflow: hidden;
+}
+
+.luxCentralHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.luxCentralText {
+  margin: 10px 0 0;
+  max-width: 760px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.luxCentralMeta {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+
+.luxCentralToolbar {
+  margin-top: 22px;
+}
+
+.luxCentralFilters {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) repeat(2, minmax(180px, 0.7fr));
+  gap: 14px;
+}
+
+.luxCentralGrid {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.luxNegCard {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.025)),
+    rgba(17, 28, 23, 0.38);
+  box-shadow: var(--shadow-card);
+}
+
+.luxNegCard.isActive {
+  border-color: var(--line-accent-hi);
+  box-shadow:
+    0 0 0 4px var(--accent-glow),
+    var(--shadow-card);
+}
+
+.luxNegCardTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.luxNegTitle {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 1.6vw, 30px);
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+  color: var(--text);
+}
+
+.luxNegSubtitle {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.luxNegPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.luxNegMeta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.luxNegMetaItem {
+  padding: 14px 15px;
+  border-radius: var(--r-md);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.035);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.luxNegMetaItem strong {
+  color: var(--text);
+  line-height: 1.45;
+}
+
+.luxNegMetaLabel {
+  color: var(--muted2);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+}
+
+.luxNegActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.luxNegActions .btn {
+  min-width: 136px;
+}
+
+.luxDangerBtn {
+  border-color: rgba(255, 110, 110, 0.22);
+  color: var(--danger);
+}
+
+.luxDangerBtn:hover {
+  border-color: rgba(255, 110, 110, 0.38);
+  background: rgba(255, 110, 110, 0.1);
+}
+
+.luxNegEmpty {
+  margin-top: 22px;
+  padding: 26px;
+  border-radius: var(--r-lg);
+  border: 1px dashed var(--line-2);
+  color: var(--muted);
+  text-align: center;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.luxCentralFeedback {
+  margin-top: -4px;
+}
+
 .luxResultPanel {
   position: relative;
   overflow: hidden;
@@ -1275,6 +1432,10 @@ body::after {
 }
 
 @media (max-width: 1360px) {
+  .luxCentralGrid {
+    grid-template-columns: 1fr;
+  }
+
   .luxStepBar {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1302,6 +1463,18 @@ body::after {
 }
 
 @media (max-width: 1100px) {
+  .luxCentralHead {
+    flex-direction: column;
+  }
+
+  .luxCentralFilters {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .luxNegMeta {
+    grid-template-columns: 1fr;
+  }
+
   .luxStepBar {
     grid-template-columns: 1fr 1fr;
   }
@@ -1329,6 +1502,19 @@ body::after {
 }
 
 @media (max-width: 768px) {
+  .luxCentralFilters {
+    grid-template-columns: 1fr;
+  }
+
+  .luxNegCardTop,
+  .luxNegActions {
+    flex-direction: column;
+  }
+
+  .luxNegPills {
+    justify-content: flex-start;
+  }
+
   body::before {
     font-size: clamp(46px, 11vw, 92px);
     transform: translate(-50%, -52%);

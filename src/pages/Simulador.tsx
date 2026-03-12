@@ -1,10 +1,24 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import CentralNegociacoes from "../components/CentralNegociacoes";
 import { carregarLotes, type Lote } from "../services/planilhaService";
 import {
   gerarPdfContraproposta,
   gerarPdfProposta,
   gerarPdfSimulacao,
 } from "../services/pdfService";
+import {
+  gerarPdfDaNegociacaoSalva,
+  mapearSimuladorParaNegociacaoSalva,
+  reidratarNegociacaoSalva,
+} from "../services/negociacoesMapper";
+import {
+  atualizarNegociacao,
+  duplicarNegociacao,
+  excluirNegociacao,
+  listarNegociacoesSalvas,
+  salvarNovaNegociacao,
+} from "../services/negociacoesStorage";
+import type { NegociacaoSalva } from "../types/negociacao";
 import "./simulador.css";
 
 import logoVivendas from "../assets/logo-vivendas.png";
@@ -323,6 +337,14 @@ export default function Simulador() {
     });
 
   const [copiado, setCopiado] = useState(false);
+  const [negociacoesSalvas, setNegociacoesSalvas] = useState<NegociacaoSalva[]>(
+    []
+  );
+  const [negociacaoAtivaId, setNegociacaoAtivaId] = useState<string | null>(
+    null
+  );
+  const [feedbackNegociacao, setFeedbackNegociacao] = useState("");
+  const restaurandoContrapropostaRef = useRef(false);
 
   useEffect(() => {
     async function init() {
@@ -331,6 +353,7 @@ export default function Simulador() {
         setErro("");
         const dados = await carregarLotes();
         setLotes(dados);
+        setNegociacoesSalvas(listarNegociacoesSalvas());
       } catch (e) {
         console.error(e);
         setErro("Não foi possível carregar os lotes agora.");
@@ -584,6 +607,11 @@ export default function Simulador() {
   const valorBalao = resumoSimulacao.valorBalao;
 
   useEffect(() => {
+    if (restaurandoContrapropostaRef.current) {
+      restaurandoContrapropostaRef.current = false;
+      return;
+    }
+
     setContrapropostaBomm((anterior) => ({
       ...anterior,
       valorAprovado: valorTerreno,
@@ -1029,6 +1057,157 @@ export default function Simulador() {
     resumoContraproposta,
     contrapropostaBomm.observacoes,
   ]);
+
+  function mostrarFeedbackNegociacao(texto: string) {
+    setFeedbackNegociacao(texto);
+    window.setTimeout(() => setFeedbackNegociacao(""), 2400);
+  }
+
+  function recarregarNegociacoes() {
+    setNegociacoesSalvas(listarNegociacoesSalvas());
+  }
+
+  function montarNegociacaoAtual() {
+    return mapearSimuladorParaNegociacaoSalva({
+      tipo: modoDocumento,
+      cliente,
+      clienteCpf,
+      clienteTelefone,
+      clienteEmail,
+      clienteProfissao,
+      clienteEstadoCivil,
+      corretor,
+      creci,
+      imobiliaria,
+      lotesSelecionados,
+      valorTotal: valorTerreno,
+      simulacao: {
+        entradaPercentual,
+        temBalao,
+        parcelasMeses,
+        baloesSemestrais,
+        temSaldoFinal,
+        saldoFinalTipo,
+        saldoFinalPercentual,
+        saldoFinalValor,
+        saldoFinalVencimento,
+        saldoFinalForma,
+        temPermuta,
+        permuta: temPermuta
+          ? {
+              descricao: descricaoPermuta,
+              valor: valorPermuta,
+            }
+          : null,
+        temVeiculo,
+        veiculo: temVeiculo
+          ? {
+              descricao: modeloVeiculo,
+              valor: valorVeiculo,
+            }
+          : null,
+      },
+      proposta: {
+        ...propostaCliente,
+        condicao: normalizarCondicaoPagamento(propostaCliente.condicao),
+      },
+      contraproposta: {
+        ...contrapropostaBomm,
+        condicao: normalizarCondicaoPagamento(contrapropostaBomm.condicao),
+      },
+    });
+  }
+
+  function salvarNegociacaoAtual() {
+    const negociacao = montarNegociacaoAtual();
+
+    if (negociacaoAtivaId) {
+      const atualizada = atualizarNegociacao(negociacaoAtivaId, negociacao);
+      if (atualizada) {
+        setNegociacaoAtivaId(atualizada.id);
+        recarregarNegociacoes();
+        mostrarFeedbackNegociacao("Negociação atualizada na central.");
+        return;
+      }
+    }
+
+    const criada = salvarNovaNegociacao(negociacao);
+    setNegociacaoAtivaId(criada.id);
+    recarregarNegociacoes();
+    mostrarFeedbackNegociacao("Negociação salva na central.");
+  }
+
+  function abrirNegociacaoSalva(negociacao: NegociacaoSalva) {
+    const restaurada = reidratarNegociacaoSalva(negociacao);
+    restaurandoContrapropostaRef.current = true;
+
+    setModoDocumento(restaurada.tipo);
+    setCliente(restaurada.cliente);
+    setClienteCpf(restaurada.clienteCpf);
+    setClienteTelefone(restaurada.clienteTelefone);
+    setClienteEmail(restaurada.clienteEmail);
+    setClienteProfissao(restaurada.clienteProfissao);
+    setClienteEstadoCivil(restaurada.clienteEstadoCivil);
+    setCorretor(restaurada.corretor);
+    setCreci(restaurada.creci);
+    setImobiliaria(restaurada.imobiliaria);
+    setLotesSelecionados(restaurada.lotesSelecionados);
+
+    setEntradaPercentual(restaurada.simulacao.entradaPercentual);
+    setTemBalao(restaurada.simulacao.temBalao);
+    setParcelasMeses(Math.max(1, restaurada.simulacao.parcelasMeses));
+    setBaloesSemestrais(restaurada.simulacao.baloesSemestrais);
+    setTemSaldoFinal(restaurada.simulacao.temSaldoFinal);
+    setSaldoFinalTipo(restaurada.simulacao.saldoFinalTipo);
+    setSaldoFinalPercentual(restaurada.simulacao.saldoFinalPercentual);
+    setSaldoFinalValor(restaurada.simulacao.saldoFinalValor);
+    setSaldoFinalVencimento(restaurada.simulacao.saldoFinalVencimento);
+    setSaldoFinalForma(restaurada.simulacao.saldoFinalForma);
+    setTemPermuta(restaurada.simulacao.temPermuta);
+    setDescricaoPermuta(restaurada.simulacao.permuta?.descricao || "");
+    setValorPermuta(numeroSeguro(restaurada.simulacao.permuta?.valor));
+    setTemVeiculo(restaurada.simulacao.temVeiculo);
+    setModeloVeiculo(restaurada.simulacao.veiculo?.descricao || "");
+    setValorVeiculo(numeroSeguro(restaurada.simulacao.veiculo?.valor));
+
+    setPropostaCliente({
+      ...restaurada.proposta,
+      condicao: normalizarCondicaoPagamento(restaurada.proposta.condicao),
+    });
+    setContrapropostaBomm({
+      ...restaurada.contraproposta,
+      condicao: normalizarCondicaoPagamento(restaurada.contraproposta.condicao),
+    });
+    setNegociacaoAtivaId(negociacao.id);
+    mostrarFeedbackNegociacao("Negociação aberta no simulador.");
+  }
+
+  function duplicarNegociacaoSalva(id: string) {
+    const duplicada = duplicarNegociacao(id);
+    if (!duplicada) return;
+    recarregarNegociacoes();
+    mostrarFeedbackNegociacao("Negociação duplicada com sucesso.");
+  }
+
+  function excluirNegociacaoSalva(id: string) {
+    const permitir = window.confirm(
+      "Deseja excluir esta negociação da central?"
+    );
+
+    if (!permitir) return;
+
+    excluirNegociacao(id);
+    if (negociacaoAtivaId === id) {
+      setNegociacaoAtivaId(null);
+    }
+    recarregarNegociacoes();
+    mostrarFeedbackNegociacao("Negociação excluída da central.");
+  }
+
+  function gerarPdfDaCentral(negociacao: NegociacaoSalva) {
+    gerarPdfDaNegociacaoSalva(negociacao);
+    mostrarFeedbackNegociacao("PDF gerado a partir da negociação salva.");
+  }
 
   async function copiarMensagem() {
     try {
@@ -2116,6 +2295,14 @@ export default function Simulador() {
                         {copiado ? "Copiado!" : "Copiar mensagem"}
                       </button>
 
+                      <button
+                        type="button"
+                        className="btn btnGhost luxActionSecondary"
+                        onClick={salvarNegociacaoAtual}
+                      >
+                        {negociacaoAtivaId ? "Atualizar negociação" : "Salvar negociação"}
+                      </button>
+
                       <button type="button" className="btn btnGhost luxActionSecondary" onClick={gerarPdf}>
                         Gerar PDF
                       </button>
@@ -2969,6 +3156,14 @@ export default function Simulador() {
                         {copiado ? "Copiado!" : "Copiar mensagem"}
                       </button>
 
+                      <button
+                        type="button"
+                        className="btn btnGhost luxActionSecondary"
+                        onClick={salvarNegociacaoAtual}
+                      >
+                        {negociacaoAtivaId ? "Atualizar negociação" : "Salvar negociação"}
+                      </button>
+
                       <button type="button" className="btn btnGhost luxActionSecondary" onClick={gerarPdf}>
                         Gerar PDF
                       </button>
@@ -3058,6 +3253,19 @@ export default function Simulador() {
               </section>
             </aside>
           </div>
+
+          {feedbackNegociacao ? (
+            <div className="luxNote luxCentralFeedback">{feedbackNegociacao}</div>
+          ) : null}
+
+          <CentralNegociacoes
+            negociacoes={negociacoesSalvas}
+            negociacaoAtivaId={negociacaoAtivaId}
+            onAbrir={abrirNegociacaoSalva}
+            onDuplicar={duplicarNegociacaoSalva}
+            onExcluir={excluirNegociacaoSalva}
+            onGerarPdf={gerarPdfDaCentral}
+          />
         </main>
       </div>
     </div>
