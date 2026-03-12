@@ -825,26 +825,28 @@ function drawProposalLayout(doc: jsPDF, payload: PdfPropostaPayload) {
         ],
         proportions: [1, 1, 1.1],
       },
-      {
-        title: "Balão",
-        fields: payload.balao
-          ? [
-              { label: "Tipo", value: safeText(payload.balao.tipo) },
-              {
-                label: "Quantidade de parcelas",
-                value: safeText(payload.balao.quantidadeParcelas),
-              },
-              {
-                label: "Valor da parcela",
-                value: safeText(payload.balao.valorParcela),
-              },
-              {
-                label: "Primeiro vencimento",
-                value: safeText(payload.balao.primeiroVencimento),
-              },
-            ]
-          : [{ label: "Balão", value: "Fluxo sem balão" }],
-      },
+      ...(payload.balao
+        ? [
+            {
+              title: "Balão",
+              fields: [
+                { label: "Tipo", value: safeText(payload.balao.tipo) },
+                {
+                  label: "Quantidade de parcelas",
+                  value: safeText(payload.balao.quantidadeParcelas),
+                },
+                {
+                  label: "Valor da parcela",
+                  value: safeText(payload.balao.valorParcela),
+                },
+                {
+                  label: "Primeiro vencimento",
+                  value: safeText(payload.balao.primeiroVencimento),
+                },
+              ],
+            },
+          ]
+        : []),
     ],
     meta
   );
@@ -925,25 +927,27 @@ function drawContrapropostaLayout(doc: jsPDF, payload: PdfContrapropostaPayload)
           },
         ],
       },
-      {
-        title: "Balão",
-        fields: hasBalao
-          ? [
-              {
-                label: "Tipo",
-                value: safeText(payload.condicaoAprovada.balaoTipo),
-              },
-              {
-                label: "Quantidade de parcelas",
-                value: safeText(payload.condicaoAprovada.balaoQuantidade),
-              },
-              {
-                label: "Valor da parcela",
-                value: safeText(payload.condicaoAprovada.balaoValor),
-              },
-            ]
-          : [{ label: "Balão", value: "Fluxo sem balão" }],
-      },
+      ...(hasBalao
+        ? [
+            {
+              title: "Balão",
+              fields: [
+                {
+                  label: "Tipo",
+                  value: safeText(payload.condicaoAprovada.balaoTipo),
+                },
+                {
+                  label: "Quantidade de parcelas",
+                  value: safeText(payload.condicaoAprovada.balaoQuantidade),
+                },
+                {
+                  label: "Valor da parcela",
+                  value: safeText(payload.condicaoAprovada.balaoValor),
+                },
+              ],
+            },
+          ]
+        : []),
     ],
     meta
   );
@@ -1028,22 +1032,24 @@ function drawSimulacaoLayout(doc: jsPDF, payload: PdfSimulacaoPayload) {
           },
         ],
       },
-      {
-        title: "Balão",
-        fields: temBalao
-          ? [
-              { label: "Tipo", value: safeText(payload.balao?.tipo) },
-              {
-                label: "Quantidade de parcelas",
-                value: safeText(payload.balao?.quantidadeParcelas),
-              },
-              {
-                label: "Valor da parcela",
-                value: safeText(payload.balao?.valorParcela),
-              },
-            ]
-          : [{ label: "Balão", value: "Fluxo sem balão" }],
-      },
+      ...(temBalao
+        ? [
+            {
+              title: "Balão",
+              fields: [
+                { label: "Tipo", value: safeText(payload.balao?.tipo) },
+                {
+                  label: "Quantidade de parcelas",
+                  value: safeText(payload.balao?.quantidadeParcelas),
+                },
+                {
+                  label: "Valor da parcela",
+                  value: safeText(payload.balao?.valorParcela),
+                },
+              ],
+            },
+          ]
+        : []),
     ],
     meta
   );

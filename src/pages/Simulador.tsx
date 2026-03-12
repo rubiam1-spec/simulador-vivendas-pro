@@ -19,6 +19,7 @@ type FormaSaldoFinal = "quitacao" | "financiamento" | "a_definir";
 type CondicaoPagamento = {
   entradaTipo: TipoEntrada;
   entradaValor: number;
+  temBalao: boolean;
   parcelasMeses: number;
   baloesSemestrais: number;
   percentualParcelas: number;
@@ -111,6 +112,7 @@ function criarCondicaoPadrao(): CondicaoPagamento {
   return normalizarCondicaoPagamento({
     entradaTipo: "percentual",
     entradaValor: 20,
+    temBalao: true,
     parcelasMeses: 36,
     baloesSemestrais: 6,
     percentualParcelas: 30,
@@ -127,14 +129,15 @@ function criarCondicaoPadrao(): CondicaoPagamento {
 function normalizarCondicaoPagamento(
   condicao: CondicaoPagamento
 ): CondicaoPagamento {
-  const baloesSemestrais = Math.max(
-    0,
-    Math.round(numeroSeguro(condicao.baloesSemestrais))
-  );
-  const semBalao = baloesSemestrais === 0;
+  const temBalao = Boolean(condicao.temBalao);
+  const baloesSemestrais = temBalao
+    ? Math.max(1, Math.round(numeroSeguro(condicao.baloesSemestrais)))
+    : 0;
+  const semBalao = !temBalao;
 
   return {
     ...condicao,
+    temBalao,
     entradaValor: numeroSeguro(condicao.entradaValor),
     parcelasMeses: Math.max(1, Math.round(numeroSeguro(condicao.parcelasMeses))),
     baloesSemestrais,
@@ -153,7 +156,7 @@ function normalizarCondicaoPagamento(
 }
 
 function condicaoTemBalao(condicao: CondicaoPagamento) {
-  return normalizarCondicaoPagamento(condicao).baloesSemestrais > 0;
+  return normalizarCondicaoPagamento(condicao).temBalao;
 }
 
 function descreverFluxoBalao(
@@ -272,6 +275,7 @@ export default function Simulador() {
   const [lotesSelecionados, setLotesSelecionados] = useState<Lote[]>([]);
 
   const [entradaPercentual, setEntradaPercentual] = useState(20);
+  const [temBalao, setTemBalao] = useState(true);
   const [parcelasMeses, setParcelasMeses] = useState(36);
   const [baloesSemestrais, setBaloesSemestrais] = useState(6);
   const [temSaldoFinal, setTemSaldoFinal] = useState(false);
@@ -468,11 +472,12 @@ export default function Simulador() {
   const condicaoBaseSimulacao = useMemo<CondicaoPagamento>(
     () =>
       normalizarCondicaoPagamento({
-      entradaTipo: "percentual",
-      entradaValor: entradaPercentual,
-      parcelasMeses,
-      baloesSemestrais,
-      percentualParcelas: 30,
+        entradaTipo: "percentual",
+        entradaValor: entradaPercentual,
+        temBalao,
+        parcelasMeses,
+        baloesSemestrais,
+        percentualParcelas: 30,
       percentualBaloes: 70,
       temSaldoFinal: false,
       saldoFinalTipo: "percentual",
@@ -483,6 +488,7 @@ export default function Simulador() {
     }),
     [
       entradaPercentual,
+      temBalao,
       parcelasMeses,
       baloesSemestrais,
       saldoFinalVencimento,
@@ -531,11 +537,12 @@ export default function Simulador() {
   const condicaoSimulacao = useMemo<CondicaoPagamento>(
     () =>
       normalizarCondicaoPagamento({
-      entradaTipo: "percentual",
-      entradaValor: entradaPercentual,
-      parcelasMeses,
-      baloesSemestrais,
-      percentualParcelas: 30,
+        entradaTipo: "percentual",
+        entradaValor: entradaPercentual,
+        temBalao,
+        parcelasMeses,
+        baloesSemestrais,
+        percentualParcelas: 30,
       percentualBaloes: 70,
       temSaldoFinal,
       saldoFinalTipo,
@@ -548,6 +555,7 @@ export default function Simulador() {
     }),
     [
       entradaPercentual,
+      temBalao,
       parcelasMeses,
       baloesSemestrais,
       temSaldoFinal,
@@ -596,6 +604,7 @@ export default function Simulador() {
       condicao: normalizarCondicaoPagamento({
         entradaTipo: "percentual",
         entradaValor: entradaPercentual,
+        temBalao,
         parcelasMeses,
         baloesSemestrais,
         percentualParcelas: 30,
@@ -617,6 +626,7 @@ export default function Simulador() {
     modeloVeiculo,
     valorVeiculo,
     entradaPercentual,
+    temBalao,
     parcelasMeses,
     baloesSemestrais,
     temSaldoFinal,
@@ -1872,7 +1882,42 @@ export default function Simulador() {
 
                     <div className="luxSpacer" />
 
-                    <div className="luxGrid3">
+                    <div className="luxGrid2">
+                      <div className="luxField">
+                        <label>Tem balão?</label>
+                        <select
+                          value={temBalao ? "sim" : "nao"}
+                          onChange={(e) => setTemBalao(e.target.value === "sim")}
+                        >
+                          <option value="sim">Sim</option>
+                          <option value="nao">Não</option>
+                        </select>
+                      </div>
+
+                      <div className="luxField">
+                        <label>Balões semestrais</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={toInputNumber(baloesSemestrais)}
+                          onChange={(e) =>
+                            setBaloesSemestrais(
+                              Math.max(1, Math.round(numeroSeguro(e.target.value)))
+                            )
+                          }
+                          disabled={!temBalao}
+                        />
+                        <div className="mini">
+                          {condicaoTemBalao(condicaoSimulacao)
+                            ? `Balão: ${brl(valorBalao)}`
+                            : "Fluxo sem balão"}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="luxSpacer" />
+
+                    <div className="luxGrid2">
                       <div className="luxField">
                         <label>Percentual de entrada</label>
                         <input
@@ -1902,25 +1947,6 @@ export default function Simulador() {
                           }
                         />
                         <div className="mini">Parcela: {brl(valorParcela)}</div>
-                      </div>
-
-                      <div className="luxField">
-                        <label>Balões semestrais</label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={toInputNumber(baloesSemestrais)}
-                          onChange={(e) =>
-                            setBaloesSemestrais(
-                              Math.max(0, Math.round(numeroSeguro(e.target.value)))
-                            )
-                          }
-                        />
-                        <div className="mini">
-                          {condicaoTemBalao(condicaoSimulacao)
-                            ? `Balão: ${brl(valorBalao)}`
-                            : "Fluxo sem balão"}
-                        </div>
                       </div>
                     </div>
 
@@ -2272,10 +2298,29 @@ export default function Simulador() {
                     </div>
 
                     <div className="luxField">
+                      <label>Tem balão?</label>
+                      <select
+                        value={propostaCliente.condicao.temBalao ? "sim" : "nao"}
+                        onChange={(e) =>
+                          setPropostaCliente((anterior) => ({
+                            ...anterior,
+                            condicao: normalizarCondicaoPagamento({
+                              ...anterior.condicao,
+                              temBalao: e.target.value === "sim",
+                            }),
+                          }))
+                        }
+                      >
+                        <option value="sim">Sim</option>
+                        <option value="nao">Não</option>
+                      </select>
+                    </div>
+
+                    <div className="luxField">
                       <label>Balões semestrais</label>
                       <input
                         type="number"
-                        min="0"
+                        min="1"
                         value={toInputNumber(propostaCliente.condicao.baloesSemestrais)}
                         onChange={(e) =>
                           setPropostaCliente((anterior) => ({
@@ -2283,12 +2328,13 @@ export default function Simulador() {
                             condicao: normalizarCondicaoPagamento({
                               ...anterior.condicao,
                               baloesSemestrais: Math.max(
-                                0,
+                                1,
                                 Math.round(numeroSeguro(e.target.value))
                               ),
                             }),
                           }))
                         }
+                        disabled={!propostaCliente.condicao.temBalao}
                       />
                     </div>
                   </div>
@@ -2326,61 +2372,54 @@ export default function Simulador() {
 
                   <div className="luxSpacer" />
 
-                  <div className="luxGrid2">
-                    <div className="luxField">
-                      <label>Balão: tipo</label>
-                      <select
-                        value={propostaCliente.balaoTipo}
-                        onChange={(e) =>
-                          setPropostaCliente((anterior) => ({
-                            ...anterior,
-                            balaoTipo: e.target.value as TipoBalao,
-                          }))
-                        }
-                      >
-                        <option value="semestral">Semestral</option>
-                        <option value="anual">Anual</option>
-                      </select>
-                    </div>
+                  {condicaoTemBalao(propostaCliente.condicao) ? (
+                    <div className="luxGrid2">
+                      <div className="luxField">
+                        <label>Balão: tipo</label>
+                        <select
+                          value={propostaCliente.balaoTipo}
+                          onChange={(e) =>
+                            setPropostaCliente((anterior) => ({
+                              ...anterior,
+                              balaoTipo: e.target.value as TipoBalao,
+                            }))
+                          }
+                        >
+                          <option value="semestral">Semestral</option>
+                          <option value="anual">Anual</option>
+                        </select>
+                      </div>
 
-                    <div className="luxField">
-                      <label>Balão: qtd. parcelas</label>
-                      <input
-                        value={
-                          condicaoTemBalao(propostaCliente.condicao)
-                            ? toInputNumber(propostaCliente.condicao.baloesSemestrais)
-                            : "Sem balão"
-                        }
-                        readOnly
-                      />
-                    </div>
+                      <div className="luxField">
+                        <label>Balão: qtd. parcelas</label>
+                        <input
+                          value={toInputNumber(propostaCliente.condicao.baloesSemestrais)}
+                          readOnly
+                        />
+                      </div>
 
-                    <div className="luxField">
-                      <label>Balão: valor da parcela</label>
-                      <input
-                        value={
-                          condicaoTemBalao(propostaCliente.condicao)
-                            ? brl(resumoPropostaCliente.calculo.valorBalao)
-                            : "Fluxo sem balão"
-                        }
-                        readOnly
-                      />
-                    </div>
+                      <div className="luxField">
+                        <label>Balão: valor da parcela</label>
+                        <input value={brl(resumoPropostaCliente.calculo.valorBalao)} readOnly />
+                      </div>
 
-                    <div className="luxField">
-                      <label>Balão: 1º vencimento</label>
-                      <input
-                        type="date"
-                        value={propostaCliente.balaoPrimeiroVencimento}
-                        onChange={(e) =>
-                          setPropostaCliente((anterior) => ({
-                            ...anterior,
-                            balaoPrimeiroVencimento: e.target.value,
-                          }))
-                        }
-                      />
+                      <div className="luxField">
+                        <label>Balão: 1º vencimento</label>
+                        <input
+                          type="date"
+                          value={propostaCliente.balaoPrimeiroVencimento}
+                          onChange={(e) =>
+                            setPropostaCliente((anterior) => ({
+                              ...anterior,
+                              balaoPrimeiroVencimento: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="luxNote">Fluxo sem balão nesta proposta.</div>
+                  )}
 
                   <div className="luxSpacer" />
 
@@ -2628,10 +2667,29 @@ export default function Simulador() {
                       </div>
 
                       <div className="luxField">
+                        <label>Tem balão?</label>
+                        <select
+                          value={contrapropostaBomm.condicao.temBalao ? "sim" : "nao"}
+                          onChange={(e) =>
+                            setContrapropostaBomm((anterior) => ({
+                              ...anterior,
+                              condicao: normalizarCondicaoPagamento({
+                                ...anterior.condicao,
+                                temBalao: e.target.value === "sim",
+                              }),
+                            }))
+                          }
+                        >
+                          <option value="sim">Sim</option>
+                          <option value="nao">Não</option>
+                        </select>
+                      </div>
+
+                      <div className="luxField">
                         <label>Balões semestrais</label>
                         <input
                           type="number"
-                          min="0"
+                          min="1"
                           value={toInputNumber(contrapropostaBomm.condicao.baloesSemestrais)}
                           onChange={(e) =>
                             setContrapropostaBomm((anterior) => ({
@@ -2639,17 +2697,25 @@ export default function Simulador() {
                               condicao: normalizarCondicaoPagamento({
                                 ...anterior.condicao,
                                 baloesSemestrais: Math.max(
-                                  0,
+                                  1,
                                   Math.round(numeroSeguro(e.target.value))
                                 ),
                               }),
                             }))
                           }
+                          disabled={!contrapropostaBomm.condicao.temBalao}
                         />
                       </div>
                     </div>
 
                     <div className="luxSpacer" />
+
+                    {!condicaoTemBalao(contrapropostaBomm.condicao) && (
+                      <>
+                        <div className="luxNote">Fluxo sem balão nesta contraproposta.</div>
+                        <div className="luxSpacer" />
+                      </>
+                    )}
 
                     <div className="luxGrid2">
                       <div className="luxField">
