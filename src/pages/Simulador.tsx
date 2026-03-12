@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import jsPDF from "jspdf";
 import { carregarLotes, type Lote } from "../services/planilhaService";
 import {
   gerarPdfContraproposta,
   gerarPdfProposta,
+  gerarPdfSimulacao,
 } from "../services/pdfService";
 import "./simulador.css";
 
@@ -108,7 +108,7 @@ function chaveLote(lote: Lote) {
 }
 
 function criarCondicaoPadrao(): CondicaoPagamento {
-  return {
+  return normalizarCondicaoPagamento({
     entradaTipo: "percentual",
     entradaValor: 20,
     parcelasMeses: 36,
@@ -121,7 +121,53 @@ function criarCondicaoPadrao(): CondicaoPagamento {
     saldoFinalValor: 0,
     saldoFinalVencimento: "2027-09-30",
     saldoFinalForma: "a_definir",
+  });
+}
+
+function normalizarCondicaoPagamento(
+  condicao: CondicaoPagamento
+): CondicaoPagamento {
+  const baloesSemestrais = Math.max(
+    0,
+    Math.round(numeroSeguro(condicao.baloesSemestrais))
+  );
+  const semBalao = baloesSemestrais === 0;
+
+  return {
+    ...condicao,
+    entradaValor: numeroSeguro(condicao.entradaValor),
+    parcelasMeses: Math.max(1, Math.round(numeroSeguro(condicao.parcelasMeses))),
+    baloesSemestrais,
+    percentualParcelas: semBalao
+      ? 100
+      : Math.max(0, numeroSeguro(condicao.percentualParcelas)),
+    percentualBaloes: semBalao
+      ? 0
+      : Math.max(0, numeroSeguro(condicao.percentualBaloes)),
+    saldoFinalPercentual: Math.max(
+      0,
+      Math.min(100, numeroSeguro(condicao.saldoFinalPercentual))
+    ),
+    saldoFinalValor: Math.max(0, numeroSeguro(condicao.saldoFinalValor)),
   };
+}
+
+function condicaoTemBalao(condicao: CondicaoPagamento) {
+  return normalizarCondicaoPagamento(condicao).baloesSemestrais > 0;
+}
+
+function descreverFluxoBalao(
+  condicao: CondicaoPagamento,
+  valorBalao: number,
+  tipoBalao: TipoBalao = "semestral"
+) {
+  const condicaoNormalizada = normalizarCondicaoPagamento(condicao);
+
+  if (!condicaoTemBalao(condicaoNormalizada) || valorBalao <= 0) {
+    return "• Fluxo sem balão";
+  }
+
+  return `• ${condicaoNormalizada.baloesSemestrais} balões ${tipoBalao === "anual" ? "anuais" : "semestrais"} de ${brl(valorBalao)}`;
 }
 
 function calcularEntrada(valorBase: number, condicao: CondicaoPagamento) {
@@ -138,14 +184,22 @@ function calcularResumoFinanceiro(
   valorPermuta: number,
   valorVeiculo: number
 ) {
-  const entrada = calcularEntrada(valorBase, condicao);
+  const condicaoNormalizada = normalizarCondicaoPagamento(condicao);
+  const entrada = calcularEntrada(valorBase, condicaoNormalizada);
   const saldoInicial = Math.max(valorBase - entrada, 0);
   const saldoAposEntrada = saldoInicial;
-  const valorSaldoFinal = condicao.temSaldoFinal
-    ? condicao.saldoFinalTipo === "valor"
-      ? Math.min(Math.max(0, numeroSeguro(condicao.saldoFinalValor)), saldoAposEntrada)
+  const valorSaldoFinal = condicaoNormalizada.temSaldoFinal
+    ? condicaoNormalizada.saldoFinalTipo === "valor"
+      ? Math.min(
+          Math.max(0, numeroSeguro(condicaoNormalizada.saldoFinalValor)),
+          saldoAposEntrada
+        )
       : Math.min(
-          Math.max(0, saldoAposEntrada * (numeroSeguro(condicao.saldoFinalPercentual) / 100)),
+          Math.max(
+            0,
+            saldoAposEntrada *
+              (numeroSeguro(condicaoNormalizada.saldoFinalPercentual) / 100)
+          ),
           saldoAposEntrada
         )
     : 0;
@@ -156,16 +210,25 @@ function calcularResumoFinanceiro(
   );
   const saldoFinal = baseParcelasEBaloes;
 
-  const baseParcelas =
-    baseParcelasEBaloes * (Math.max(0, numeroSeguro(condicao.percentualParcelas)) / 100);
-  const baseBaloes =
-    baseParcelasEBaloes * (Math.max(0, numeroSeguro(condicao.percentualBaloes)) / 100);
+  const baseParcelas = condicaoTemBalao(condicaoNormalizada)
+    ? baseParcelasEBaloes *
+      (Math.max(0, numeroSeguro(condicaoNormalizada.percentualParcelas)) / 100)
+    : baseParcelasEBaloes;
+  const baseBaloes = condicaoTemBalao(condicaoNormalizada)
+    ? baseParcelasEBaloes *
+      (Math.max(0, numeroSeguro(condicaoNormalizada.percentualBaloes)) / 100)
+    : 0;
 
   const valorParcela =
-    condicao.parcelasMeses > 0 ? baseParcelas / condicao.parcelasMeses : 0;
+    condicaoNormalizada.parcelasMeses > 0
+      ? baseParcelas / condicaoNormalizada.parcelasMeses
+      : 0;
 
   const valorBalao =
-    condicao.baloesSemestrais > 0 ? baseBaloes / condicao.baloesSemestrais : 0;
+    condicaoTemBalao(condicaoNormalizada) &&
+    condicaoNormalizada.baloesSemestrais > 0
+      ? baseBaloes / condicaoNormalizada.baloesSemestrais
+      : 0;
 
   return {
     entrada,
@@ -403,7 +466,8 @@ export default function Simulador() {
   const permutaAplicada = temPermuta ? numeroSeguro(valorPermuta) : 0;
   const veiculoAplicado = temVeiculo ? numeroSeguro(valorVeiculo) : 0;
   const condicaoBaseSimulacao = useMemo<CondicaoPagamento>(
-    () => ({
+    () =>
+      normalizarCondicaoPagamento({
       entradaTipo: "percentual",
       entradaValor: entradaPercentual,
       parcelasMeses,
@@ -465,7 +529,8 @@ export default function Simulador() {
   ]);
 
   const condicaoSimulacao = useMemo<CondicaoPagamento>(
-    () => ({
+    () =>
+      normalizarCondicaoPagamento({
       entradaTipo: "percentual",
       entradaValor: entradaPercentual,
       parcelasMeses,
@@ -528,7 +593,7 @@ export default function Simulador() {
             valor: valorVeiculo,
           }
         : null,
-      condicao: {
+      condicao: normalizarCondicaoPagamento({
         entradaTipo: "percentual",
         entradaValor: entradaPercentual,
         parcelasMeses,
@@ -541,7 +606,7 @@ export default function Simulador() {
         saldoFinalValor,
         saldoFinalVencimento,
         saldoFinalForma,
-      },
+      }),
     }));
   }, [
     valorTerreno,
@@ -676,7 +741,11 @@ export default function Simulador() {
       `• ${propostaCliente.condicao.parcelasMeses} parcelas mensais de ${brl(calculo.valorParcela)}`
     );
     linhas.push(
-      `• ${propostaCliente.condicao.baloesSemestrais} balões semestrais de ${brl(calculo.valorBalao)}`
+      descreverFluxoBalao(
+        propostaCliente.condicao,
+        calculo.valorBalao,
+        propostaCliente.balaoTipo
+      )
     );
 
     return {
@@ -767,7 +836,10 @@ export default function Simulador() {
       `• ${contrapropostaBomm.condicao.parcelasMeses} parcelas mensais de ${brl(calculo.valorParcela)}`
     );
     linhas.push(
-      `• ${contrapropostaBomm.condicao.baloesSemestrais} balões semestrais de ${brl(calculo.valorBalao)}`
+      descreverFluxoBalao(
+        contrapropostaBomm.condicao,
+        calculo.valorBalao
+      )
     );
 
     if (contrapropostaBomm.validade) {
@@ -839,9 +911,7 @@ export default function Simulador() {
       linhas.push("");
       linhas.push("📋 Condição sugerida:");
       linhas.push(`• ${parcelasMeses} parcelas mensais de ${brl(valorParcela)}`);
-      linhas.push(
-        `• ${baloesSemestrais} balões semestrais de ${brl(valorBalao)}`
-      );
+      linhas.push(descreverFluxoBalao(condicaoSimulacao, valorBalao));
       linhas.push("");
       linhas.push(
         "📌 Importante: parcelas e balões são corrigidos pelo INCC durante a obra e, após a entrega, pelo IPCA."
@@ -997,12 +1067,14 @@ export default function Simulador() {
           valorParcela: brl(resumoPropostaCliente.calculo.valorParcela),
           primeiroVencimento: propostaCliente.mensaisPrimeiroVencimento || "-",
         },
-        balao: {
-          tipo: propostaCliente.balaoTipo,
-          quantidadeParcelas: String(propostaCliente.condicao.baloesSemestrais),
-          valorParcela: brl(resumoPropostaCliente.calculo.valorBalao),
-          primeiroVencimento: propostaCliente.balaoPrimeiroVencimento || "-",
-        },
+        balao: condicaoTemBalao(propostaCliente.condicao)
+          ? {
+              tipo: propostaCliente.balaoTipo,
+              quantidadeParcelas: String(propostaCliente.condicao.baloesSemestrais),
+              valorParcela: brl(resumoPropostaCliente.calculo.valorBalao),
+              primeiroVencimento: propostaCliente.balaoPrimeiroVencimento || "-",
+            }
+          : undefined,
         permuta: propostaCliente.temPermuta
           ? {
               valor: brl(numeroSeguro(propostaCliente.permuta?.valor)),
@@ -1040,9 +1112,15 @@ export default function Simulador() {
               : brl(resumoContraproposta.calculo.entrada),
           mensaisQuantidade: `${contrapropostaBomm.condicao.parcelasMeses}x`,
           mensaisValor: brl(resumoContraproposta.calculo.valorParcela),
-          balaoTipo: "semestral",
-          balaoQuantidade: `${contrapropostaBomm.condicao.baloesSemestrais}x`,
-          balaoValor: brl(resumoContraproposta.calculo.valorBalao),
+          balaoTipo: condicaoTemBalao(contrapropostaBomm.condicao)
+            ? "semestral"
+            : undefined,
+          balaoQuantidade: condicaoTemBalao(contrapropostaBomm.condicao)
+            ? `${contrapropostaBomm.condicao.baloesSemestrais}x`
+            : undefined,
+          balaoValor: condicaoTemBalao(contrapropostaBomm.condicao)
+            ? brl(resumoContraproposta.calculo.valorBalao)
+            : undefined,
           validade: contrapropostaBomm.validade || "-",
         },
         permuta: contrapropostaBomm.temPermuta
@@ -1059,158 +1137,70 @@ export default function Simulador() {
       return;
     }
 
-    const doc = new jsPDF({
-      unit: "pt",
-      format: "a4",
-    });
-
-    const margemX = 42;
-    let y = 40;
-
-    const tituloPdf = "Simulação Comercial";
-
-    doc.setFillColor(21, 42, 34);
-    doc.roundedRect(24, 24, 547, 794, 18, 18, "F");
-
-    try {
-      doc.addImage(logoVivendas, "PNG", margemX, y, 88, 28);
-      doc.addImage(logoBomm, "PNG", 470, y + 2, 60, 22);
-    } catch {
-      // segue sem imagem
-    }
-
-    y += 48;
-
-    doc.setTextColor(245, 245, 245);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(22);
-    doc.text(tituloPdf, margemX, y);
-
-    y += 24;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-    doc.setTextColor(194, 209, 201);
-    doc.text("Vivendas do Bosque • BOMM Urbanizadora", margemX, y);
-
-    y += 34;
-
-    doc.setDrawColor(72, 94, 83);
-    doc.line(margemX, y, 530, y);
-
-    y += 24;
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.setTextColor(245, 245, 245);
-    doc.text("Dados do atendimento", margemX, y);
-
-    y += 20;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-    doc.setTextColor(230, 235, 232);
-
-    const blocoAtendimento = [
-      `Cliente: ${cliente || "-"}`,
-      `Corretor(a): ${corretor || "-"}`,
-      `Imobiliária: ${imobiliaria || "-"}`,
-      `Quantidade de lotes: ${quantidadeLotesSelecionados || 0}`,
-    ];
-
-    blocoAtendimento.forEach((linha) => {
-      doc.text(linha, margemX, y);
-      y += 16;
-    });
-
-    y += 10;
-    doc.setFont("helvetica", "bold");
-    doc.text("Unidades selecionadas", margemX, y);
-
-    y += 18;
-    doc.setFont("helvetica", "normal");
-
-    const unidadesPdf =
-      lotesSelecionados.length > 0
-        ? lotesSelecionados.map(
-            (lote) => `• Quadra ${lote.quadra} • Lote ${lote.lote}`
-          )
-        : ["• Nenhuma unidade selecionada"];
-
-    unidadesPdf.forEach((linha) => {
-      doc.text(linha, margemX, y);
-      y += 16;
-    });
-
-    y += 10;
-
-    if (modoDocumento === "simulacao") {
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.setTextColor(245, 245, 245);
-      doc.text("Estrutura da negociação", margemX, y);
-
-      y += 20;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(11);
-      doc.setTextColor(230, 235, 232);
-
-      resumoNegociacao.forEach((linha) => {
-        doc.text(linha, margemX, y);
-        y += 16;
-      });
-
-      y += 12;
-
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.setTextColor(245, 245, 245);
-      doc.text("Condição sugerida", margemX, y);
-
-      y += 20;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(11);
-      doc.setTextColor(230, 235, 232);
-
-      [
-        `• ${parcelasMeses} parcelas mensais de ${brl(valorParcela)}`,
-        `• ${baloesSemestrais} balões semestrais de ${brl(valorBalao)}`,
-        ...(temSaldoFinal && valorSaldoFinalCalculado > 0
-          ? [
-              `• Saldo final na entrega: ${brl(valorSaldoFinalCalculado)}`,
-              `• Vencimento: ${saldoFinalVencimento || "2027-09-30"}`,
-              `• Forma prevista: ${
+    gerarPdfSimulacao({
+      data: dataAtualInput(),
+      quadra: quadraProposta,
+      lote: loteProposta,
+      valor: brl(valorTerreno),
+      clienteNome: cliente || "-",
+      clienteCpf: clienteCpf || "-",
+      clienteTelefone: clienteTelefone || "-",
+      clienteEmail: clienteEmail || "-",
+      clienteProfissao: clienteProfissao || "-",
+      clienteEstadoCivil: clienteEstadoCivil || "-",
+      corretor: corretor || "-",
+      creci: creci || "-",
+      imobiliaria: imobiliaria || "-",
+      unidades: unidadesSelecionadasPdf,
+      entrada: brl(valorEntrada),
+      saldoFinal:
+        temSaldoFinal && valorSaldoFinalCalculado > 0
+          ? {
+              valor: brl(valorSaldoFinalCalculado),
+              vencimento: saldoFinalVencimento || "2027-09-30",
+              forma:
                 saldoFinalForma === "quitacao"
                   ? "quitação"
                   : saldoFinalForma === "financiamento"
                     ? "financiamento"
-                    : "a definir"
-              }`,
-            ]
-          : []),
-        "• Correção via INCC durante a obra e, após a entrega, IPCA.",
-      ].forEach((linha) => {
-        doc.text(linha, margemX, y);
-        y += 16;
-      });
-    }
-
-    y += 18;
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.setTextColor(245, 245, 245);
-    doc.text("Mensagem pronta", margemX, y);
-
-    y += 18;
-    doc.setFont("courier", "normal");
-    doc.setFontSize(9);
-    doc.setTextColor(225, 231, 227);
-
-    const linhasMensagem = doc.splitTextToSize(mensagemWhatsApp, 485);
-    doc.text(linhasMensagem, margemX, y);
-
-    const nomeArquivo = "simulacao-vivendas.pdf";
-
-    doc.save(nomeArquivo);
+                    : "a definir",
+            }
+          : undefined,
+      permuta:
+        temPermuta && permutaAplicada > 0
+          ? {
+              valor: brl(permutaAplicada),
+              descricao: descricaoPermuta || "Permuta informada",
+            }
+          : undefined,
+      veiculo:
+        temVeiculo && veiculoAplicado > 0
+          ? {
+              valor: brl(veiculoAplicado),
+              descricao: modeloVeiculo || "Veículo informado",
+            }
+          : undefined,
+      mensais: {
+        quantidadeParcelas: `${parcelasMeses} parcelas`,
+        valorParcela: brl(valorParcela),
+      },
+      balao: condicaoTemBalao(condicaoSimulacao)
+        ? {
+            tipo: "Semestral",
+            quantidadeParcelas: `${baloesSemestrais} parcelas`,
+            valorParcela: brl(valorBalao),
+          }
+        : undefined,
+      baseParcelasEBaloes: brl(resumoSimulacao.baseParcelasEBaloes),
+      saldoRemanescente: brl(saldoFinal),
+      detalhesNegociacao: [
+        ...resumoNegociacao,
+        `• ${parcelasMeses} parcelas mensais de ${brl(valorParcela)}`,
+        descreverFluxoBalao(condicaoSimulacao, valorBalao),
+      ],
+      observacao:
+        "Condição comercial sujeita à disponibilidade das unidades e validação na data da negociação.",
+    });
   }
 
   const tituloModo =
@@ -1387,7 +1377,9 @@ export default function Simulador() {
       {
         label: "Base p/ mensais e balões",
         value: brl(resumoSimulacao.baseParcelasEBaloes),
-        hint: `${parcelasMeses} mensais • ${baloesSemestrais} balões`,
+        hint: condicaoTemBalao(condicaoSimulacao)
+          ? `${parcelasMeses} mensais • ${baloesSemestrais} balões`
+          : `${parcelasMeses} mensais • fluxo sem balão`,
         tone: "isFinal",
       },
     ],
@@ -1410,6 +1402,7 @@ export default function Simulador() {
       resumoSimulacao.baseParcelasEBaloes,
       parcelasMeses,
       baloesSemestrais,
+      condicaoSimulacao,
     ]
   );
 
@@ -1915,15 +1908,19 @@ export default function Simulador() {
                         <label>Balões semestrais</label>
                         <input
                           type="number"
-                          min="1"
+                          min="0"
                           value={toInputNumber(baloesSemestrais)}
                           onChange={(e) =>
                             setBaloesSemestrais(
-                              Math.max(1, Math.round(numeroSeguro(e.target.value)))
+                              Math.max(0, Math.round(numeroSeguro(e.target.value)))
                             )
                           }
                         />
-                        <div className="mini">Balão: {brl(valorBalao)}</div>
+                        <div className="mini">
+                          {condicaoTemBalao(condicaoSimulacao)
+                            ? `Balão: ${brl(valorBalao)}`
+                            : "Fluxo sem balão"}
+                        </div>
                       </div>
                     </div>
 
@@ -2187,7 +2184,7 @@ export default function Simulador() {
                       <label>Entrada: qtd. parcelas</label>
                       <input
                         type="number"
-                        min="1"
+                        min="0"
                         value={toInputNumber(propostaCliente.entradaQuantidadeParcelas)}
                         onChange={(e) =>
                           setPropostaCliente((anterior) => ({
@@ -2278,18 +2275,18 @@ export default function Simulador() {
                       <label>Balões semestrais</label>
                       <input
                         type="number"
-                        min="1"
+                        min="0"
                         value={toInputNumber(propostaCliente.condicao.baloesSemestrais)}
                         onChange={(e) =>
                           setPropostaCliente((anterior) => ({
                             ...anterior,
-                            condicao: {
+                            condicao: normalizarCondicaoPagamento({
                               ...anterior.condicao,
                               baloesSemestrais: Math.max(
-                                1,
+                                0,
                                 Math.round(numeroSeguro(e.target.value))
                               ),
-                            },
+                            }),
                           }))
                         }
                       />
@@ -2349,14 +2346,25 @@ export default function Simulador() {
                     <div className="luxField">
                       <label>Balão: qtd. parcelas</label>
                       <input
-                        value={toInputNumber(propostaCliente.condicao.baloesSemestrais)}
+                        value={
+                          condicaoTemBalao(propostaCliente.condicao)
+                            ? toInputNumber(propostaCliente.condicao.baloesSemestrais)
+                            : "Sem balão"
+                        }
                         readOnly
                       />
                     </div>
 
                     <div className="luxField">
                       <label>Balão: valor da parcela</label>
-                      <input value={brl(resumoPropostaCliente.calculo.valorBalao)} readOnly />
+                      <input
+                        value={
+                          condicaoTemBalao(propostaCliente.condicao)
+                            ? brl(resumoPropostaCliente.calculo.valorBalao)
+                            : "Fluxo sem balão"
+                        }
+                        readOnly
+                      />
                     </div>
 
                     <div className="luxField">
@@ -2623,18 +2631,18 @@ export default function Simulador() {
                         <label>Balões semestrais</label>
                         <input
                           type="number"
-                          min="1"
+                          min="0"
                           value={toInputNumber(contrapropostaBomm.condicao.baloesSemestrais)}
                           onChange={(e) =>
                             setContrapropostaBomm((anterior) => ({
                               ...anterior,
-                              condicao: {
+                              condicao: normalizarCondicaoPagamento({
                                 ...anterior.condicao,
                                 baloesSemestrais: Math.max(
-                                  1,
+                                  0,
                                   Math.round(numeroSeguro(e.target.value))
                                 ),
-                              },
+                              }),
                             }))
                           }
                         />
