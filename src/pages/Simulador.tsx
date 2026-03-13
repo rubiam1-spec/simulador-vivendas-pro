@@ -14,12 +14,14 @@ import {
 } from "../services/negociacoesMapper";
 import {
   adicionarEventoNegociacao,
+  buscarNegociacaoPorId,
   atualizarNegociacao,
   duplicarNegociacao,
   excluirNegociacao,
   listarNegociacoesSalvas,
   salvarNovaNegociacao,
 } from "../services/negociacoesStorage";
+import { consumirNegociacaoAgendada } from "../services/negociacoesSession";
 import type { NegociacaoSalva } from "../types/negociacao";
 import "./simulador.css";
 
@@ -1210,6 +1212,18 @@ export default function Simulador() {
     recarregarNegociacoes();
     mostrarFeedbackNegociacao("Negociação aberta no simulador.");
   }
+
+  useEffect(() => {
+    if (loading) return;
+
+    const negociacaoId = consumirNegociacaoAgendada();
+    if (!negociacaoId) return;
+
+    const negociacao = buscarNegociacaoPorId(negociacaoId);
+    if (negociacao) {
+      abrirNegociacaoSalva(negociacao);
+    }
+  }, [loading]);
 
   function duplicarNegociacaoSalva(id: string) {
     const duplicada = duplicarNegociacao(id);
