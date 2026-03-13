@@ -1,19 +1,21 @@
 import { NavLink } from "react-router-dom";
 
+import { branding } from "../config/branding";
+
 const NAV_ITEMS = [
   { to: "/dashboard", label: "Dashboard" },
-  { to: "/negociacoes", label: "Negociações" },
+  { to: "/negociacoes", label: "Negociacoes" },
   { to: "/simulador", label: "Simulador" },
-  { to: "/configuracoes", label: "Configurações" },
+  { to: "/configuracoes", label: "Configuracoes" },
 ];
 
 export default function Sidebar() {
   return (
     <aside className="appSidebar">
       <div className="appSidebarBrand">
-        <div className="appSidebarKicker">BOMM Urbanizadora</div>
-        <h1>Simulador Pro</h1>
-        <p>Operação comercial, negociações e proposta institucional.</p>
+        <div className="appSidebarKicker">{branding.sidebarSubtitle}</div>
+        <h1>{branding.sidebarTitle}</h1>
+        <p>Operacao comercial, negociacoes, simulacoes e documentos.</p>
       </div>
 
       <nav className="appSidebarNav" aria-label="Menu principal">

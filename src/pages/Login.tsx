@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 
-import { hasSupabaseConfig } from "../lib/supabase";
 import { useAuth } from "../components/AuthProvider";
+import { branding } from "../config/branding";
+import { hasSupabaseConfig } from "../lib/supabase";
 
 export default function Login() {
   const { session, login } = useAuth();
@@ -40,12 +41,9 @@ export default function Login() {
   return (
     <div className="loginPage">
       <div className="loginCard">
-        <div className="loginKicker">BOMM Urbanizadora</div>
-        <h1>Entrar no Simulador Pro</h1>
-        <p>
-          Acesso protegido para dashboard, central comercial, simulador e
-          configuracoes.
-        </p>
+        <div className="loginKicker">{branding.sidebarSubtitle}</div>
+        <h1>{branding.loginTitle}</h1>
+        <p>{branding.loginSubtitle}</p>
 
         {!hasSupabaseConfig ? (
           <div className="loginAlert">
