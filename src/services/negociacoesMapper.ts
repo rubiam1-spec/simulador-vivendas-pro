@@ -8,6 +8,8 @@ import type {
   CondicaoPagamentoSalva,
   ContrapropostaSalva,
   NegociacaoSalva,
+  OrigemNegociacao,
+  PrioridadeNegociacao,
   PropostaSalva,
   StatusNegociacao,
   TipoBalaoSalvo,
@@ -70,6 +72,20 @@ function statusPorTipo(tipo: TipoNegociacao): StatusNegociacao {
   if (tipo === "proposta") return "em_negociacao";
   if (tipo === "contraproposta") return "aprovada";
   return "rascunho";
+}
+
+function prioridadePadrao(): PrioridadeNegociacao {
+  return "media";
+}
+
+function origemPadrao(): OrigemNegociacao {
+  return "outro";
+}
+
+function ultimaAcaoPorTipo(tipo: TipoNegociacao) {
+  if (tipo === "proposta") return "Proposta salva";
+  if (tipo === "contraproposta") return "Contraproposta salva";
+  return "Simulação salva";
 }
 
 function normalizarCondicao(condicao: CondicaoPagamentoSalva): CondicaoPagamentoSalva {
@@ -191,6 +207,10 @@ export function mapearSimuladorParaNegociacaoSalva(
   return {
     tipo: input.tipo,
     status: statusPorTipo(input.tipo),
+    prioridade: prioridadePadrao(),
+    origem: origemPadrao(),
+    observacaoInterna: "",
+    ultimaAcao: ultimaAcaoPorTipo(input.tipo),
     titulo: `${input.tipo.toUpperCase()} • ${input.cliente || "Sem cliente"}`,
     cliente: input.cliente,
     clienteCpf: input.clienteCpf,
@@ -204,6 +224,7 @@ export function mapearSimuladorParaNegociacaoSalva(
     unidades,
     valorTotal: numeroSeguro(input.valorTotal),
     resumoLotes,
+    historico: [],
     simulacao: clonar(input.simulacao),
     proposta: clonar(input.proposta),
     contraproposta: clonar(input.contraproposta),

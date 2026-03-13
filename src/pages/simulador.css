@@ -689,6 +689,147 @@ body::after {
   overflow: hidden;
 }
 
+.luxDashboardHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.luxDashboardTop {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.luxMetricCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.025)),
+    rgba(17, 28, 23, 0.34);
+  box-shadow: var(--shadow-card);
+}
+
+.luxMetricCardAccent {
+  border-color: rgba(57, 163, 118, 0.28);
+  background:
+    linear-gradient(180deg, rgba(57, 163, 118, 0.12), rgba(255, 255, 255, 0.03)),
+    rgba(17, 28, 23, 0.34);
+}
+
+.luxMetricLabel {
+  color: var(--muted2);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+}
+
+.luxMetricValue {
+  font-family: var(--font-display);
+  font-size: clamp(30px, 2vw, 42px);
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+  color: var(--text);
+}
+
+.luxDashboardGrid {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: 1.2fr 0.9fr 0.9fr;
+  gap: 18px;
+}
+
+.luxDashboardPanel {
+  padding: 18px;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.luxDashboardPanelTitle {
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: 800;
+  margin-bottom: 14px;
+}
+
+.luxDashboardList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.luxDashboardRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.luxDashboardRow:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.luxDashboardRowMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.luxDashboardRowMeta strong {
+  color: var(--text);
+}
+
+.luxDashboardRowMeta span {
+  color: var(--muted2);
+  font-size: var(--text-xs);
+}
+
+.luxDashPill.isYellow {
+  border-color: rgba(255, 208, 137, 0.22);
+  background: rgba(255, 208, 137, 0.08);
+  color: #ffe1a8;
+}
+
+.luxDashPill.isOrange {
+  border-color: rgba(255, 166, 82, 0.24);
+  background: rgba(255, 166, 82, 0.08);
+  color: #ffd7a8;
+}
+
+.luxDashPill.isGreen {
+  border-color: rgba(142, 241, 200, 0.22);
+  background: rgba(142, 241, 200, 0.08);
+  color: var(--success);
+}
+
+.luxDashPill.isBlue {
+  border-color: rgba(125, 182, 255, 0.24);
+  background: rgba(125, 182, 255, 0.08);
+  color: #cfe0ff;
+}
+
+.luxDashPill.isRed {
+  border-color: rgba(255, 110, 110, 0.24);
+  background: rgba(255, 110, 110, 0.08);
+  color: #ffd0d0;
+}
+
+.luxDashPill.isMuted {
+  opacity: 0.76;
+}
+
 .luxCentralHead {
   display: flex;
   justify-content: space-between;
@@ -717,6 +858,12 @@ body::after {
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) repeat(2, minmax(180px, 0.7fr));
   gap: 14px;
+}
+
+.luxCentralFiltersWide {
+  grid-template-columns:
+    minmax(0, 1.5fr)
+    repeat(4, minmax(160px, 0.65fr));
 }
 
 .luxCentralGrid {
@@ -774,6 +921,51 @@ body::after {
   justify-content: flex-end;
 }
 
+.luxStatusPill.isPositive {
+  border-color: rgba(142, 241, 200, 0.26);
+  background: rgba(142, 241, 200, 0.1);
+  color: var(--success);
+}
+
+.luxStatusPill.isWarning {
+  border-color: rgba(255, 208, 137, 0.28);
+  background: rgba(255, 208, 137, 0.1);
+  color: var(--warning);
+}
+
+.luxStatusPill.isMuted {
+  opacity: 0.78;
+}
+
+.luxPriorityPill.isHigh {
+  border-color: rgba(255, 110, 110, 0.26);
+  background: rgba(255, 110, 110, 0.1);
+  color: #ffd0d0;
+}
+
+.luxPriorityPill.isMedium {
+  border-color: rgba(255, 208, 137, 0.22);
+  background: rgba(255, 208, 137, 0.08);
+  color: #ffe1a8;
+}
+
+.luxPriorityPill.isLow {
+  border-color: rgba(142, 241, 200, 0.22);
+  background: rgba(142, 241, 200, 0.08);
+  color: var(--success);
+}
+
+.luxOriginPill.isAccent {
+  border-color: rgba(57, 163, 118, 0.34);
+  background: rgba(57, 163, 118, 0.14);
+}
+
+.luxOriginPill.isWarm {
+  border-color: rgba(255, 208, 137, 0.22);
+  background: rgba(255, 208, 137, 0.08);
+  color: #ffe1a8;
+}
+
 .luxNegMeta {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -801,6 +993,111 @@ body::after {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-weight: 800;
+}
+
+.luxNegInsightRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.luxNegInsight {
+  padding: 14px 15px;
+  border-radius: var(--r-md);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(8, 13, 11, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.luxNegInsight strong {
+  color: var(--text);
+  line-height: 1.55;
+  font-weight: 600;
+}
+
+.luxNegEditor {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border-radius: var(--r-lg);
+  border: 1px solid rgba(57, 163, 118, 0.18);
+  background:
+    linear-gradient(180deg, rgba(57, 163, 118, 0.08), rgba(255, 255, 255, 0.02)),
+    rgba(10, 18, 14, 0.28);
+}
+
+.luxFieldFull {
+  grid-column: 1 / -1;
+}
+
+.luxCentralTextarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.luxNegTimeline {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border-radius: var(--r-lg);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.luxNegTimelineHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.luxNegTimelineHead strong {
+  color: var(--text);
+  font-size: var(--text-sm);
+}
+
+.luxNegTimelineList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.luxNegTimelineItem {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.luxNegTimelineDot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 10px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px rgba(57, 163, 118, 0.14);
+}
+
+.luxNegTimelineBody {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.luxNegTimelineBody strong {
+  color: var(--text);
+  line-height: 1.45;
+}
+
+.luxNegTimelineBody span,
+.luxNegTimelineEmpty {
+  color: var(--muted2);
+  font-size: var(--text-xs);
+  line-height: 1.5;
 }
 
 .luxNegActions {
@@ -1432,6 +1729,10 @@ body::after {
 }
 
 @media (max-width: 1360px) {
+  .luxDashboardGrid {
+    grid-template-columns: 1fr;
+  }
+
   .luxCentralGrid {
     grid-template-columns: 1fr;
   }
@@ -1463,6 +1764,10 @@ body::after {
 }
 
 @media (max-width: 1100px) {
+  .luxDashboardTop {
+    grid-template-columns: 1fr;
+  }
+
   .luxCentralHead {
     flex-direction: column;
   }
@@ -1472,6 +1777,10 @@ body::after {
   }
 
   .luxNegMeta {
+    grid-template-columns: 1fr;
+  }
+
+  .luxNegInsightRow {
     grid-template-columns: 1fr;
   }
 

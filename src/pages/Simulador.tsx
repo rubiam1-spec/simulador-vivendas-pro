@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import CentralNegociacoes from "../components/CentralNegociacoes";
+import DashboardComercial from "../components/DashboardComercial";
 import { carregarLotes, type Lote } from "../services/planilhaService";
 import {
   gerarPdfContraproposta,
@@ -12,6 +13,7 @@ import {
   reidratarNegociacaoSalva,
 } from "../services/negociacoesMapper";
 import {
+  adicionarEventoNegociacao,
   atualizarNegociacao,
   duplicarNegociacao,
   excluirNegociacao,
@@ -1068,7 +1070,7 @@ export default function Simulador() {
   }
 
   function montarNegociacaoAtual() {
-    return mapearSimuladorParaNegociacaoSalva({
+    const base = mapearSimuladorParaNegociacaoSalva({
       tipo: modoDocumento,
       cliente,
       clienteCpf,
@@ -1116,13 +1118,35 @@ export default function Simulador() {
         condicao: normalizarCondicaoPagamento(contrapropostaBomm.condicao),
       },
     });
+
+    const negociacaoAtual = negociacaoAtivaId
+      ? negociacoesSalvas.find((negociacao) => negociacao.id === negociacaoAtivaId)
+      : null;
+
+    if (!negociacaoAtual) {
+      return base;
+    }
+
+    return {
+      ...base,
+      status: negociacaoAtual.status,
+      prioridade: negociacaoAtual.prioridade,
+      origem: negociacaoAtual.origem,
+      observacaoInterna: negociacaoAtual.observacaoInterna,
+      ultimaAcao: negociacaoAtual.ultimaAcao,
+    };
   }
 
   function salvarNegociacaoAtual() {
     const negociacao = montarNegociacaoAtual();
 
     if (negociacaoAtivaId) {
-      const atualizada = atualizarNegociacao(negociacaoAtivaId, negociacao);
+      const atualizada = atualizarNegociacao(negociacaoAtivaId, negociacao, [
+        {
+          tipo: "negociacao_atualizada",
+          descricao: "Negociacao atualizada",
+        },
+      ]);
       if (atualizada) {
         setNegociacaoAtivaId(atualizada.id);
         recarregarNegociacoes();
@@ -1179,6 +1203,11 @@ export default function Simulador() {
       condicao: normalizarCondicaoPagamento(restaurada.contraproposta.condicao),
     });
     setNegociacaoAtivaId(negociacao.id);
+    adicionarEventoNegociacao(negociacao.id, {
+      tipo: "negociacao_aberta",
+      descricao: "Negociacao aberta",
+    });
+    recarregarNegociacoes();
     mostrarFeedbackNegociacao("Negociação aberta no simulador.");
   }
 
@@ -1206,7 +1235,25 @@ export default function Simulador() {
 
   function gerarPdfDaCentral(negociacao: NegociacaoSalva) {
     gerarPdfDaNegociacaoSalva(negociacao);
+    adicionarEventoNegociacao(negociacao.id, {
+      tipo: "pdf_gerado",
+      descricao: "PDF gerado",
+    });
+    recarregarNegociacoes();
     mostrarFeedbackNegociacao("PDF gerado a partir da negociação salva.");
+  }
+
+  function atualizarDadosComerciaisNegociacao(
+    id: string,
+    dados: Pick<
+      NegociacaoSalva,
+      "status" | "prioridade" | "origem" | "observacaoInterna" | "ultimaAcao"
+    >
+  ) {
+    const atualizada = atualizarNegociacao(id, dados);
+    if (!atualizada) return;
+    recarregarNegociacoes();
+    mostrarFeedbackNegociacao("Dados comerciais atualizados.");
   }
 
   async function copiarMensagem() {
@@ -3258,6 +3305,8 @@ export default function Simulador() {
             <div className="luxNote luxCentralFeedback">{feedbackNegociacao}</div>
           ) : null}
 
+          <DashboardComercial negociacoes={negociacoesSalvas} />
+
           <CentralNegociacoes
             negociacoes={negociacoesSalvas}
             negociacaoAtivaId={negociacaoAtivaId}
@@ -3265,6 +3314,7 @@ export default function Simulador() {
             onDuplicar={duplicarNegociacaoSalva}
             onExcluir={excluirNegociacaoSalva}
             onGerarPdf={gerarPdfDaCentral}
+            onAtualizarDadosComerciais={atualizarDadosComerciaisNegociacao}
           />
         </main>
       </div>

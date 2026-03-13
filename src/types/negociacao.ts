@@ -3,8 +3,42 @@ export type TipoNegociacao = "simulacao" | "proposta" | "contraproposta";
 export type StatusNegociacao =
   | "rascunho"
   | "em_negociacao"
+  | "aguardando_retorno"
   | "aprovada"
+  | "fechada"
+  | "perdida"
   | "arquivada";
+
+export type PrioridadeNegociacao = "baixa" | "media" | "alta";
+
+export type OrigemNegociacao =
+  | "corretor"
+  | "cliente_direto"
+  | "feira"
+  | "indicacao"
+  | "trafego_pago"
+  | "interno"
+  | "outro";
+
+export type TipoEventoNegociacao =
+  | "negociacao_criada"
+  | "status_alterado"
+  | "prioridade_alterada"
+  | "origem_alterada"
+  | "observacao_interna_alterada"
+  | "ultima_acao_alterada"
+  | "pdf_gerado"
+  | "negociacao_duplicada"
+  | "negociacao_aberta"
+  | "negociacao_atualizada";
+
+export type EventoNegociacao = {
+  id: string;
+  tipo: TipoEventoNegociacao;
+  descricao: string;
+  dataHora: string;
+  metadados?: Record<string, string>;
+};
 
 export type TipoEntradaSalva = "percentual" | "valor";
 export type TipoBalaoSalvo = "anual" | "semestral";
@@ -90,6 +124,10 @@ export type NegociacaoSalva = {
   id: string;
   tipo: TipoNegociacao;
   status: StatusNegociacao;
+  prioridade: PrioridadeNegociacao;
+  origem: OrigemNegociacao;
+  observacaoInterna: string;
+  ultimaAcao: string;
   titulo: string;
   cliente: string;
   clienteCpf: string;
@@ -105,6 +143,7 @@ export type NegociacaoSalva = {
   resumoLotes: string;
   createdAt: string;
   updatedAt: string;
+  historico: EventoNegociacao[];
   simulacao: SimulacaoSalva;
   proposta: PropostaSalva;
   contraproposta: ContrapropostaSalva;
