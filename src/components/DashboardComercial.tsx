@@ -53,6 +53,9 @@ function formatarData(valor: string) {
 }
 
 function labelStatus(status: StatusNegociacao) {
+  if (status === "simulacao") return "Simulacao";
+  if (status === "proposta_enviada") return "Proposta enviada";
+  if (status === "contraproposta") return "Contraproposta";
   if (status === "em_negociacao") return "Em negociacao";
   if (status === "aguardando_retorno") return "Aguardando retorno";
   if (status === "aprovada") return "Aprovada";
@@ -183,11 +186,21 @@ export default function DashboardComercial({
         </article>
 
         <article className="crmMetricCard">
-          <span className="crmMetricLabel">Aguardando retorno</span>
+          <span className="crmMetricLabel">Negociacoes em aberto</span>
           <strong className="crmMetricValue">
             {metrics.totalEmAndamento.toLocaleString("pt-BR")}
           </strong>
           <span className="crmMetricHint">Negociacoes em fase ativa do funil.</span>
+        </article>
+
+        <article className="crmMetricCard">
+          <span className="crmMetricLabel">Aprovadas e fechadas</span>
+          <strong className="crmMetricValue">
+            {(metrics.totalFechadas + (metrics.porStatus.find((item) => item.status === "aprovada")?.quantidade || 0)).toLocaleString("pt-BR")}
+          </strong>
+          <span className="crmMetricHint">
+            Sinal positivo consolidado entre aprovacao comercial e fechamento.
+          </span>
         </article>
 
         <article className="crmMetricCard">
