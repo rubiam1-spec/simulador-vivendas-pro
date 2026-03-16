@@ -6,6 +6,7 @@ import AppLayout from "./components/AppLayout";
 import { AuthProvider } from "./components/AuthProvider";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { branding } from "./config/branding";
+import { getDefaultAppRoute } from "./config/routeAccess";
 import AcessosPage from "./pages/Acessos";
 import CentralNegociacoesPage from "./pages/CentralNegociacoesPage";
 import ClientesPage from "./pages/Clientes";
@@ -23,11 +24,7 @@ function HomeRedirect() {
     return <div className="appShellLoading">Carregando perfil...</div>;
   }
 
-  if (profile?.role === "corretor") {
-    return <Navigate to="/simulador" replace />;
-  }
-
-  return <Navigate to="/dashboard" replace />;
+  return <Navigate to={getDefaultAppRoute(profile)} replace />;
 }
 
 export default function App() {
@@ -57,7 +54,7 @@ export default function App() {
             <Route element={<AppLayout />}>
               <Route path="/" element={<HomeRedirect />} />
               <Route
-                element={<ProtectedRoute allowedRoles={["admin", "gestor"]} redirectTo="/" />}
+                element={<ProtectedRoute allowedRoles={["admin", "gestor"]} />}
               >
                 <Route path="/dashboard" element={<DashboardPage />} />
               </Route>
@@ -76,7 +73,7 @@ export default function App() {
                 element={<ConfiguracoesPage />}
               />
               <Route
-                element={<ProtectedRoute allowedRoles={["admin", "gestor"]} redirectTo="/" />}
+                element={<ProtectedRoute allowedRoles={["admin", "gestor"]} />}
               >
                 <Route path="/clientes" element={<ClientesPage />} />
                 <Route path="/corretores" element={<CorretoresPage />} />
