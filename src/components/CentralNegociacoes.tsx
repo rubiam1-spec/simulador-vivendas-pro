@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 
 import type {
+  EtapaNegociacao,
   NegociacaoSalva,
   OrigemNegociacao,
   PrioridadeNegociacao,
@@ -10,7 +11,7 @@ import type {
 
 type DadosComerciaisEditaveis = Pick<
   NegociacaoSalva,
-  "status" | "prioridade" | "origem" | "observacaoInterna" | "ultimaAcao"
+  "status" | "etapa" | "prioridade" | "origem" | "observacaoInterna" | "ultimaAcao"
 >;
 
 type CentralNegociacoesProps = {
@@ -35,6 +36,9 @@ const TIPOS: Array<{ value: TipoNegociacao | "todos"; label: string }> = [
 
 const STATUS: Array<{ value: StatusNegociacao | "todos"; label: string }> = [
   { value: "todos", label: "Todos" },
+  { value: "simulacao", label: "Simulacao" },
+  { value: "proposta_enviada", label: "Proposta enviada" },
+  { value: "contraproposta", label: "Contraproposta" },
   { value: "rascunho", label: "Rascunho" },
   { value: "em_negociacao", label: "Em negociacao" },
   { value: "aguardando_retorno", label: "Aguardando retorno" },
@@ -42,6 +46,15 @@ const STATUS: Array<{ value: StatusNegociacao | "todos"; label: string }> = [
   { value: "fechada", label: "Fechada" },
   { value: "perdida", label: "Perdida" },
   { value: "arquivada", label: "Arquivada" },
+];
+
+const ETAPAS: Array<{ value: EtapaNegociacao | "todas"; label: string }> = [
+  { value: "todas", label: "Todas" },
+  { value: "inicial", label: "Inicial" },
+  { value: "atendimento", label: "Atendimento" },
+  { value: "proposta", label: "Proposta" },
+  { value: "retorno", label: "Retorno" },
+  { value: "fechamento", label: "Fechamento" },
 ];
 
 const PRIORIDADES: Array<{
@@ -88,6 +101,9 @@ function labelTipo(tipo: TipoNegociacao) {
 }
 
 function labelStatus(status: StatusNegociacao) {
+  if (status === "simulacao") return "Simulacao";
+  if (status === "proposta_enviada") return "Proposta enviada";
+  if (status === "contraproposta") return "Contraproposta";
   if (status === "rascunho") return "Rascunho";
   if (status === "em_negociacao") return "Em negociacao";
   if (status === "aguardando_retorno") return "Aguardando retorno";
@@ -95,6 +111,14 @@ function labelStatus(status: StatusNegociacao) {
   if (status === "fechada") return "Fechada";
   if (status === "perdida") return "Perdida";
   return "Arquivada";
+}
+
+function labelEtapa(etapa: EtapaNegociacao) {
+  if (etapa === "inicial") return "Inicial";
+  if (etapa === "atendimento") return "Atendimento";
+  if (etapa === "proposta") return "Proposta";
+  if (etapa === "retorno") return "Retorno";
+  return "Fechamento";
 }
 
 function labelPrioridade(prioridade: PrioridadeNegociacao) {
@@ -114,6 +138,8 @@ function labelOrigem(origem: OrigemNegociacao) {
 }
 
 function statusTone(status: StatusNegociacao) {
+  if (status === "simulacao") return "isInfo";
+  if (status === "proposta_enviada" || status === "contraproposta") return "isWarning";
   if (status === "aprovada" || status === "fechada") return "isSuccess";
   if (status === "aguardando_retorno") return "isWarning";
   if (status === "perdida" || status === "arquivada") return "isMuted";
@@ -148,6 +174,9 @@ export default function CentralNegociacoes({
   const [statusFiltro, setStatusFiltro] = useState<StatusNegociacao | "todos">(
     "todos"
   );
+  const [etapaFiltro, setEtapaFiltro] = useState<EtapaNegociacao | "todas">(
+    "todas"
+  );
   const [prioridadeFiltro, setPrioridadeFiltro] = useState<
     PrioridadeNegociacao | "todos"
   >("todos");
@@ -169,6 +198,7 @@ export default function CentralNegociacoes({
         const tipoOk = tipoFiltro === "todos" || negociacao.tipo === tipoFiltro;
         const statusOk =
           statusFiltro === "todos" || negociacao.status === statusFiltro;
+        const etapaOk = etapaFiltro === "todas" || negociacao.etapa === etapaFiltro;
         const prioridadeOk =
           prioridadeFiltro === "todos" ||
           negociacao.prioridade === prioridadeFiltro;
@@ -188,7 +218,7 @@ export default function CentralNegociacoes({
         const buscaOk =
           !buscaNormalizada || textoBusca.includes(buscaNormalizada);
 
-        return tipoOk && statusOk && prioridadeOk && origemOk && buscaOk;
+        return tipoOk && statusOk && etapaOk && prioridadeOk && origemOk && buscaOk;
       })
       .sort(
         (a, b) =>
@@ -198,6 +228,7 @@ export default function CentralNegociacoes({
     busca,
     negociacoes,
     origemFiltro,
+    etapaFiltro,
     prioridadeFiltro,
     statusFiltro,
     tipoFiltro,
@@ -206,9 +237,15 @@ export default function CentralNegociacoes({
   const resumo = useMemo(() => {
     const pipeline = negociacoesFiltradas
       .filter((item) =>
-        ["rascunho", "em_negociacao", "aguardando_retorno", "aprovada"].includes(
-          item.status
-        )
+        [
+          "rascunho",
+          "simulacao",
+          "proposta_enviada",
+          "contraproposta",
+          "em_negociacao",
+          "aguardando_retorno",
+          "aprovada",
+        ].includes(item.status)
       )
       .reduce((acc, item) => acc + item.valorTotal, 0);
 
@@ -227,6 +264,7 @@ export default function CentralNegociacoes({
     setEdicao({
       id: negociacao.id,
       status: negociacao.status,
+      etapa: negociacao.etapa,
       prioridade: negociacao.prioridade,
       origem: negociacao.origem,
       observacaoInterna: negociacao.observacaoInterna,
@@ -239,6 +277,7 @@ export default function CentralNegociacoes({
 
     onAtualizarDadosComerciais(edicao.id, {
       status: edicao.status,
+      etapa: edicao.etapa,
       prioridade: edicao.prioridade,
       origem: edicao.origem,
       observacaoInterna: edicao.observacaoInterna,
@@ -298,6 +337,22 @@ export default function CentralNegociacoes({
               {STATUS.map((status) => (
                 <option key={status.value} value={status.value}>
                   {status.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="crmField">
+            <span>Etapa</span>
+            <select
+              value={etapaFiltro}
+              onChange={(event) =>
+                setEtapaFiltro(event.target.value as EtapaNegociacao | "todas")
+              }
+            >
+              {ETAPAS.map((etapa) => (
+                <option key={etapa.value} value={etapa.value}>
+                  {etapa.label}
                 </option>
               ))}
             </select>
@@ -411,7 +466,7 @@ export default function CentralNegociacoes({
                         {labelTipo(negociacao.tipo)} • Atualizado em{" "}
                         {formatarData(negociacao.updatedAt)}
                       </span>
-                      <h3>{negociacao.cliente || negociacao.titulo}</h3>
+                      <h3>{negociacao.clienteNome || negociacao.cliente || negociacao.titulo}</h3>
                       <p>{negociacao.titulo}</p>
                     </div>
 
@@ -419,6 +474,7 @@ export default function CentralNegociacoes({
                       <span className={["crmBadge", statusTone(negociacao.status)].join(" ")}>
                         {labelStatus(negociacao.status)}
                       </span>
+                      <span className="crmBadge isMuted">{labelEtapa(negociacao.etapa)}</span>
                       <span
                         className={[
                           "crmBadge",
@@ -436,19 +492,27 @@ export default function CentralNegociacoes({
                   <div className="crmDealMetaGrid">
                     <div className="crmDealMetaItem">
                       <span className="crmDealMetaLabel">Corretor</span>
-                      <strong>{negociacao.corretor || "Nao informado"}</strong>
+                      <strong>
+                        {negociacao.corretorNome || negociacao.corretor || "Nao informado"}
+                      </strong>
                     </div>
                     <div className="crmDealMetaItem">
                       <span className="crmDealMetaLabel">Valor</span>
                       <strong>{formatarMoeda(negociacao.valorTotal)}</strong>
                     </div>
                     <div className="crmDealMetaItem">
-                      <span className="crmDealMetaLabel">Quadra / lote</span>
-                      <strong>{negociacao.resumoLotes}</strong>
+                      <span className="crmDealMetaLabel">Entrada / saldo</span>
+                      <strong>
+                        {formatarMoeda(negociacao.entrada)} / {formatarMoeda(negociacao.saldoFinal)}
+                      </strong>
                     </div>
                     <div className="crmDealMetaItem">
                       <span className="crmDealMetaLabel">Ultima acao</span>
                       <strong>{negociacao.ultimaAcao || "Sem acao registrada"}</strong>
+                    </div>
+                    <div className="crmDealMetaItem">
+                      <span className="crmDealMetaLabel">Lotes</span>
+                      <strong>{negociacao.resumoLotes}</strong>
                     </div>
                   </div>
 
@@ -472,6 +536,29 @@ export default function CentralNegociacoes({
                           {STATUS.filter((item) => item.value !== "todos").map((status) => (
                             <option key={status.value} value={status.value}>
                               {status.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label className="crmField">
+                        <span>Etapa</span>
+                        <select
+                          value={edicao.etapa}
+                          onChange={(event) =>
+                            setEdicao((anterior) =>
+                              anterior
+                                ? {
+                                    ...anterior,
+                                    etapa: event.target.value as EtapaNegociacao,
+                                  }
+                                : anterior
+                            )
+                          }
+                        >
+                          {ETAPAS.filter((item) => item.value !== "todas").map((etapa) => (
+                            <option key={etapa.value} value={etapa.value}>
+                              {etapa.label}
                             </option>
                           ))}
                         </select>

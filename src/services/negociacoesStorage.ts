@@ -1,4 +1,5 @@
 import type {
+  EtapaNegociacao,
   EventoNegociacao,
   NegociacaoSalva,
   OrigemNegociacao,
@@ -22,6 +23,9 @@ function canUseStorage() {
 function statusValido(status: unknown): status is StatusNegociacao {
   return [
     "rascunho",
+    "simulacao",
+    "proposta_enviada",
+    "contraproposta",
     "em_negociacao",
     "aguardando_retorno",
     "aprovada",
@@ -29,6 +33,12 @@ function statusValido(status: unknown): status is StatusNegociacao {
     "perdida",
     "arquivada",
   ].includes(String(status));
+}
+
+function etapaValida(etapa: unknown): etapa is EtapaNegociacao {
+  return ["inicial", "atendimento", "proposta", "retorno", "fechamento"].includes(
+    String(etapa)
+  );
 }
 
 function prioridadeValida(
@@ -90,13 +100,48 @@ function anexarEventos(
 function normalizarNegociacao(negociacao: NegociacaoSalva): NegociacaoSalva {
   return {
     ...negociacao,
-    status: statusValido(negociacao.status) ? negociacao.status : "rascunho",
+    status: statusValido(negociacao.status) ? negociacao.status : "simulacao",
+    etapa: etapaValida(negociacao.etapa) ? negociacao.etapa : "inicial",
     prioridade: prioridadeValida(negociacao.prioridade)
       ? negociacao.prioridade
       : "media",
     origem: origemValida(negociacao.origem) ? negociacao.origem : "outro",
     observacaoInterna: negociacao.observacaoInterna || "",
+    observacoes: negociacao.observacoes || "",
     ultimaAcao: negociacao.ultimaAcao || "",
+    clienteId: negociacao.clienteId || null,
+    clienteNome: negociacao.clienteNome || negociacao.cliente || "",
+    cliente: negociacao.cliente || negociacao.clienteNome || "",
+    corretorId: negociacao.corretorId || null,
+    corretorNome: negociacao.corretorNome || negociacao.corretor || "",
+    corretor: negociacao.corretor || negociacao.corretorNome || "",
+    entrada: Number.isFinite(negociacao.entrada) ? negociacao.entrada : 0,
+    saldoFinal: Number.isFinite(negociacao.saldoFinal) ? negociacao.saldoFinal : 0,
+    permuta: negociacao.permuta || null,
+    veiculo: negociacao.veiculo || null,
+    payloadSimulacao:
+      negociacao.payloadSimulacao || {
+        modoDocumento: negociacao.tipo,
+        cliente: {
+          id: negociacao.clienteId || null,
+          nome: negociacao.clienteNome || negociacao.cliente || "",
+          cpf: negociacao.clienteCpf || "",
+          telefone: negociacao.clienteTelefone || "",
+          email: negociacao.clienteEmail || "",
+          profissao: negociacao.clienteProfissao || "",
+          estadoCivil: negociacao.clienteEstadoCivil || "",
+        },
+        corretor: {
+          id: negociacao.corretorId || null,
+          nome: negociacao.corretorNome || negociacao.corretor || "",
+          creci: negociacao.creci || "",
+          imobiliaria: negociacao.imobiliaria || "",
+        },
+        lotes: Array.isArray(negociacao.unidades) ? negociacao.unidades : [],
+        simulacao: negociacao.simulacao,
+        proposta: negociacao.proposta,
+        contraproposta: negociacao.contraproposta,
+      },
     historico: Array.isArray(negociacao.historico) ? negociacao.historico : [],
   };
 }
@@ -135,6 +180,13 @@ function gerarEventosOperacionais(
     });
   }
 
+  if (anterior.etapa !== atualizada.etapa) {
+    eventos.push({
+      tipo: "etapa_alterada",
+      descricao: `Etapa alterada para ${atualizada.etapa}`,
+    });
+  }
+
   if (anterior.prioridade !== atualizada.prioridade) {
     eventos.push({
       tipo: "prioridade_alterada",
@@ -160,6 +212,20 @@ function gerarEventosOperacionais(
     eventos.push({
       tipo: "ultima_acao_alterada",
       descricao: `Ultima acao alterada para ${atualizada.ultimaAcao || "vazia"}`,
+    });
+  }
+
+  if (anterior.clienteId !== atualizada.clienteId) {
+    eventos.push({
+      tipo: "vinculo_cliente_atualizado",
+      descricao: `Cliente vinculado: ${atualizada.clienteNome || "nao informado"}`,
+    });
+  }
+
+  if (anterior.corretorId !== atualizada.corretorId) {
+    eventos.push({
+      tipo: "vinculo_corretor_atualizado",
+      descricao: `Corretor vinculado: ${atualizada.corretorNome || "nao informado"}`,
     });
   }
 
@@ -258,7 +324,8 @@ export function duplicarNegociacao(id: string): NegociacaoSalva | null {
       ...original,
       id: createId(),
       titulo: `${original.titulo} (copia)`,
-      status: "rascunho",
+      status: "simulacao",
+      etapa: "inicial",
       createdAt: agora,
       updatedAt: agora,
       ultimaAcao: "Negociacao duplicada",

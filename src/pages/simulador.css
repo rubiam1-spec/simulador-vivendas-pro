@@ -105,13 +105,15 @@ body,
   padding: 0 !important;
 }
 
-body {
+.simPage {
   font-family: var(--font-body);
   font-size: var(--text-base);
   line-height: 1.55;
   color: var(--text);
-  overflow-x: hidden;
   position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 32px;
   background:
     radial-gradient(ellipse 1800px 1100px at 8% 6%, rgba(73, 170, 125, 0.18), transparent 52%),
     radial-gradient(ellipse 1300px 860px at 36% 18%, rgba(53, 128, 93, 0.14), transparent 50%),
@@ -120,9 +122,9 @@ body {
     linear-gradient(160deg, var(--bg0) 0%, var(--bg1) 38%, var(--bg2) 72%, var(--bg3) 100%);
 }
 
-body::before {
+.simPage::before {
   content: "Urbanismo";
-  position: fixed;
+  position: absolute;
   left: 50%;
   top: 49%;
   transform: translate(-50%, -58%);
@@ -136,14 +138,14 @@ body::before {
     0 0 88px rgba(57, 163, 118, 0.05);
   filter: blur(1.6px);
   white-space: nowrap;
-  z-index: 0;
+  z-index: -1;
   pointer-events: none;
   user-select: none;
 }
 
-body::after {
+.simPage::after {
   content: "de dentro para fora";
-  position: fixed;
+  position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, 18%);
@@ -157,7 +159,7 @@ body::after {
     0 0 64px rgba(57, 163, 118, 0.04);
   filter: blur(1.6px);
   white-space: nowrap;
-  z-index: 0;
+  z-index: -1;
   pointer-events: none;
   user-select: none;
 }
@@ -208,9 +210,8 @@ body::after {
 }
 
 .simPage {
-  min-height: 100vh;
+  min-height: 100%;
   width: 100%;
-  position: relative;
   z-index: 1;
   display: block;
 }
@@ -497,9 +498,10 @@ body::after {
 
 .luxWorkspace {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  grid-template-columns: minmax(0, 1.55fr) minmax(360px, 0.88fr);
   gap: 24px;
   align-items: start;
+  min-width: 0;
 }
 
 .luxContent {
@@ -509,13 +511,23 @@ body::after {
   gap: var(--gap-main);
 }
 
-.luxSidebar {
+.luxRail {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: start;
   position: sticky;
   top: 20px;
+  align-self: start;
+}
+
+.luxSidebar {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
 }
 
 .luxFlowPanel {
@@ -524,6 +536,13 @@ body::after {
   border-radius: var(--r-xl);
   box-shadow: var(--shadow-card);
   overflow: hidden;
+}
+
+.luxSupportPanel,
+.luxSidebar {
+  position: static;
+  top: auto;
+  align-self: auto;
 }
 
 .luxFlowPanelSoft {
@@ -550,6 +569,8 @@ body::after {
   flex-direction: column;
   gap: 12px;
   padding: 18px 22px 22px;
+  max-height: min(48vh, 540px);
+  overflow: auto;
 }
 
 .luxFlowItem {
@@ -661,6 +682,32 @@ body::after {
   grid-template-columns: 1fr;
   gap: 10px;
   padding: 18px 22px 22px;
+}
+
+.luxSupportBody {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px 22px 22px;
+}
+
+.luxSupportPanel .luxWhatsPremium {
+  min-height: 260px;
+  max-height: 360px;
+  flex: 1 1 auto;
+}
+
+.luxSplitSingle {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.luxResultSectionLegacy {
+  display: none;
+}
+
+.luxResultPanelLegacy {
+  display: none;
 }
 
 .luxFlowMetaItem {
@@ -1716,7 +1763,11 @@ body::after {
   }
 
   .luxWorkspace {
-    grid-template-columns: minmax(0, 1.3fr) minmax(360px, 0.7fr);
+    grid-template-columns: minmax(0, 1.5fr) minmax(560px, 0.95fr);
+  }
+
+  .luxRail {
+    gap: 20px;
   }
 
   .luxLotExplorer {
@@ -1749,9 +1800,13 @@ body::after {
     grid-template-columns: 1fr;
   }
 
+  .luxRail {
+    position: static;
+  }
+
+  .luxSupportPanel,
   .luxSidebar {
     position: static;
-    order: -1;
   }
 
   .luxLotExplorer {
@@ -1796,6 +1851,10 @@ body::after {
     grid-template-columns: 1fr 1fr;
   }
 
+  .luxRail {
+    position: static;
+  }
+
   .luxValueRow {
     grid-template-columns: 1fr 1fr;
   }
@@ -1836,12 +1895,12 @@ body::after {
     justify-content: flex-start;
   }
 
-  body::before {
+  .simPage::before {
     font-size: clamp(46px, 11vw, 92px);
     transform: translate(-50%, -52%);
   }
 
-  body::after {
+  .simPage::after {
     font-size: clamp(22px, 5vw, 46px);
     transform: translate(-50%, 30%);
   }
@@ -1940,6 +1999,7 @@ body::after {
   }
 
   .luxFlowHead,
+  .luxSupportBody,
   .luxFlowList,
   .luxChipRow,
   .luxFlowMeta {
@@ -1965,6 +2025,10 @@ body::after {
   .luxNegActions .btn {
     width: 100%;
     min-width: 0;
+  }
+
+  .luxSupportPanel .luxWhatsPremium {
+    min-height: 240px;
   }
 }
 
@@ -2059,8 +2123,8 @@ body::after {
     color: #000000;
   }
 
-  body::before,
-  body::after {
+  .simPage::before,
+  .simPage::after {
     display: none !important;
   }
 

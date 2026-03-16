@@ -37,10 +37,10 @@ export function getNavigationSections(
     ...(!isCorretor
       ? [
           {
-            label: "Expansao",
+            label: "Relacionamento",
             items: [
-              { label: "Clientes", to: "/clientes", badge: "Em breve" },
-              { label: "Corretores", to: "/corretores", badge: "Em breve" },
+              { label: "Clientes", to: "/clientes" },
+              { label: "Corretores", to: "/corretores" },
             ],
           },
         ]

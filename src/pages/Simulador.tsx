@@ -11,13 +11,17 @@ import {
   reidratarNegociacaoSalva,
 } from "../services/negociacoesMapper";
 import {
-  adicionarEventoNegociacao,
-  buscarNegociacaoPorId,
-  atualizarNegociacao,
-  listarNegociacoesSalvas,
-  salvarNovaNegociacao,
-} from "../services/negociacoesStorage";
+  appendNegociacaoEvent,
+  createNegociacao,
+  getNegociacaoById,
+  listNegociacoes,
+  updateNegociacaoById,
+} from "../services/negociacoesService";
 import { consumirNegociacaoAgendada } from "../services/negociacoesSession";
+import { listClientes } from "../services/clientesService";
+import { listCorretores } from "../services/corretoresService";
+import type { Cliente } from "../types/cliente";
+import type { Corretor } from "../types/corretor";
 import type { NegociacaoSalva } from "../types/negociacao";
 import "./simulador.css";
 
@@ -274,9 +278,13 @@ export default function Simulador() {
   const [clienteEmail, setClienteEmail] = useState("");
   const [clienteProfissao, setClienteProfissao] = useState("");
   const [clienteEstadoCivil, setClienteEstadoCivil] = useState("");
+  const [clientesCadastrados, setClientesCadastrados] = useState<Cliente[]>([]);
+  const [clienteSelecionadoId, setClienteSelecionadoId] = useState<string>("");
   const [corretor, setCorretor] = useState("");
   const [creci, setCreci] = useState("");
   const [imobiliaria, setImobiliaria] = useState("");
+  const [corretoresCadastrados, setCorretoresCadastrados] = useState<Corretor[]>([]);
+  const [corretorSelecionadoId, setCorretorSelecionadoId] = useState<string>("");
 
   const [quadraFiltro, setQuadraFiltro] = useState("");
   const [loteFiltro, setLoteFiltro] = useState("");
@@ -349,9 +357,16 @@ export default function Simulador() {
       try {
         setLoading(true);
         setErro("");
-        const dados = await carregarLotes();
+        const [dados, negociacoes, clientes, corretores] = await Promise.all([
+          carregarLotes(),
+          listNegociacoes(),
+          listClientes(),
+          listCorretores(),
+        ]);
         setLotes(dados);
-        setNegociacoesSalvas(listarNegociacoesSalvas());
+        setNegociacoesSalvas(negociacoes);
+        setClientesCadastrados(clientes);
+        setCorretoresCadastrados(corretores);
       } catch (e) {
         console.error(e);
         setErro("Não foi possível carregar os lotes agora.");
@@ -412,6 +427,33 @@ export default function Simulador() {
       }));
     }
   }, [contrapropostaBomm.temVeiculo]);
+
+  const clienteSelecionado = useMemo(
+    () =>
+      clientesCadastrados.find((item) => item.id === clienteSelecionadoId) || null,
+    [clienteSelecionadoId, clientesCadastrados]
+  );
+
+  const corretorSelecionado = useMemo(
+    () =>
+      corretoresCadastrados.find((item) => item.id === corretorSelecionadoId) || null,
+    [corretorSelecionadoId, corretoresCadastrados]
+  );
+
+  function aplicarClienteVinculado(clienteVinculado: Cliente | null) {
+    if (!clienteVinculado) return;
+    setCliente(clienteVinculado.nome || "");
+    setClienteTelefone(clienteVinculado.telefone || "");
+    setClienteEmail(clienteVinculado.email || "");
+    setClienteCpf(clienteVinculado.cpf || "");
+  }
+
+  function aplicarCorretorVinculado(corretorVinculado: Corretor | null) {
+    if (!corretorVinculado) return;
+    setCorretor(corretorVinculado.nome || "");
+    setCreci(corretorVinculado.creci || "");
+    setImobiliaria(corretorVinculado.imobiliaria || "");
+  }
 
   const quadras = useMemo(() => {
     const unicas = Array.from(new Set(lotes.map((l) => String(l.quadra || ""))));
@@ -1061,11 +1103,11 @@ export default function Simulador() {
     window.setTimeout(() => setFeedbackNegociacao(""), 2400);
   }
 
-  function recarregarNegociacoes() {
-    setNegociacoesSalvas(listarNegociacoesSalvas());
+  async function recarregarNegociacoes() {
+    setNegociacoesSalvas(await listNegociacoes());
   }
 
-  function sincronizarNegociacaoNoCrm(
+  async function sincronizarNegociacaoNoCrm(
     tipo: ModoDocumento,
     options?: { gerarPdfDepois?: boolean }
   ) {
@@ -1097,12 +1139,14 @@ export default function Simulador() {
 
     const base = mapearSimuladorParaNegociacaoSalva({
       tipo,
+      clienteId: clienteSelecionadoId || null,
       cliente,
       clienteCpf,
       clienteTelefone,
       clienteEmail,
       clienteProfissao,
       clienteEstadoCivil,
+      corretorId: corretorSelecionadoId || null,
       corretor,
       creci,
       imobiliaria,
@@ -1154,7 +1198,7 @@ export default function Simulador() {
     let negociacaoPersistida: NegociacaoSalva | null = null;
 
     if (negociacaoAtual && negociacaoAtivaId) {
-      const atualizada = atualizarNegociacao(negociacaoAtivaId, negociacao, [
+      const atualizada = await updateNegociacaoById(negociacaoAtivaId, negociacao, [
         {
           tipo: "negociacao_atualizada",
           descricao: "Negociacao atualizada a partir do simulador",
@@ -1168,11 +1212,11 @@ export default function Simulador() {
       if (atualizada) {
         negociacaoPersistida = atualizada;
         setNegociacaoAtivaId(atualizada.id);
-        recarregarNegociacoes();
+        await recarregarNegociacoes();
         mostrarFeedbackNegociacao(configuracao.mensagemAtualizada);
       }
     } else {
-      const criada = salvarNovaNegociacao(negociacao, [
+      const criada = await createNegociacao(negociacao, [
         {
           tipo: "negociacao_atualizada",
           descricao: configuracao.descricaoEvento,
@@ -1180,33 +1224,35 @@ export default function Simulador() {
       ]);
       negociacaoPersistida = criada;
       setNegociacaoAtivaId(criada.id);
-      recarregarNegociacoes();
+      await recarregarNegociacoes();
       mostrarFeedbackNegociacao(configuracao.mensagemCriada);
     }
 
     if (options?.gerarPdfDepois) {
-      gerarPdf();
-      if (negociacaoPersistida) {
-        adicionarEventoNegociacao(negociacaoPersistida.id, {
+        gerarPdf();
+        if (negociacaoPersistida) {
+        await appendNegociacaoEvent(negociacaoPersistida.id, {
           tipo: "pdf_gerado",
           descricao: "PDF gerado",
         });
-        recarregarNegociacoes();
+        await recarregarNegociacoes();
       }
     }
   }
 
-  function abrirNegociacaoSalva(negociacao: NegociacaoSalva) {
+  async function abrirNegociacaoSalva(negociacao: NegociacaoSalva) {
     const restaurada = reidratarNegociacaoSalva(negociacao);
     restaurandoContrapropostaRef.current = true;
 
     setModoDocumento(restaurada.tipo);
+    setClienteSelecionadoId(restaurada.clienteId || "");
     setCliente(restaurada.cliente);
     setClienteCpf(restaurada.clienteCpf);
     setClienteTelefone(restaurada.clienteTelefone);
     setClienteEmail(restaurada.clienteEmail);
     setClienteProfissao(restaurada.clienteProfissao);
     setClienteEstadoCivil(restaurada.clienteEstadoCivil);
+    setCorretorSelecionadoId(restaurada.corretorId || "");
     setCorretor(restaurada.corretor);
     setCreci(restaurada.creci);
     setImobiliaria(restaurada.imobiliaria);
@@ -1238,24 +1284,28 @@ export default function Simulador() {
       condicao: normalizarCondicaoPagamento(restaurada.contraproposta.condicao),
     });
     setNegociacaoAtivaId(negociacao.id);
-    adicionarEventoNegociacao(negociacao.id, {
+    await appendNegociacaoEvent(negociacao.id, {
       tipo: "negociacao_aberta",
       descricao: "Negociacao aberta",
     });
-    recarregarNegociacoes();
+    await recarregarNegociacoes();
     mostrarFeedbackNegociacao("Negociação aberta no simulador.");
   }
 
   useEffect(() => {
     if (loading) return;
 
-    const negociacaoId = consumirNegociacaoAgendada();
-    if (!negociacaoId) return;
+    async function abrirAgendada() {
+      const negociacaoId = consumirNegociacaoAgendada();
+      if (!negociacaoId) return;
 
-    const negociacao = buscarNegociacaoPorId(negociacaoId);
-    if (negociacao) {
-      abrirNegociacaoSalva(negociacao);
+      const negociacao = await getNegociacaoById(negociacaoId);
+      if (negociacao) {
+        await abrirNegociacaoSalva(negociacao);
+      }
     }
+
+    void abrirAgendada();
   }, [loading]);
 
   async function copiarMensagem() {
@@ -1653,6 +1703,25 @@ export default function Simulador() {
     [lotesSelecionados]
   );
 
+  const painelApoioTitulo =
+    modoDocumento === "simulacao"
+      ? "Mensagem e acoes"
+      : modoDocumento === "proposta"
+        ? "Fechamento da proposta"
+        : "Fechamento da contraproposta";
+
+  const painelApoioDescricao =
+    modoDocumento === "simulacao"
+      ? "Revise a mensagem comercial, copie o texto, sincronize a simulacao no CRM e gere o PDF sem competir com o formulario principal."
+      : modoDocumento === "proposta"
+        ? "Conclua a proposta com uma area dedicada para mensagem, PDF e sincronizacao comercial."
+        : "Consolide a contraproposta com revisao textual, PDF institucional e registro no CRM.";
+
+  const painelApoioRodape =
+    modoDocumento === "simulacao"
+      ? "Pronto para copiar, salvar no CRM e gerar PDF a partir da mesma negociacao."
+      : "Fluxo final preparado para sincronizacao da negociacao, mensagem e PDF institucional.";
+
   return (
     <div className="simPage">
       <div className="luxWrap">
@@ -1725,6 +1794,62 @@ export default function Simulador() {
 
           <section className="luxSection">
             <div className="luxSectionInner">
+              <div className="luxGrid2">
+                <div className="luxField">
+                  <label>Cliente cadastrado</label>
+                  <select
+                    value={clienteSelecionadoId}
+                    onChange={(e) => {
+                      const nextId = e.target.value;
+                      setClienteSelecionadoId(nextId);
+                      aplicarClienteVinculado(
+                        clientesCadastrados.find((item) => item.id === nextId) || null
+                      );
+                    }}
+                  >
+                    <option value="">Preencher manualmente</option>
+                    {clientesCadastrados.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.nome}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="mini">
+                    {clienteSelecionado
+                      ? `Vinculado ao CRM: ${clienteSelecionado.nome}`
+                      : "Sem cliente vinculado. Voce pode preencher os dados manualmente."}
+                  </div>
+                </div>
+
+                <div className="luxField">
+                  <label>Corretor cadastrado</label>
+                  <select
+                    value={corretorSelecionadoId}
+                    onChange={(e) => {
+                      const nextId = e.target.value;
+                      setCorretorSelecionadoId(nextId);
+                      aplicarCorretorVinculado(
+                        corretoresCadastrados.find((item) => item.id === nextId) || null
+                      );
+                    }}
+                  >
+                    <option value="">Preencher manualmente</option>
+                    {corretoresCadastrados.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.nome}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="mini">
+                    {corretorSelecionado
+                      ? `Vinculado ao CRM: ${corretorSelecionado.nome}`
+                      : "Sem corretor vinculado. O atendimento pode seguir com preenchimento manual."}
+                  </div>
+                </div>
+              </div>
+
+              <div className="luxSpacer" />
+
               <div className="luxGrid3">
                 <div className="luxField">
                   <label>Data</label>
@@ -2064,7 +2189,7 @@ export default function Simulador() {
                 </div>
               </section>
 
-              <div className="luxSplit">
+              <div className="luxSplit luxSplitSingle">
                 <section className="luxSection">
                   <div className="luxSectionInner">
                     <div className="luxKicker">Estrutura financeira</div>
@@ -2290,8 +2415,8 @@ export default function Simulador() {
                   </div>
                 </section>
 
-                <section className="luxSection">
-                  <div className="luxSectionInner luxResultPanel">
+                <section className="luxSection luxResultSectionLegacy">
+                  <div className="luxSectionInner luxResultPanel luxResultPanelLegacy">
                     <div className="luxKicker">Resultado</div>
                     <h2 className="luxH2">Mensagem pronta para envio</h2>
 
@@ -3110,7 +3235,7 @@ export default function Simulador() {
                 </section>
               )}
 
-              <div className="luxSplit">
+              <div className="luxSplit luxSplitSingle">
                 <section className="luxSection">
                   <div className="luxSectionInner">
                     <div className="luxKicker">Comparativo</div>
@@ -3173,8 +3298,8 @@ export default function Simulador() {
                   </div>
                 </section>
 
-                <section className="luxSection">
-                  <div className="luxSectionInner">
+                <section className="luxSection luxResultSectionLegacy">
+                  <div className="luxSectionInner luxResultPanelLegacy">
                     <div className="luxKicker">Resultado</div>
                     <h2 className="luxH2">Mensagem pronta para envio</h2>
 
@@ -3224,11 +3349,87 @@ export default function Simulador() {
           )}
             </div>
 
-            <aside className="luxSidebar">
+            <div className="luxRail">
+              <section className="luxFlowPanel luxSupportPanel">
+                <div className="luxFlowHead">
+                  <div className="luxKicker">Apoio operacional</div>
+                  <h2 className="luxH2">{painelApoioTitulo}</h2>
+                  <p className="luxFlowText">{painelApoioDescricao}</p>
+                </div>
+
+                <div className="luxSupportBody">
+                  <div className="luxResultIntro">
+                    <div className="luxResultLead">
+                      {modoDocumento === "simulacao"
+                        ? "Mensagem comercial pronta para revisao, copia imediata e geracao do PDF."
+                        : "Mensagem final pronta para revisao textual, sincronizacao da negociacao e PDF institucional."}
+                    </div>
+                    <div className="luxResultPills">
+                      <span className="luxChip">
+                        {modoDocumento === "simulacao"
+                          ? "Mensagem comercial"
+                          : "Mensagem institucional"}
+                      </span>
+                      <span className="luxChip">
+                        {modoDocumento === "simulacao"
+                          ? "PDF da simulacao"
+                          : modoDocumento === "proposta"
+                            ? "PDF da proposta"
+                            : "PDF da contraproposta"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <textarea
+                    className="whats luxWhats luxWhatsPremium"
+                    value={mensagemWhatsApp}
+                    onChange={() => {}}
+                    readOnly
+                  />
+
+                  <div className="luxActions luxResultActions">
+                    <button type="button" className="btn luxActionPrimary" onClick={copiarMensagem}>
+                      {copiado ? "Copiado!" : "Copiar mensagem"}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn btnGhost luxActionSecondary"
+                      onClick={() =>
+                        modoDocumento === "simulacao"
+                          ? sincronizarNegociacaoNoCrm("simulacao")
+                          : sincronizarNegociacaoNoCrm(modoDocumento, {
+                              gerarPdfDepois: true,
+                            })
+                      }
+                    >
+                      {modoDocumento === "simulacao"
+                        ? negociacaoAtivaId
+                          ? "Atualizar simulacao no CRM"
+                          : "Salvar simulacao no CRM"
+                        : modoDocumento === "proposta"
+                          ? "Gerar proposta + PDF + salvar no CRM"
+                          : "Gerar contraproposta + PDF + salvar no CRM"}
+                    </button>
+
+                    <button type="button" className="btn btnGhost luxActionSecondary" onClick={gerarPdf}>
+                      Gerar PDF
+                    </button>
+
+                    <span className="luxHint luxResultHint">
+                      INCC ate entrega - IPCA apos entrega
+                    </span>
+                  </div>
+
+                  <div className="foot luxResultFoot">{painelApoioRodape}</div>
+                </div>
+              </section>
+
+              <aside className="luxSidebar">
               <section className="luxFlowPanel">
                 <div className="luxFlowHead">
-                  <div className="luxKicker">Painel lateral</div>
-                  <h2 className="luxH2">FlowPanel</h2>
+                  <div className="luxKicker">Resumo financeiro</div>
+                  <h2 className="luxH2">Linha do calculo</h2>
                   <p className="luxFlowText">
                     Ordem real do cálculo: valor total, entrada, saldo final,
                     permuta, veículo e base final para mensais e balões.
@@ -3254,7 +3455,7 @@ export default function Simulador() {
 
               <section className="luxFlowPanel luxFlowPanelSoft">
                 <div className="luxFlowHead">
-                  <div className="luxKicker">Seleção atual</div>
+                  <div className="luxKicker">Selecao atual</div>
                   <h2 className="luxH2">Lotes escolhidos</h2>
                 </div>
 
@@ -3291,7 +3492,8 @@ export default function Simulador() {
                   </div>
                 </div>
               </section>
-            </aside>
+              </aside>
+            </div>
           </div>
 
           {feedbackNegociacao ? (

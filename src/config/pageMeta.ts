@@ -16,7 +16,7 @@ const pageMetaMap: Array<{ match: string; meta: PageMeta }> = [
       eyebrow: "Visao comercial",
       description:
         "Leitura consolidada do pipeline, prioridades e ritmo operacional da equipe.",
-      browserTitle: `Dashboard • ${branding.appName}`,
+      browserTitle: `Dashboard - ${branding.appName}`,
     },
   },
   {
@@ -26,7 +26,7 @@ const pageMetaMap: Array<{ match: string; meta: PageMeta }> = [
       eyebrow: "Central operacional",
       description:
         "Acompanhe propostas, contrapropostas, prioridades, origem e ultimas acoes do funil.",
-      browserTitle: `Negociacoes • ${branding.appName}`,
+      browserTitle: `Negociacoes - ${branding.appName}`,
     },
   },
   {
@@ -36,7 +36,7 @@ const pageMetaMap: Array<{ match: string; meta: PageMeta }> = [
       eyebrow: "Estruturacao financeira",
       description:
         "Monte simulacoes, propostas, contrapropostas e PDFs sem misturar dashboards ou modulos paralelos.",
-      browserTitle: `Simulador • ${branding.appName}`,
+      browserTitle: `Simulador - ${branding.appName}`,
     },
   },
   {
@@ -46,7 +46,7 @@ const pageMetaMap: Array<{ match: string; meta: PageMeta }> = [
       eyebrow: "Conta e ambiente",
       description:
         "Centralize informacoes da conta, autenticacao, branding do cliente e proximas preferencias da operacao.",
-      browserTitle: `Configuracoes • ${branding.appName}`,
+      browserTitle: `Configuracoes - ${branding.appName}`,
     },
   },
   {
@@ -56,29 +56,27 @@ const pageMetaMap: Array<{ match: string; meta: PageMeta }> = [
       eyebrow: "Administracao",
       description:
         "Gerencie usuarios, perfis e disponibilidade do ambiente com controles claros para a operacao.",
-      browserTitle: `Acessos • ${branding.appName}`,
+      browserTitle: `Acessos - ${branding.appName}`,
     },
   },
   {
     match: "/clientes",
     meta: {
       title: "Clientes",
-      eyebrow: "Expansao do CRM",
+      eyebrow: "Relacionamento comercial",
       description:
-        "Base preparada para o futuro modulo de clientes, com espaco reservado na navegacao e no shell da plataforma.",
-      badge: "Em breve",
-      browserTitle: `Clientes • ${branding.appName}`,
+        "Gerencie a base de clientes com estrutura pronta para conectar simulador, negociacoes e relacionamento comercial.",
+      browserTitle: `Clientes - ${branding.appName}`,
     },
   },
   {
     match: "/corretores",
     meta: {
       title: "Corretores",
-      eyebrow: "Expansao do CRM",
+      eyebrow: "Operacao de parceiros",
       description:
-        "Estrutura inicial reservada para o futuro modulo de corretores, sem impactar a operacao atual.",
-      badge: "Em breve",
-      browserTitle: `Corretores • ${branding.appName}`,
+        "Organize corretores, equipes e parceiros com base pronta para integrar futuras negociacoes e atribuicoes.",
+      browserTitle: `Corretores - ${branding.appName}`,
     },
   },
 ];

@@ -2,12 +2,22 @@ export type TipoNegociacao = "simulacao" | "proposta" | "contraproposta";
 
 export type StatusNegociacao =
   | "rascunho"
+  | "simulacao"
+  | "proposta_enviada"
+  | "contraproposta"
   | "em_negociacao"
   | "aguardando_retorno"
   | "aprovada"
   | "fechada"
   | "perdida"
   | "arquivada";
+
+export type EtapaNegociacao =
+  | "inicial"
+  | "atendimento"
+  | "proposta"
+  | "retorno"
+  | "fechamento";
 
 export type PrioridadeNegociacao = "baixa" | "media" | "alta";
 
@@ -30,7 +40,10 @@ export type TipoEventoNegociacao =
   | "pdf_gerado"
   | "negociacao_duplicada"
   | "negociacao_aberta"
-  | "negociacao_atualizada";
+  | "negociacao_atualizada"
+  | "etapa_alterada"
+  | "vinculo_cliente_atualizado"
+  | "vinculo_corretor_atualizado";
 
 export type EventoNegociacao = {
   id: string;
@@ -120,27 +133,61 @@ export type ContrapropostaSalva = {
   observacoes: string;
 };
 
+export type PayloadSimulacaoNegociacao = {
+  modoDocumento: TipoNegociacao;
+  cliente: {
+    id: string | null;
+    nome: string;
+    cpf: string;
+    telefone: string;
+    email: string;
+    profissao: string;
+    estadoCivil: string;
+  };
+  corretor: {
+    id: string | null;
+    nome: string;
+    creci: string;
+    imobiliaria: string;
+  };
+  lotes: UnidadeNegociacao[];
+  simulacao: SimulacaoSalva;
+  proposta: PropostaSalva;
+  contraproposta: ContrapropostaSalva;
+};
+
 export type NegociacaoSalva = {
   id: string;
   tipo: TipoNegociacao;
   status: StatusNegociacao;
+  etapa: EtapaNegociacao;
   prioridade: PrioridadeNegociacao;
   origem: OrigemNegociacao;
   observacaoInterna: string;
+  observacoes: string;
   ultimaAcao: string;
   titulo: string;
+  clienteId: string | null;
+  clienteNome: string;
   cliente: string;
   clienteCpf: string;
   clienteTelefone: string;
   clienteEmail: string;
   clienteProfissao: string;
   clienteEstadoCivil: string;
+  corretorId: string | null;
+  corretorNome: string;
   corretor: string;
   creci: string;
   imobiliaria: string;
   unidades: UnidadeNegociacao[];
   valorTotal: number;
+  entrada: number;
+  saldoFinal: number;
+  permuta: AtivoNegociadoSalvo | null;
+  veiculo: AtivoNegociadoSalvo | null;
   resumoLotes: string;
+  payloadSimulacao: PayloadSimulacaoNegociacao;
   createdAt: string;
   updatedAt: string;
   historico: EventoNegociacao[];

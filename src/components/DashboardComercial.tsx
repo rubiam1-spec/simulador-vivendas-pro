@@ -1,11 +1,7 @@
 import { useMemo } from "react";
 
-import type {
-  NegociacaoSalva,
-  OrigemNegociacao,
-  PrioridadeNegociacao,
-  StatusNegociacao,
-} from "../types/negociacao";
+import type { NegociacaoSalva, OrigemNegociacao, PrioridadeNegociacao, StatusNegociacao } from "../types/negociacao";
+import type { NegociacoesMetrics } from "../services/negociacoesService";
 
 type DashboardComercialProps = {
   negociacoes: NegociacaoSalva[];
@@ -98,19 +94,13 @@ function tonePrioridade(prioridade: PrioridadeNegociacao) {
 export default function DashboardComercial({
   negociacoes,
 }: DashboardComercialProps) {
-  const metrics = useMemo(() => {
+  const metrics = useMemo<NegociacoesMetrics>(() => {
     const totalNegociacoes = negociacoes.length;
     const pipelineTotal = negociacoes.reduce((acc, negociacao) => {
       return PIPELINE_STATUS.includes(negociacao.status)
         ? acc + negociacao.valorTotal
         : acc;
     }, 0);
-    const aprovadas = negociacoes.filter(
-      (negociacao) => negociacao.status === "aprovada"
-    );
-    const aguardandoRetorno = negociacoes.filter(
-      (negociacao) => negociacao.status === "aguardando_retorno"
-    );
     const ticketMedio = totalNegociacoes
       ? negociacoes.reduce((acc, negociacao) => acc + negociacao.valorTotal, 0) /
         totalNegociacoes
@@ -146,10 +136,25 @@ export default function DashboardComercial({
       .slice(0, 5);
 
     return {
-      totalNegociacoes,
-      pipelineTotal,
-      aprovadas: aprovadas.length,
-      aguardandoRetorno: aguardandoRetorno.length,
+      total: totalNegociacoes,
+      totalSimulacoes: negociacoes.filter(
+        (negociacao) => negociacao.status === "simulacao"
+      ).length,
+      totalPropostasEnviadas: negociacoes.filter((negociacao) =>
+        ["proposta_enviada", "contraproposta"].includes(negociacao.status)
+      ).length,
+      totalEmAndamento: negociacoes.filter((negociacao) =>
+        ["em_negociacao", "aguardando_retorno", "aprovada"].includes(
+          negociacao.status
+        )
+      ).length,
+      totalFechadas: negociacoes.filter(
+        (negociacao) => negociacao.status === "fechada"
+      ).length,
+      totalPerdidas: negociacoes.filter(
+        (negociacao) => negociacao.status === "perdida"
+      ).length,
+      pipelineValor: pipelineTotal,
       ticketMedio,
       porStatus,
       porOrigem,
@@ -164,14 +169,14 @@ export default function DashboardComercial({
         <article className="crmMetricCard">
           <span className="crmMetricLabel">Negociacoes ativas</span>
           <strong className="crmMetricValue">
-            {metrics.totalNegociacoes.toLocaleString("pt-BR")}
+            {metrics.total.toLocaleString("pt-BR")}
           </strong>
           <span className="crmMetricHint">Volume total em acompanhamento.</span>
         </article>
 
         <article className="crmMetricCard crmMetricCardAccent">
           <span className="crmMetricLabel">Pipeline financeiro</span>
-          <strong className="crmMetricValue">{brl(metrics.pipelineTotal)}</strong>
+          <strong className="crmMetricValue">{brl(metrics.pipelineValor)}</strong>
           <span className="crmMetricHint">
             Soma das oportunidades em rascunho, negociacao, retorno e aprovacao.
           </span>
@@ -180,9 +185,9 @@ export default function DashboardComercial({
         <article className="crmMetricCard">
           <span className="crmMetricLabel">Aguardando retorno</span>
           <strong className="crmMetricValue">
-            {metrics.aguardandoRetorno.toLocaleString("pt-BR")}
+            {metrics.totalEmAndamento.toLocaleString("pt-BR")}
           </strong>
-          <span className="crmMetricHint">Negociacoes pedindo proxima acao.</span>
+          <span className="crmMetricHint">Negociacoes em fase ativa do funil.</span>
         </article>
 
         <article className="crmMetricCard">

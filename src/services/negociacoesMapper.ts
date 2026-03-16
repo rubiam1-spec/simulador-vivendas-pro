@@ -5,8 +5,10 @@ import {
 } from "./pdfService";
 import type { Lote } from "./planilhaService";
 import type {
+  AtivoNegociadoSalvo,
   CondicaoPagamentoSalva,
   ContrapropostaSalva,
+  EtapaNegociacao,
   NegociacaoSalva,
   OrigemNegociacao,
   PrioridadeNegociacao,
@@ -19,12 +21,14 @@ import type {
 
 type CriarNegociacaoInput = {
   tipo: TipoNegociacao;
+  clienteId: string | null;
   cliente: string;
   clienteCpf: string;
   clienteTelefone: string;
   clienteEmail: string;
   clienteProfissao: string;
   clienteEstadoCivil: string;
+  corretorId: string | null;
   corretor: string;
   creci: string;
   imobiliaria: string;
@@ -44,12 +48,14 @@ type PrepararNegociacaoCrmInput = {
 
 export type NegociacaoReidratada = {
   tipo: TipoNegociacao;
+  clienteId: string | null;
   cliente: string;
   clienteCpf: string;
   clienteTelefone: string;
   clienteEmail: string;
   clienteProfissao: string;
   clienteEstadoCivil: string;
+  corretorId: string | null;
   corretor: string;
   creci: string;
   imobiliaria: string;
@@ -76,9 +82,15 @@ function chaveLote(unidade: { quadra: string; lote: string }) {
 }
 
 function statusPorTipo(tipo: TipoNegociacao): StatusNegociacao {
-  if (tipo === "proposta") return "em_negociacao";
-  if (tipo === "contraproposta") return "aprovada";
-  return "rascunho";
+  if (tipo === "proposta") return "proposta_enviada";
+  if (tipo === "contraproposta") return "contraproposta";
+  return "simulacao";
+}
+
+function etapaPorTipo(tipo: TipoNegociacao): EtapaNegociacao {
+  if (tipo === "proposta") return "proposta";
+  if (tipo === "contraproposta") return "retorno";
+  return "inicial";
 }
 
 function prioridadePadrao(): PrioridadeNegociacao {
@@ -92,7 +104,7 @@ function origemPadrao(): OrigemNegociacao {
 function ultimaAcaoPorTipo(tipo: TipoNegociacao) {
   if (tipo === "proposta") return "Proposta salva";
   if (tipo === "contraproposta") return "Contraproposta salva";
-  return "Simulação salva";
+  return "Simulacao salva";
 }
 
 function normalizarCondicao(condicao: CondicaoPagamentoSalva): CondicaoPagamentoSalva {
@@ -181,10 +193,10 @@ function descreverFluxoBalao(
 ) {
   const normalizada = normalizarCondicao(condicao);
   if (!normalizada.temBalao || valorBalao <= 0) {
-    return "• Fluxo sem balão";
+    return "- Fluxo sem balao";
   }
 
-  return `• ${normalizada.baloesSemestrais} balões ${
+  return `- ${normalizada.baloesSemestrais} baloes ${
     tipoBalao === "anual" ? "anuais" : "semestrais"
   } de ${brl(valorBalao)}`;
 }
@@ -203,6 +215,34 @@ function clonar<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
+function criarPayloadSimulacao(
+  input: CriarNegociacaoInput,
+  unidades: UnidadeNegociacao[]
+) {
+  return {
+    modoDocumento: input.tipo,
+    cliente: {
+      id: input.clienteId,
+      nome: input.cliente,
+      cpf: input.clienteCpf,
+      telefone: input.clienteTelefone,
+      email: input.clienteEmail,
+      profissao: input.clienteProfissao,
+      estadoCivil: input.clienteEstadoCivil,
+    },
+    corretor: {
+      id: input.corretorId,
+      nome: input.corretor,
+      creci: input.creci,
+      imobiliaria: input.imobiliaria,
+    },
+    lotes: clonar(unidades),
+    simulacao: clonar(input.simulacao),
+    proposta: clonar(input.proposta),
+    contraproposta: clonar(input.contraproposta),
+  } as NegociacaoSalva["payloadSimulacao"];
+}
+
 export function mapearSimuladorParaNegociacaoSalva(
   input: CriarNegociacaoInput
 ): Omit<NegociacaoSalva, "id" | "createdAt" | "updatedAt"> {
@@ -210,31 +250,74 @@ export function mapearSimuladorParaNegociacaoSalva(
   const resumoLotes = unidades.length
     ? unidades.map((unidade) => `Q${unidade.quadra} • L${unidade.lote}`).join(", ")
     : "Nenhuma unidade selecionada";
+  const simulacao = clonar(input.simulacao);
+  const proposta = clonar(input.proposta);
+  const contraproposta = clonar(input.contraproposta);
+  const entrada =
+    proposta.condicao.entradaTipo === "valor"
+      ? numeroSeguro(proposta.condicao.entradaValor)
+      : Math.max(
+          0,
+          numeroSeguro(input.valorTotal) *
+            (numeroSeguro(proposta.condicao.entradaValor) / 100)
+        );
+  const saldoFinal =
+    proposta.condicao.temSaldoFinal && proposta.condicao.saldoFinalTipo === "valor"
+      ? numeroSeguro(proposta.condicao.saldoFinalValor)
+      : simulacao.temSaldoFinal && simulacao.saldoFinalTipo === "valor"
+        ? numeroSeguro(simulacao.saldoFinalValor)
+        : 0;
+  const permuta: AtivoNegociadoSalvo | null =
+    input.tipo === "contraproposta"
+      ? contraproposta.permutaAceita
+      : input.tipo === "proposta"
+        ? proposta.permuta
+        : simulacao.permuta;
+  const veiculo: AtivoNegociadoSalvo | null =
+    input.tipo === "contraproposta"
+      ? contraproposta.veiculoAceito
+      : input.tipo === "proposta"
+        ? proposta.veiculo
+        : simulacao.veiculo;
 
   return {
     tipo: input.tipo,
     status: statusPorTipo(input.tipo),
+    etapa: etapaPorTipo(input.tipo),
     prioridade: prioridadePadrao(),
     origem: origemPadrao(),
     observacaoInterna: "",
+    observacoes:
+      input.tipo === "contraproposta"
+        ? contraproposta.observacoes
+        : proposta.observacoes,
     ultimaAcao: ultimaAcaoPorTipo(input.tipo),
     titulo: `${input.tipo.toUpperCase()} • ${input.cliente || "Sem cliente"}`,
+    clienteId: input.clienteId,
+    clienteNome: input.cliente,
     cliente: input.cliente,
     clienteCpf: input.clienteCpf,
     clienteTelefone: input.clienteTelefone,
     clienteEmail: input.clienteEmail,
     clienteProfissao: input.clienteProfissao,
     clienteEstadoCivil: input.clienteEstadoCivil,
+    corretorId: input.corretorId,
+    corretorNome: input.corretor,
     corretor: input.corretor,
     creci: input.creci,
     imobiliaria: input.imobiliaria,
     unidades,
     valorTotal: numeroSeguro(input.valorTotal),
+    entrada,
+    saldoFinal,
+    permuta: clonar(permuta),
+    veiculo: clonar(veiculo),
     resumoLotes,
+    payloadSimulacao: criarPayloadSimulacao(input, unidades),
     historico: [],
-    simulacao: clonar(input.simulacao),
-    proposta: clonar(input.proposta),
-    contraproposta: clonar(input.contraproposta),
+    simulacao,
+    proposta,
+    contraproposta,
   };
 }
 
@@ -252,6 +335,7 @@ export function prepararNegociacaoParaCrm({
       ...base,
       tipo,
       status: statusPorTipo(tipo),
+      etapa: etapaPorTipo(tipo),
       ultimaAcao,
       titulo: `${tipo.toUpperCase()} • ${base.cliente || "Sem cliente"}`,
     };
@@ -261,9 +345,11 @@ export function prepararNegociacaoParaCrm({
     ...base,
     tipo,
     status: negociacaoAtual.status,
+    etapa: negociacaoAtual.etapa,
     prioridade: negociacaoAtual.prioridade,
     origem: negociacaoAtual.origem,
     observacaoInterna: negociacaoAtual.observacaoInterna,
+    observacoes: base.observacoes || negociacaoAtual.observacoes,
     ultimaAcao,
     titulo: `${tipo.toUpperCase()} • ${base.cliente || "Sem cliente"}`,
   };
@@ -274,12 +360,14 @@ export function reidratarNegociacaoSalva(
 ): NegociacaoReidratada {
   return {
     tipo: negociacao.tipo,
+    clienteId: negociacao.clienteId || null,
     cliente: negociacao.cliente,
     clienteCpf: negociacao.clienteCpf,
     clienteTelefone: negociacao.clienteTelefone,
     clienteEmail: negociacao.clienteEmail,
     clienteProfissao: negociacao.clienteProfissao,
     clienteEstadoCivil: negociacao.clienteEstadoCivil,
+    corretorId: negociacao.corretorId || null,
     corretor: negociacao.corretor,
     creci: negociacao.creci,
     imobiliaria: negociacao.imobiliaria,
@@ -323,15 +411,15 @@ function gerarResumoSimulacao(negociacao: NegociacaoSalva) {
   return {
     calculo,
     detalhesNegociacao: [
-      `• Valor total dos terrenos: ${brl(negociacao.valorTotal)}`,
-      `• Entrada (${simulacao.entradaPercentual}%): ${brl(calculo.entrada)}`,
+      `- Valor total dos terrenos: ${brl(negociacao.valorTotal)}`,
+      `- Entrada (${simulacao.entradaPercentual}%): ${brl(calculo.entrada)}`,
       ...(simulacao.temSaldoFinal && calculo.valorSaldoFinal > 0
         ? [
-            `• Saldo final na entrega: ${brl(calculo.valorSaldoFinal)}`,
-            `• Vencimento previsto: ${simulacao.saldoFinalVencimento || "2027-09-30"}`,
-            `• Forma prevista: ${
+            `- Saldo final na entrega: ${brl(calculo.valorSaldoFinal)}`,
+            `- Vencimento previsto: ${simulacao.saldoFinalVencimento || "2027-09-30"}`,
+            `- Forma prevista: ${
               simulacao.saldoFinalForma === "quitacao"
-                ? "quitação"
+                ? "quitacao"
                 : simulacao.saldoFinalForma === "financiamento"
                   ? "financiamento"
                   : "a definir"
@@ -340,20 +428,20 @@ function gerarResumoSimulacao(negociacao: NegociacaoSalva) {
         : []),
       ...(valorPermuta > 0
         ? [
-            `• Permuta: ${
+            `- Permuta: ${
               simulacao.permuta?.descricao || "Permuta informada"
-            } — ${brl(valorPermuta)}`,
+            } - ${brl(valorPermuta)}`,
           ]
         : []),
       ...(valorVeiculo > 0
         ? [
-            `• Veículo: ${
-              simulacao.veiculo?.descricao || "Veículo informado"
-            } — ${brl(valorVeiculo)}`,
+            `- Veiculo: ${
+              simulacao.veiculo?.descricao || "Veiculo informado"
+            } - ${brl(valorVeiculo)}`,
           ]
         : []),
-      `• Base para mensais e balões: ${brl(calculo.baseParcelasEBaloes)}`,
-      `• ${simulacao.parcelasMeses} parcelas mensais de ${brl(calculo.valorParcela)}`,
+      `- Base para mensais e baloes: ${brl(calculo.baseParcelasEBaloes)}`,
+      `- ${simulacao.parcelasMeses} parcelas mensais de ${brl(calculo.valorParcela)}`,
       descreverFluxoBalao(
         {
           entradaTipo: "percentual",
@@ -382,9 +470,9 @@ export function gerarPdfDaNegociacaoSalva(negociacao: NegociacaoSalva) {
     lote: unidade.lote,
     valor: brl(unidade.valor),
   }));
-  const quadras = Array.from(new Set(negociacao.unidades.map((unidade) => unidade.quadra))).join(
-    ", "
-  );
+  const quadras = Array.from(
+    new Set(negociacao.unidades.map((unidade) => unidade.quadra))
+  ).join(", ");
   const lotes = negociacao.unidades.map((unidade) => unidade.lote).join(", ");
 
   if (negociacao.tipo === "simulacao") {
@@ -413,7 +501,7 @@ export function gerarPdfDaNegociacaoSalva(negociacao: NegociacaoSalva) {
               vencimento: negociacao.simulacao.saldoFinalVencimento || "2027-09-30",
               forma:
                 negociacao.simulacao.saldoFinalForma === "quitacao"
-                  ? "quitação"
+                  ? "quitacao"
                   : negociacao.simulacao.saldoFinalForma === "financiamento"
                     ? "financiamento"
                     : "a definir",
@@ -448,7 +536,7 @@ export function gerarPdfDaNegociacaoSalva(negociacao: NegociacaoSalva) {
       saldoRemanescente: brl(calculo.saldoFinal),
       detalhesNegociacao,
       observacao:
-        "Condição comercial sujeita à disponibilidade das unidades e validação na data da negociação.",
+        "Condicao comercial sujeita a disponibilidade das unidades e validacao na data da negociacao.",
     });
     return;
   }
@@ -511,8 +599,8 @@ export function gerarPdfDaNegociacaoSalva(negociacao: NegociacaoSalva) {
           : undefined,
       observacao: proposta.observacoes || "-",
       detalhesNegociacao: [
-        `• Valor ofertado: ${brl(proposta.valorOfertado)}`,
-        `• ${proposta.condicao.parcelasMeses} parcelas mensais de ${brl(calculo.valorParcela)}`,
+        `- Valor ofertado: ${brl(proposta.valorOfertado)}`,
+        `- ${proposta.condicao.parcelasMeses} parcelas mensais de ${brl(calculo.valorParcela)}`,
         descreverFluxoBalao(proposta.condicao, calculo.valorBalao, proposta.balaoTipo),
       ],
     });
@@ -574,8 +662,8 @@ export function gerarPdfDaNegociacaoSalva(negociacao: NegociacaoSalva) {
         : undefined,
     observacao: contraproposta.observacoes || "-",
     detalhesNegociacao: [
-      `• Valor aprovado: ${brl(contraproposta.valorAprovado)}`,
-      `• ${contraproposta.condicao.parcelasMeses} parcelas mensais de ${brl(calculo.valorParcela)}`,
+      `- Valor aprovado: ${brl(contraproposta.valorAprovado)}`,
+      `- ${contraproposta.condicao.parcelasMeses} parcelas mensais de ${brl(calculo.valorParcela)}`,
       descreverFluxoBalao(contraproposta.condicao, calculo.valorBalao),
     ],
   });

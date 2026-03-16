@@ -715,6 +715,27 @@
   margin-bottom: 18px;
 }
 
+.crmFilterGridThree {
+  grid-template-columns: minmax(0, 1.6fr) repeat(2, minmax(170px, 0.7fr));
+}
+
+.crmFilterSummary {
+  min-height: 48px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  color: rgba(237, 243, 238, 0.72);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.crmToolbarActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .crmDealsList,
 .crmAccessList {
   display: flex;
@@ -862,6 +883,10 @@
   align-items: start;
 }
 
+.crmEntityGrid {
+  grid-template-columns: minmax(360px, 0.86fr) minmax(0, 1.14fr);
+}
+
 .crmAccessForm {
   display: flex;
   flex-direction: column;
@@ -872,6 +897,49 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
+}
+
+.crmEntityList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.crmEntityCard {
+  padding: 20px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.crmEntityCard.isActive {
+  border-color: rgba(123, 201, 157, 0.28);
+  box-shadow: 0 0 0 4px rgba(123, 201, 157, 0.08);
+}
+
+.crmEntityHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.crmEntityMetaGrid {
+  margin-top: 16px;
+}
+
+.crmEntityNotes {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.025);
+  color: rgba(237, 243, 238, 0.72);
+  line-height: 1.65;
+}
+
+.crmEntityEmpty {
+  min-height: 320px;
 }
 
 @media (max-width: 1200px) {
@@ -886,6 +954,10 @@
   }
 
   .crmFilterGridWide {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .crmFilterGridThree {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -969,10 +1041,12 @@
   .appShellTitleRow,
   .appShellUser,
   .crmDealHeader,
+  .crmEntityHeader,
   .crmAccessHeader,
   .crmInlineListItemSplit,
   .crmInlineListItemRich,
-  .crmButtonRow {
+  .crmButtonRow,
+  .crmToolbarActions {
     flex-direction: column;
     align-items: stretch;
   }
@@ -996,7 +1070,8 @@
   .crmDealMetaGrid,
   .crmEditorGrid,
   .crmAccessFormSplit,
-  .crmFilterGridWide {
+  .crmFilterGridWide,
+  .crmFilterGridThree {
     grid-template-columns: 1fr;
   }
 
@@ -1026,7 +1101,8 @@
   .crmPanel,
   .crmMetricCard,
   .crmDealCard,
-  .crmAccessCard {
+  .crmAccessCard,
+  .crmEntityCard {
     padding: 16px;
     border-radius: 18px;
   }

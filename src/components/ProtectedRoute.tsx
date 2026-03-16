@@ -10,7 +10,7 @@ type ProtectedRouteProps = {
 
 export default function ProtectedRoute({
   allowedRoles,
-  redirectTo = "/dashboard",
+  redirectTo = "/",
 }: ProtectedRouteProps) {
   const { session, profile, loading, profileLoading, profileResolved } = useAuth();
   const location = useLocation();

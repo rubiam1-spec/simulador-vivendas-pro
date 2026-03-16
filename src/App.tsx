@@ -8,10 +8,11 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { branding } from "./config/branding";
 import AcessosPage from "./pages/Acessos";
 import CentralNegociacoesPage from "./pages/CentralNegociacoesPage";
+import ClientesPage from "./pages/Clientes";
 import ConfiguracoesPage from "./pages/Configuracoes";
+import CorretoresPage from "./pages/Corretores";
 import DashboardPage from "./pages/Dashboard";
 import Login from "./pages/Login";
-import ModulePlaceholder from "./pages/ModulePlaceholder";
 import Simulador from "./pages/Simulador";
 import { useAuth } from "./components/AuthProvider";
 
@@ -56,7 +57,7 @@ export default function App() {
             <Route element={<AppLayout />}>
               <Route path="/" element={<HomeRedirect />} />
               <Route
-                element={<ProtectedRoute allowedRoles={["admin", "gestor"]} redirectTo="/simulador" />}
+                element={<ProtectedRoute allowedRoles={["admin", "gestor"]} redirectTo="/" />}
               >
                 <Route path="/dashboard" element={<DashboardPage />} />
               </Route>
@@ -75,24 +76,12 @@ export default function App() {
                 element={<ConfiguracoesPage />}
               />
               <Route
-                path="/clientes"
-                element={
-                  <ModulePlaceholder
-                    moduleName="Clientes"
-                    description="Estrutura pronta para o futuro modulo de clientes, com espaco reservado na navegacao e no shell do RR CRM."
-                  />
-                }
-              />
-              <Route
-                path="/corretores"
-                element={
-                  <ModulePlaceholder
-                    moduleName="Corretores"
-                    description="Estrutura pronta para o futuro modulo de corretores, preservando a operacao atual e a compatibilidade com os dados existentes."
-                  />
-                }
-              />
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                element={<ProtectedRoute allowedRoles={["admin", "gestor"]} redirectTo="/" />}
+              >
+                <Route path="/clientes" element={<ClientesPage />} />
+                <Route path="/corretores" element={<CorretoresPage />} />
+              </Route>
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Route>
 

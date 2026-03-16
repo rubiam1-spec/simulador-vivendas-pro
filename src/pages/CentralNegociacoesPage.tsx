@@ -3,14 +3,14 @@ import { useNavigate } from "react-router-dom";
 
 import CentralNegociacoes from "../components/CentralNegociacoes";
 import { gerarPdfDaNegociacaoSalva } from "../services/negociacoesMapper";
-import { agendarAberturaNegociacao } from "../services/negociacoesSession";
 import {
-  adicionarEventoNegociacao,
-  atualizarNegociacao,
-  duplicarNegociacao,
-  excluirNegociacao,
-  listarNegociacoesSalvas,
-} from "../services/negociacoesStorage";
+  appendNegociacaoEvent,
+  deleteNegociacaoById,
+  duplicateNegociacaoById,
+  listNegociacoes,
+  updateNegociacaoById,
+} from "../services/negociacoesService";
+import { agendarAberturaNegociacao } from "../services/negociacoesSession";
 import type { NegociacaoSalva } from "../types/negociacao";
 
 export default function CentralNegociacoesPage() {
@@ -18,8 +18,8 @@ export default function CentralNegociacoesPage() {
   const [negociacoes, setNegociacoes] = useState<NegociacaoSalva[]>([]);
   const [feedback, setFeedback] = useState("");
 
-  function recarregar() {
-    setNegociacoes(listarNegociacoesSalvas());
+  async function recarregar() {
+    setNegociacoes(await listNegociacoes());
   }
 
   function notificar(texto: string) {
@@ -28,53 +28,53 @@ export default function CentralNegociacoesPage() {
   }
 
   useEffect(() => {
-    recarregar();
+    void recarregar();
   }, []);
 
-  function abrir(negociacao: NegociacaoSalva) {
+  async function abrir(negociacao: NegociacaoSalva) {
     agendarAberturaNegociacao(negociacao.id);
-    adicionarEventoNegociacao(negociacao.id, {
+    await appendNegociacaoEvent(negociacao.id, {
       tipo: "negociacao_aberta",
       descricao: "Negociacao aberta",
     });
-    recarregar();
+    await recarregar();
     navigate("/simulador");
   }
 
-  function duplicar(id: string) {
-    const duplicada = duplicarNegociacao(id);
+  async function duplicar(id: string) {
+    const duplicada = await duplicateNegociacaoById(id);
     if (!duplicada) return;
-    recarregar();
+    await recarregar();
     notificar("Negociacao duplicada com sucesso.");
   }
 
-  function excluir(id: string) {
+  async function excluir(id: string) {
     if (!window.confirm("Deseja excluir esta negociacao?")) return;
-    excluirNegociacao(id);
-    recarregar();
+    await deleteNegociacaoById(id);
+    await recarregar();
     notificar("Negociacao excluida.");
   }
 
-  function gerarPdf(negociacao: NegociacaoSalva) {
+  async function gerarPdf(negociacao: NegociacaoSalva) {
     gerarPdfDaNegociacaoSalva(negociacao);
-    adicionarEventoNegociacao(negociacao.id, {
+    await appendNegociacaoEvent(negociacao.id, {
       tipo: "pdf_gerado",
       descricao: "PDF gerado",
     });
-    recarregar();
+    await recarregar();
     notificar("PDF gerado.");
   }
 
-  function atualizarDadosComerciais(
+  async function atualizarDadosComerciais(
     id: string,
     dados: Pick<
       NegociacaoSalva,
-      "status" | "prioridade" | "origem" | "observacaoInterna" | "ultimaAcao"
+      "status" | "etapa" | "prioridade" | "origem" | "observacaoInterna" | "ultimaAcao"
     >
   ) {
-    const atualizada = atualizarNegociacao(id, dados);
+    const atualizada = await updateNegociacaoById(id, dados);
     if (!atualizada) return;
-    recarregar();
+    await recarregar();
     notificar("Dados comerciais atualizados.");
   }
 
