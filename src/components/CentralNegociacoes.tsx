@@ -27,16 +27,16 @@ type CentralNegociacoesProps = {
 };
 
 const TIPOS: Array<{ value: TipoNegociacao | "todos"; label: string }> = [
-  { value: "todos", label: "Todos os tipos" },
-  { value: "simulacao", label: "Simulação" },
+  { value: "todos", label: "Todos" },
+  { value: "simulacao", label: "Simulacao" },
   { value: "proposta", label: "Proposta" },
-  { value: "contraproposta", label: "Contra-proposta" },
+  { value: "contraproposta", label: "Contraproposta" },
 ];
 
 const STATUS: Array<{ value: StatusNegociacao | "todos"; label: string }> = [
-  { value: "todos", label: "Todos os status" },
+  { value: "todos", label: "Todos" },
   { value: "rascunho", label: "Rascunho" },
-  { value: "em_negociacao", label: "Em negociação" },
+  { value: "em_negociacao", label: "Em negociacao" },
   { value: "aguardando_retorno", label: "Aguardando retorno" },
   { value: "aprovada", label: "Aprovada" },
   { value: "fechada", label: "Fechada" },
@@ -44,22 +44,23 @@ const STATUS: Array<{ value: StatusNegociacao | "todos"; label: string }> = [
   { value: "arquivada", label: "Arquivada" },
 ];
 
-const PRIORIDADES: Array<
-  { value: PrioridadeNegociacao | "todos"; label: string }
-> = [
-  { value: "todos", label: "Todas as prioridades" },
+const PRIORIDADES: Array<{
+  value: PrioridadeNegociacao | "todos";
+  label: string;
+}> = [
+  { value: "todos", label: "Todas" },
   { value: "baixa", label: "Baixa" },
-  { value: "media", label: "Média" },
+  { value: "media", label: "Media" },
   { value: "alta", label: "Alta" },
 ];
 
 const ORIGENS: Array<{ value: OrigemNegociacao | "todos"; label: string }> = [
-  { value: "todos", label: "Todas as origens" },
+  { value: "todos", label: "Todas" },
   { value: "corretor", label: "Corretor" },
   { value: "cliente_direto", label: "Cliente direto" },
   { value: "feira", label: "Feira" },
-  { value: "indicacao", label: "Indicação" },
-  { value: "trafego_pago", label: "Tráfego pago" },
+  { value: "indicacao", label: "Indicacao" },
+  { value: "trafego_pago", label: "Trafego pago" },
   { value: "interno", label: "Interno" },
   { value: "outro", label: "Outro" },
 ];
@@ -81,14 +82,14 @@ function formatarData(valor: string) {
 }
 
 function labelTipo(tipo: TipoNegociacao) {
-  if (tipo === "simulacao") return "Simulação";
+  if (tipo === "simulacao") return "Simulacao";
   if (tipo === "proposta") return "Proposta";
-  return "Contra-proposta";
+  return "Contraproposta";
 }
 
 function labelStatus(status: StatusNegociacao) {
   if (status === "rascunho") return "Rascunho";
-  if (status === "em_negociacao") return "Em negociação";
+  if (status === "em_negociacao") return "Em negociacao";
   if (status === "aguardando_retorno") return "Aguardando retorno";
   if (status === "aprovada") return "Aprovada";
   if (status === "fechada") return "Fechada";
@@ -99,13 +100,13 @@ function labelStatus(status: StatusNegociacao) {
 function labelPrioridade(prioridade: PrioridadeNegociacao) {
   if (prioridade === "baixa") return "Baixa";
   if (prioridade === "alta") return "Alta";
-  return "Média";
+  return "Media";
 }
 
 function labelOrigem(origem: OrigemNegociacao) {
   if (origem === "cliente_direto") return "Cliente direto";
-  if (origem === "trafego_pago") return "Tráfego pago";
-  if (origem === "indicacao") return "Indicação";
+  if (origem === "trafego_pago") return "Trafego pago";
+  if (origem === "indicacao") return "Indicacao";
   if (origem === "corretor") return "Corretor";
   if (origem === "feira") return "Feira";
   if (origem === "interno") return "Interno";
@@ -113,22 +114,22 @@ function labelOrigem(origem: OrigemNegociacao) {
 }
 
 function statusTone(status: StatusNegociacao) {
-  if (status === "aprovada" || status === "fechada") return "isPositive";
-  if (status === "perdida" || status === "arquivada") return "isMuted";
+  if (status === "aprovada" || status === "fechada") return "isSuccess";
   if (status === "aguardando_retorno") return "isWarning";
-  return "isNeutral";
+  if (status === "perdida" || status === "arquivada") return "isMuted";
+  return "isInfo";
 }
 
 function prioridadeTone(prioridade: PrioridadeNegociacao) {
-  if (prioridade === "alta") return "isHigh";
-  if (prioridade === "baixa") return "isLow";
-  return "isMedium";
+  if (prioridade === "alta") return "isDanger";
+  if (prioridade === "baixa") return "isSuccess";
+  return "isWarning";
 }
 
 function origemTone(origem: OrigemNegociacao) {
-  if (origem === "cliente_direto" || origem === "indicacao") return "isWarm";
-  if (origem === "trafego_pago") return "isAccent";
-  return "isNeutral";
+  if (origem === "cliente_direto" || origem === "indicacao") return "isSuccess";
+  if (origem === "trafego_pago") return "isInfo";
+  return "isMuted";
 }
 
 export default function CentralNegociacoes({
@@ -163,31 +164,36 @@ export default function CentralNegociacoes({
   const negociacoesFiltradas = useMemo(() => {
     const buscaNormalizada = busca.trim().toLowerCase();
 
-    return negociacoes.filter((negociacao) => {
-      const tipoOk = tipoFiltro === "todos" || negociacao.tipo === tipoFiltro;
-      const statusOk =
-        statusFiltro === "todos" || negociacao.status === statusFiltro;
-      const prioridadeOk =
-        prioridadeFiltro === "todos" ||
-        negociacao.prioridade === prioridadeFiltro;
-      const origemOk =
-        origemFiltro === "todos" || negociacao.origem === origemFiltro;
-      const textoBusca = [
-        negociacao.titulo,
-        negociacao.cliente,
-        negociacao.corretor,
-        negociacao.imobiliaria,
-        negociacao.resumoLotes,
-        negociacao.ultimaAcao,
-        negociacao.observacaoInterna,
-      ]
-        .join(" ")
-        .toLowerCase();
-      const buscaOk =
-        !buscaNormalizada || textoBusca.includes(buscaNormalizada);
+    return [...negociacoes]
+      .filter((negociacao) => {
+        const tipoOk = tipoFiltro === "todos" || negociacao.tipo === tipoFiltro;
+        const statusOk =
+          statusFiltro === "todos" || negociacao.status === statusFiltro;
+        const prioridadeOk =
+          prioridadeFiltro === "todos" ||
+          negociacao.prioridade === prioridadeFiltro;
+        const origemOk =
+          origemFiltro === "todos" || negociacao.origem === origemFiltro;
+        const textoBusca = [
+          negociacao.titulo,
+          negociacao.cliente,
+          negociacao.corretor,
+          negociacao.imobiliaria,
+          negociacao.resumoLotes,
+          negociacao.ultimaAcao,
+          negociacao.observacaoInterna,
+        ]
+          .join(" ")
+          .toLowerCase();
+        const buscaOk =
+          !buscaNormalizada || textoBusca.includes(buscaNormalizada);
 
-      return tipoOk && statusOk && prioridadeOk && origemOk && buscaOk;
-    });
+        return tipoOk && statusOk && prioridadeOk && origemOk && buscaOk;
+      })
+      .sort(
+        (a, b) =>
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      );
   }, [
     busca,
     negociacoes,
@@ -196,6 +202,26 @@ export default function CentralNegociacoes({
     statusFiltro,
     tipoFiltro,
   ]);
+
+  const resumo = useMemo(() => {
+    const pipeline = negociacoesFiltradas
+      .filter((item) =>
+        ["rascunho", "em_negociacao", "aguardando_retorno", "aprovada"].includes(
+          item.status
+        )
+      )
+      .reduce((acc, item) => acc + item.valorTotal, 0);
+
+    return {
+      total: negociacoesFiltradas.length,
+      aprovadas: negociacoesFiltradas.filter((item) => item.status === "aprovada")
+        .length,
+      aguardando: negociacoesFiltradas.filter(
+        (item) => item.status === "aguardando_retorno"
+      ).length,
+      pipeline,
+    };
+  }, [negociacoesFiltradas]);
 
   function iniciarEdicao(negociacao: NegociacaoSalva) {
     setEdicao({
@@ -222,112 +248,144 @@ export default function CentralNegociacoes({
   }
 
   return (
-    <section className="luxSection luxCentral">
-      <div className="luxSectionInner">
-        <div className="luxCentralHead">
+    <div className="crmStack">
+      <section className="crmSection crmFilterShell">
+        <div className="crmSectionHeader">
           <div>
-            <div className="luxKicker">Operação comercial</div>
-            <h2 className="luxH2">Central de Negociações</h2>
-            <p className="luxCentralText">
-              Painel operacional para acompanhar estágio, prioridade, origem e
-              histórico recente das negociações.
+            <span className="crmSectionEyebrow">Operacao comercial</span>
+            <h3 className="crmSectionTitle">Central operacional do funil</h3>
+            <p className="crmSectionText">
+              Filtros compactos, leitura rapida das negociacoes e acoes diretas para
+              acompanhar o pipeline sem poluicao visual.
             </p>
           </div>
-
-          <div className="luxCentralMeta">
-            <span className="luxChip">
-              {negociacoes.length} negociação(ões) salvas
-            </span>
-          </div>
         </div>
 
-        <div className="luxCentralToolbar">
-          <div className="luxCentralFilters luxCentralFiltersWide">
-            <div className="luxField">
-              <label>Buscar negociação</label>
-              <input
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-                placeholder="Cliente, corretor, lote, ação ou observação"
-              />
-            </div>
+        <div className="crmFilterGrid crmFilterGridWide">
+          <label className="crmField">
+            <span>Buscar</span>
+            <input
+              value={busca}
+              onChange={(event) => setBusca(event.target.value)}
+              placeholder="Cliente, corretor, lote ou ultima acao"
+            />
+          </label>
 
-            <div className="luxField">
-              <label>Tipo</label>
-              <select
-                value={tipoFiltro}
-                onChange={(e) =>
-                  setTipoFiltro(e.target.value as TipoNegociacao | "todos")
-                }
-              >
-                {TIPOS.map((tipo) => (
-                  <option key={tipo.value} value={tipo.value}>
-                    {tipo.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <label className="crmField">
+            <span>Tipo</span>
+            <select
+              value={tipoFiltro}
+              onChange={(event) =>
+                setTipoFiltro(event.target.value as TipoNegociacao | "todos")
+              }
+            >
+              {TIPOS.map((tipo) => (
+                <option key={tipo.value} value={tipo.value}>
+                  {tipo.label}
+                </option>
+              ))}
+            </select>
+          </label>
 
-            <div className="luxField">
-              <label>Status</label>
-              <select
-                value={statusFiltro}
-                onChange={(e) =>
-                  setStatusFiltro(
-                    e.target.value as StatusNegociacao | "todos"
-                  )
-                }
-              >
-                {STATUS.map((status) => (
-                  <option key={status.value} value={status.value}>
-                    {status.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <label className="crmField">
+            <span>Status</span>
+            <select
+              value={statusFiltro}
+              onChange={(event) =>
+                setStatusFiltro(event.target.value as StatusNegociacao | "todos")
+              }
+            >
+              {STATUS.map((status) => (
+                <option key={status.value} value={status.value}>
+                  {status.label}
+                </option>
+              ))}
+            </select>
+          </label>
 
-            <div className="luxField">
-              <label>Prioridade</label>
-              <select
-                value={prioridadeFiltro}
-                onChange={(e) =>
-                  setPrioridadeFiltro(
-                    e.target.value as PrioridadeNegociacao | "todos"
-                  )
-                }
-              >
-                {PRIORIDADES.map((prioridade) => (
-                  <option key={prioridade.value} value={prioridade.value}>
-                    {prioridade.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <label className="crmField">
+            <span>Prioridade</span>
+            <select
+              value={prioridadeFiltro}
+              onChange={(event) =>
+                setPrioridadeFiltro(
+                  event.target.value as PrioridadeNegociacao | "todos"
+                )
+              }
+            >
+              {PRIORIDADES.map((prioridade) => (
+                <option key={prioridade.value} value={prioridade.value}>
+                  {prioridade.label}
+                </option>
+              ))}
+            </select>
+          </label>
 
-            <div className="luxField">
-              <label>Origem</label>
-              <select
-                value={origemFiltro}
-                onChange={(e) =>
-                  setOrigemFiltro(e.target.value as OrigemNegociacao | "todos")
-                }
-              >
-                {ORIGENS.map((origem) => (
-                  <option key={origem.value} value={origem.value}>
-                    {origem.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+          <label className="crmField">
+            <span>Origem</span>
+            <select
+              value={origemFiltro}
+              onChange={(event) =>
+                setOrigemFiltro(event.target.value as OrigemNegociacao | "todos")
+              }
+            >
+              {ORIGENS.map((origem) => (
+                <option key={origem.value} value={origem.value}>
+                  {origem.label}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
 
-        {negociacoesFiltradas.length === 0 ? (
-          <div className="luxNegEmpty">
-            Nenhuma negociação encontrada com os filtros atuais.
+        <section className="crmMetricGrid">
+          <article className="crmMetricCard">
+            <span className="crmMetricLabel">Resultados</span>
+            <strong className="crmMetricValue">{resumo.total}</strong>
+            <span className="crmMetricHint">Negociacoes dentro dos filtros atuais.</span>
+          </article>
+
+          <article className="crmMetricCard crmMetricCardAccent">
+            <span className="crmMetricLabel">Pipeline filtrado</span>
+            <strong className="crmMetricValue">{formatarMoeda(resumo.pipeline)}</strong>
+            <span className="crmMetricHint">Valor vivo em acompanhamento.</span>
+          </article>
+
+          <article className="crmMetricCard">
+            <span className="crmMetricLabel">Aguardando retorno</span>
+            <strong className="crmMetricValue">{resumo.aguardando}</strong>
+            <span className="crmMetricHint">Itens pedindo retomada comercial.</span>
+          </article>
+
+          <article className="crmMetricCard">
+            <span className="crmMetricLabel">Aprovadas</span>
+            <strong className="crmMetricValue">{resumo.aprovadas}</strong>
+            <span className="crmMetricHint">Negociacoes com sinal positivo.</span>
+          </article>
+        </section>
+      </section>
+
+      {negociacoesFiltradas.length === 0 ? (
+        <section className="crmSection">
+          <div className="crmEmptyState">
+            <span className="crmBadge">Estado vazio</span>
+            <h3>Nenhuma negociacao encontrada</h3>
+            <p>
+              Ajuste os filtros ou salve novas negociacoes no simulador para preencher
+              esta central com oportunidades reais.
+            </p>
           </div>
-        ) : (
-          <div className="luxCentralGrid">
+        </section>
+      ) : (
+        <section className="crmSection">
+          <div className="crmSectionHeader">
+            <div>
+              <span className="crmSectionEyebrow">Fila de trabalho</span>
+              <h3 className="crmSectionTitle">Negociacoes em acompanhamento</h3>
+            </div>
+          </div>
+
+          <div className="crmDealsList">
             {negociacoesFiltradas.map((negociacao) => {
               const editando = edicao?.id === negociacao.id;
               const historicoAberto = historicoAbertoId === negociacao.id;
@@ -341,216 +399,171 @@ export default function CentralNegociacoes({
                 <article
                   key={negociacao.id}
                   className={[
-                    "luxNegCard",
+                    "crmDealCard",
                     negociacao.id === negociacaoAtivaId ? "isActive" : "",
                   ]
                     .join(" ")
                     .trim()}
                 >
-                  <div className="luxNegCardTop">
-                    <div>
-                      <div className="luxNegTitle">{negociacao.titulo}</div>
-                      <div className="luxNegSubtitle">
-                        {negociacao.cliente || "Cliente não informado"}
-                      </div>
+                  <div className="crmDealHeader">
+                    <div className="crmDealTitleBlock">
+                      <span className="crmDealOverline">
+                        {labelTipo(negociacao.tipo)} • Atualizado em{" "}
+                        {formatarData(negociacao.updatedAt)}
+                      </span>
+                      <h3>{negociacao.cliente || negociacao.titulo}</h3>
+                      <p>{negociacao.titulo}</p>
                     </div>
 
-                    <div className="luxNegPills">
-                      <span className="luxPill">{labelTipo(negociacao.tipo)}</span>
-                      <span
-                        className={[
-                          "luxPill",
-                          "luxPillSoft",
-                          "luxStatusPill",
-                          statusTone(negociacao.status),
-                        ]
-                          .join(" ")
-                          .trim()}
-                      >
+                    <div className="crmDealStatus">
+                      <span className={["crmBadge", statusTone(negociacao.status)].join(" ")}>
                         {labelStatus(negociacao.status)}
                       </span>
                       <span
                         className={[
-                          "luxPill",
-                          "luxPillSoft",
-                          "luxPriorityPill",
+                          "crmBadge",
                           prioridadeTone(negociacao.prioridade),
-                        ]
-                          .join(" ")
-                          .trim()}
+                        ].join(" ")}
                       >
                         {labelPrioridade(negociacao.prioridade)}
                       </span>
-                      <span
-                        className={[
-                          "luxPill",
-                          "luxPillSoft",
-                          "luxOriginPill",
-                          origemTone(negociacao.origem),
-                        ]
-                          .join(" ")
-                          .trim()}
-                      >
+                      <span className={["crmBadge", origemTone(negociacao.origem)].join(" ")}>
                         {labelOrigem(negociacao.origem)}
                       </span>
                     </div>
                   </div>
 
-                  <div className="luxNegMeta">
-                    <div className="luxNegMetaItem">
-                      <span className="luxNegMetaLabel">Corretor</span>
-                      <strong>{negociacao.corretor || "Não informado"}</strong>
+                  <div className="crmDealMetaGrid">
+                    <div className="crmDealMetaItem">
+                      <span className="crmDealMetaLabel">Corretor</span>
+                      <strong>{negociacao.corretor || "Nao informado"}</strong>
                     </div>
-                    <div className="luxNegMetaItem">
-                      <span className="luxNegMetaLabel">Quadra / Lote</span>
-                      <strong>{negociacao.resumoLotes}</strong>
-                    </div>
-                    <div className="luxNegMetaItem">
-                      <span className="luxNegMetaLabel">Valor</span>
+                    <div className="crmDealMetaItem">
+                      <span className="crmDealMetaLabel">Valor</span>
                       <strong>{formatarMoeda(negociacao.valorTotal)}</strong>
                     </div>
-                    <div className="luxNegMetaItem">
-                      <span className="luxNegMetaLabel">Atualizado em</span>
-                      <strong>{formatarData(negociacao.updatedAt)}</strong>
+                    <div className="crmDealMetaItem">
+                      <span className="crmDealMetaLabel">Quadra / lote</span>
+                      <strong>{negociacao.resumoLotes}</strong>
                     </div>
-                  </div>
-
-                  <div className="luxNegInsightRow">
-                    <div className="luxNegInsight">
-                      <span className="luxNegMetaLabel">Última ação</span>
-                      <strong>{negociacao.ultimaAcao || "Sem ação registrada"}</strong>
-                    </div>
-                    <div className="luxNegInsight">
-                      <span className="luxNegMetaLabel">Observação interna</span>
-                      <strong>
-                        {negociacao.observacaoInterna || "Sem observação interna"}
-                      </strong>
+                    <div className="crmDealMetaItem">
+                      <span className="crmDealMetaLabel">Ultima acao</span>
+                      <strong>{negociacao.ultimaAcao || "Sem acao registrada"}</strong>
                     </div>
                   </div>
 
                   {editando ? (
-                    <div className="luxNegEditor">
-                      <div className="luxCentralFilters">
-                        <div className="luxField">
-                          <label>Status</label>
-                          <select
-                            value={edicao.status}
-                            onChange={(e) =>
-                              setEdicao((anterior) =>
-                                anterior
-                                  ? {
-                                      ...anterior,
-                                      status: e.target.value as StatusNegociacao,
-                                    }
-                                  : anterior
-                              )
-                            }
-                          >
-                            {STATUS.filter((item) => item.value !== "todos").map(
-                              (status) => (
-                                <option key={status.value} value={status.value}>
-                                  {status.label}
-                                </option>
-                              )
-                            )}
-                          </select>
-                        </div>
+                    <div className="crmEditorGrid">
+                      <label className="crmField">
+                        <span>Status</span>
+                        <select
+                          value={edicao.status}
+                          onChange={(event) =>
+                            setEdicao((anterior) =>
+                              anterior
+                                ? {
+                                    ...anterior,
+                                    status: event.target.value as StatusNegociacao,
+                                  }
+                                : anterior
+                            )
+                          }
+                        >
+                          {STATUS.filter((item) => item.value !== "todos").map((status) => (
+                            <option key={status.value} value={status.value}>
+                              {status.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
 
-                        <div className="luxField">
-                          <label>Prioridade</label>
-                          <select
-                            value={edicao.prioridade}
-                            onChange={(e) =>
-                              setEdicao((anterior) =>
-                                anterior
-                                  ? {
-                                      ...anterior,
-                                      prioridade:
-                                        e.target.value as PrioridadeNegociacao,
-                                    }
-                                  : anterior
-                              )
-                            }
-                          >
-                            {PRIORIDADES.filter(
-                              (item) => item.value !== "todos"
-                            ).map((prioridade) => (
-                              <option
-                                key={prioridade.value}
-                                value={prioridade.value}
-                              >
+                      <label className="crmField">
+                        <span>Prioridade</span>
+                        <select
+                          value={edicao.prioridade}
+                          onChange={(event) =>
+                            setEdicao((anterior) =>
+                              anterior
+                                ? {
+                                    ...anterior,
+                                    prioridade:
+                                      event.target.value as PrioridadeNegociacao,
+                                  }
+                                : anterior
+                            )
+                          }
+                        >
+                          {PRIORIDADES.filter((item) => item.value !== "todos").map(
+                            (prioridade) => (
+                              <option key={prioridade.value} value={prioridade.value}>
                                 {prioridade.label}
                               </option>
-                            ))}
-                          </select>
-                        </div>
+                            )
+                          )}
+                        </select>
+                      </label>
 
-                        <div className="luxField">
-                          <label>Origem</label>
-                          <select
-                            value={edicao.origem}
-                            onChange={(e) =>
-                              setEdicao((anterior) =>
-                                anterior
-                                  ? {
-                                      ...anterior,
-                                      origem: e.target.value as OrigemNegociacao,
-                                    }
-                                  : anterior
-                              )
-                            }
-                          >
-                            {ORIGENS.filter((item) => item.value !== "todos").map(
-                              (origem) => (
-                                <option key={origem.value} value={origem.value}>
-                                  {origem.label}
-                                </option>
-                              )
-                            )}
-                          </select>
-                        </div>
-                      </div>
+                      <label className="crmField">
+                        <span>Origem</span>
+                        <select
+                          value={edicao.origem}
+                          onChange={(event) =>
+                            setEdicao((anterior) =>
+                              anterior
+                                ? {
+                                    ...anterior,
+                                    origem: event.target.value as OrigemNegociacao,
+                                  }
+                                : anterior
+                            )
+                          }
+                        >
+                          {ORIGENS.filter((item) => item.value !== "todos").map((origem) => (
+                            <option key={origem.value} value={origem.value}>
+                              {origem.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
 
-                      <div className="luxCentralFilters">
-                        <div className="luxField">
-                          <label>Última ação</label>
-                          <input
-                            value={edicao.ultimaAcao}
-                            onChange={(e) =>
-                              setEdicao((anterior) =>
-                                anterior
-                                  ? {
-                                      ...anterior,
-                                      ultimaAcao: e.target.value,
-                                    }
-                                  : anterior
-                              )
-                            }
-                            placeholder="Ex: cliente pediu revisão da entrada"
-                          />
-                        </div>
+                      <label className="crmField crmFieldWide">
+                        <span>Ultima acao</span>
+                        <input
+                          value={edicao.ultimaAcao}
+                          onChange={(event) =>
+                            setEdicao((anterior) =>
+                              anterior
+                                ? {
+                                    ...anterior,
+                                    ultimaAcao: event.target.value,
+                                  }
+                                : anterior
+                            )
+                          }
+                          placeholder="Ex: cliente pediu revisao da entrada"
+                        />
+                      </label>
 
-                        <div className="luxField luxFieldFull">
-                          <label>Observação interna</label>
-                          <textarea
-                            className="luxCentralTextarea"
-                            value={edicao.observacaoInterna}
-                            onChange={(e) =>
-                              setEdicao((anterior) =>
-                                anterior
-                                  ? {
-                                      ...anterior,
-                                      observacaoInterna: e.target.value,
-                                    }
-                                  : anterior
-                              )
-                            }
-                            placeholder="Notas internas do gestor ou do time comercial"
-                          />
-                        </div>
-                      </div>
+                      <label className="crmField crmFieldWide">
+                        <span>Observacao interna</span>
+                        <textarea
+                          className="crmTextarea"
+                          value={edicao.observacaoInterna}
+                          onChange={(event) =>
+                            setEdicao((anterior) =>
+                              anterior
+                                ? {
+                                    ...anterior,
+                                    observacaoInterna: event.target.value,
+                                  }
+                                : anterior
+                            )
+                          }
+                          placeholder="Notas internas do gestor ou do time comercial"
+                        />
+                      </label>
 
-                      <div className="luxNegActions">
+                      <div className="crmButtonRow">
                         <button type="button" className="btn" onClick={salvarEdicao}>
                           Salvar dados comerciais
                         </button>
@@ -566,50 +579,35 @@ export default function CentralNegociacoes({
                   ) : null}
 
                   {historicoAberto ? (
-                    <div className="luxNegTimeline">
-                      <div className="luxNegTimelineHead">
-                        <span className="luxNegMetaLabel">Historico</span>
-                        <strong>
-                          {historicoOrdenado.length} evento(s) registrados
-                        </strong>
-                      </div>
-
+                    <div className="crmTimeline">
                       {historicoOrdenado.length > 0 ? (
-                        <div className="luxNegTimelineList">
-                          {historicoOrdenado.map((evento) => (
-                            <div key={evento.id} className="luxNegTimelineItem">
-                              <div className="luxNegTimelineDot" />
-                              <div className="luxNegTimelineBody">
-                                <strong>{evento.descricao}</strong>
-                                <span>
-                                  {formatarData(evento.dataHora)}
-                                </span>
-                              </div>
+                        historicoOrdenado.map((evento) => (
+                          <div key={evento.id} className="crmTimelineItem">
+                            <div className="crmTimelineDot" />
+                            <div className="crmTimelineBody">
+                              <strong>{evento.descricao}</strong>
+                              <span>{formatarData(evento.dataHora)}</span>
                             </div>
-                          ))}
-                        </div>
+                          </div>
+                        ))
                       ) : (
-                        <div className="luxNegTimelineEmpty">
-                          Nenhum evento registrado ate o momento.
+                        <div className="crmHint">
+                          Nenhum evento registrado ate o momento para esta negociacao.
                         </div>
                       )}
                     </div>
                   ) : null}
 
-                  <div className="luxNegActions">
-                    <button
-                      type="button"
-                      className="btn"
-                      onClick={() => onAbrir(negociacao)}
-                    >
-                      Abrir
+                  <div className="crmButtonRow">
+                    <button type="button" className="btn" onClick={() => onAbrir(negociacao)}>
+                      Abrir no simulador
                     </button>
                     <button
                       type="button"
                       className="btn btnGhost"
                       onClick={() => iniciarEdicao(negociacao)}
                     >
-                      Editar dados comerciais
+                      Editar
                     </button>
                     <button
                       type="button"
@@ -638,7 +636,7 @@ export default function CentralNegociacoes({
                     </button>
                     <button
                       type="button"
-                      className="btn btnGhost luxDangerBtn"
+                      className="btn btnGhost btnDanger"
                       onClick={() => onExcluir(negociacao.id)}
                     >
                       Excluir
@@ -648,8 +646,8 @@ export default function CentralNegociacoes({
               );
             })}
           </div>
-        )}
-      </div>
-    </section>
+        </section>
+      )}
+    </div>
   );
 }

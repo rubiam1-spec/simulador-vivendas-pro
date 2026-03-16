@@ -1,6 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import CentralNegociacoes from "../components/CentralNegociacoes";
-import DashboardComercial from "../components/DashboardComercial";
 import { carregarLotes, type Lote } from "../services/planilhaService";
 import {
   gerarPdfContraproposta,
@@ -8,16 +6,14 @@ import {
   gerarPdfSimulacao,
 } from "../services/pdfService";
 import {
-  gerarPdfDaNegociacaoSalva,
   mapearSimuladorParaNegociacaoSalva,
+  prepararNegociacaoParaCrm,
   reidratarNegociacaoSalva,
 } from "../services/negociacoesMapper";
 import {
   adicionarEventoNegociacao,
   buscarNegociacaoPorId,
   atualizarNegociacao,
-  duplicarNegociacao,
-  excluirNegociacao,
   listarNegociacoesSalvas,
   salvarNovaNegociacao,
 } from "../services/negociacoesStorage";
@@ -25,8 +21,6 @@ import { consumirNegociacaoAgendada } from "../services/negociacoesSession";
 import type { NegociacaoSalva } from "../types/negociacao";
 import "./simulador.css";
 
-import logoVivendas from "../assets/logo-vivendas.png";
-import logoBomm from "../assets/logo-bomm.png";
 
 type StatusFiltro = "todos" | "disponivel" | "indisponivel";
 type ModoDocumento = "simulacao" | "proposta" | "contraproposta";
@@ -1071,9 +1065,38 @@ export default function Simulador() {
     setNegociacoesSalvas(listarNegociacoesSalvas());
   }
 
-  function montarNegociacaoAtual() {
+  function sincronizarNegociacaoNoCrm(
+    tipo: ModoDocumento,
+    options?: { gerarPdfDepois?: boolean }
+  ) {
+    const negociacaoAtual = negociacaoAtivaId
+      ? negociacoesSalvas.find((negociacao) => negociacao.id === negociacaoAtivaId)
+      : null;
+
+    const configuracao =
+      tipo === "proposta"
+        ? {
+            ultimaAcao: "Proposta gerada e salva no CRM",
+            descricaoEvento: "Proposta gerada e salva no CRM",
+            mensagemCriada: "Proposta salva no CRM.",
+            mensagemAtualizada: "Proposta atualizada no CRM.",
+          }
+        : tipo === "contraproposta"
+          ? {
+              ultimaAcao: "Contraproposta gerada e salva no CRM",
+              descricaoEvento: "Contraproposta gerada e salva no CRM",
+              mensagemCriada: "Contraproposta salva no CRM.",
+              mensagemAtualizada: "Contraproposta atualizada no CRM.",
+            }
+          : {
+              ultimaAcao: "Simulação salva no CRM",
+              descricaoEvento: "Simulação salva no CRM",
+              mensagemCriada: "Simulação salva no CRM.",
+              mensagemAtualizada: "Negociação atualizada a partir do simulador.",
+            };
+
     const base = mapearSimuladorParaNegociacaoSalva({
-      tipo: modoDocumento,
+      tipo,
       cliente,
       clienteCpf,
       clienteTelefone,
@@ -1121,46 +1144,56 @@ export default function Simulador() {
       },
     });
 
-    const negociacaoAtual = negociacaoAtivaId
-      ? negociacoesSalvas.find((negociacao) => negociacao.id === negociacaoAtivaId)
-      : null;
+    const negociacao = prepararNegociacaoParaCrm({
+      base,
+      tipo,
+      negociacaoAtual,
+      ultimaAcao: configuracao.ultimaAcao,
+    });
 
-    if (!negociacaoAtual) {
-      return base;
-    }
+    let negociacaoPersistida: NegociacaoSalva | null = null;
 
-    return {
-      ...base,
-      status: negociacaoAtual.status,
-      prioridade: negociacaoAtual.prioridade,
-      origem: negociacaoAtual.origem,
-      observacaoInterna: negociacaoAtual.observacaoInterna,
-      ultimaAcao: negociacaoAtual.ultimaAcao,
-    };
-  }
-
-  function salvarNegociacaoAtual() {
-    const negociacao = montarNegociacaoAtual();
-
-    if (negociacaoAtivaId) {
+    if (negociacaoAtual && negociacaoAtivaId) {
       const atualizada = atualizarNegociacao(negociacaoAtivaId, negociacao, [
         {
           tipo: "negociacao_atualizada",
-          descricao: "Negociacao atualizada",
+          descricao: "Negociacao atualizada a partir do simulador",
+        },
+        {
+          tipo: "negociacao_atualizada",
+          descricao: configuracao.descricaoEvento,
         },
       ]);
+
       if (atualizada) {
+        negociacaoPersistida = atualizada;
         setNegociacaoAtivaId(atualizada.id);
         recarregarNegociacoes();
-        mostrarFeedbackNegociacao("Negociação atualizada na central.");
-        return;
+        mostrarFeedbackNegociacao(configuracao.mensagemAtualizada);
       }
+    } else {
+      const criada = salvarNovaNegociacao(negociacao, [
+        {
+          tipo: "negociacao_atualizada",
+          descricao: configuracao.descricaoEvento,
+        },
+      ]);
+      negociacaoPersistida = criada;
+      setNegociacaoAtivaId(criada.id);
+      recarregarNegociacoes();
+      mostrarFeedbackNegociacao(configuracao.mensagemCriada);
     }
 
-    const criada = salvarNovaNegociacao(negociacao);
-    setNegociacaoAtivaId(criada.id);
-    recarregarNegociacoes();
-    mostrarFeedbackNegociacao("Negociação salva na central.");
+    if (options?.gerarPdfDepois) {
+      gerarPdf();
+      if (negociacaoPersistida) {
+        adicionarEventoNegociacao(negociacaoPersistida.id, {
+          tipo: "pdf_gerado",
+          descricao: "PDF gerado",
+        });
+        recarregarNegociacoes();
+      }
+    }
   }
 
   function abrirNegociacaoSalva(negociacao: NegociacaoSalva) {
@@ -1224,51 +1257,6 @@ export default function Simulador() {
       abrirNegociacaoSalva(negociacao);
     }
   }, [loading]);
-
-  function duplicarNegociacaoSalva(id: string) {
-    const duplicada = duplicarNegociacao(id);
-    if (!duplicada) return;
-    recarregarNegociacoes();
-    mostrarFeedbackNegociacao("Negociação duplicada com sucesso.");
-  }
-
-  function excluirNegociacaoSalva(id: string) {
-    const permitir = window.confirm(
-      "Deseja excluir esta negociação da central?"
-    );
-
-    if (!permitir) return;
-
-    excluirNegociacao(id);
-    if (negociacaoAtivaId === id) {
-      setNegociacaoAtivaId(null);
-    }
-    recarregarNegociacoes();
-    mostrarFeedbackNegociacao("Negociação excluída da central.");
-  }
-
-  function gerarPdfDaCentral(negociacao: NegociacaoSalva) {
-    gerarPdfDaNegociacaoSalva(negociacao);
-    adicionarEventoNegociacao(negociacao.id, {
-      tipo: "pdf_gerado",
-      descricao: "PDF gerado",
-    });
-    recarregarNegociacoes();
-    mostrarFeedbackNegociacao("PDF gerado a partir da negociação salva.");
-  }
-
-  function atualizarDadosComerciaisNegociacao(
-    id: string,
-    dados: Pick<
-      NegociacaoSalva,
-      "status" | "prioridade" | "origem" | "observacaoInterna" | "ultimaAcao"
-    >
-  ) {
-    const atualizada = atualizarNegociacao(id, dados);
-    if (!atualizada) return;
-    recarregarNegociacoes();
-    mostrarFeedbackNegociacao("Dados comerciais atualizados.");
-  }
 
   async function copiarMensagem() {
     try {
@@ -1668,23 +1656,6 @@ export default function Simulador() {
   return (
     <div className="simPage">
       <div className="luxWrap">
-        <div className="luxTopbar">
-          <div className="luxBrand">
-            <img src={logoVivendas} alt="Vivendas do Bosque" className="luxLogo" />
-            <div className="luxBrandText">
-              <div className="luxBrandName">Vivendas do Bosque</div>
-              <div className="luxBrandSub">
-                Simulador Comercial • BOMM Urbanizadora
-              </div>
-            </div>
-          </div>
-
-          <div className="luxRight">
-            <span className="luxPill">VGV • Simulador</span>
-            <img src={logoBomm} alt="BOMM Urbanizadora" className="luxLogoBomm" />
-          </div>
-        </div>
-
         <main className="luxMain">
           {erro ? <div className="alert alertDanger">{erro}</div> : null}
 
@@ -2359,9 +2330,11 @@ export default function Simulador() {
                       <button
                         type="button"
                         className="btn btnGhost luxActionSecondary"
-                        onClick={salvarNegociacaoAtual}
+                        onClick={() => sincronizarNegociacaoNoCrm("simulacao")}
                       >
-                        {negociacaoAtivaId ? "Atualizar negociação" : "Salvar negociação"}
+                        {negociacaoAtivaId
+                          ? "Atualizar simulação no CRM"
+                          : "Salvar simulação no CRM"}
                       </button>
 
                       <button type="button" className="btn btnGhost luxActionSecondary" onClick={gerarPdf}>
@@ -3220,9 +3193,15 @@ export default function Simulador() {
                       <button
                         type="button"
                         className="btn btnGhost luxActionSecondary"
-                        onClick={salvarNegociacaoAtual}
+                        onClick={() =>
+                          sincronizarNegociacaoNoCrm(modoDocumento, {
+                            gerarPdfDepois: true,
+                          })
+                        }
                       >
-                        {negociacaoAtivaId ? "Atualizar negociação" : "Salvar negociação"}
+                        {modoDocumento === "proposta"
+                          ? "Gerar proposta + PDF + salvar no CRM"
+                          : "Gerar contraproposta + PDF + salvar no CRM"}
                       </button>
 
                       <button type="button" className="btn btnGhost luxActionSecondary" onClick={gerarPdf}>
@@ -3318,18 +3297,6 @@ export default function Simulador() {
           {feedbackNegociacao ? (
             <div className="luxNote luxCentralFeedback">{feedbackNegociacao}</div>
           ) : null}
-
-          <DashboardComercial negociacoes={negociacoesSalvas} />
-
-          <CentralNegociacoes
-            negociacoes={negociacoesSalvas}
-            negociacaoAtivaId={negociacaoAtivaId}
-            onAbrir={abrirNegociacaoSalva}
-            onDuplicar={duplicarNegociacaoSalva}
-            onExcluir={excluirNegociacaoSalva}
-            onGerarPdf={gerarPdfDaCentral}
-            onAtualizarDadosComerciais={atualizarDadosComerciaisNegociacao}
-          />
         </main>
       </div>
     </div>

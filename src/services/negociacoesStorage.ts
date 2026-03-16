@@ -177,7 +177,8 @@ export function buscarNegociacaoPorId(id: string): NegociacaoSalva | null {
 }
 
 export function salvarNovaNegociacao(
-  negociacao: Omit<NegociacaoSalva, "id" | "createdAt" | "updatedAt">
+  negociacao: Omit<NegociacaoSalva, "id" | "createdAt" | "updatedAt">,
+  eventosExtras: EventoNegociacaoInput[] = []
 ): NegociacaoSalva {
   const agora = new Date().toISOString();
   const completa = anexarEventos(
@@ -192,6 +193,7 @@ export function salvarNovaNegociacao(
         tipo: "negociacao_criada",
         descricao: "Negociacao criada",
       },
+      ...eventosExtras,
     ]
   );
 

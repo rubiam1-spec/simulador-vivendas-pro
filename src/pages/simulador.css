@@ -848,6 +848,7 @@ body::after {
   display: flex;
   align-items: flex-start;
   justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 .luxCentralToolbar {
@@ -1190,6 +1191,9 @@ body::after {
 
 .luxResultActions {
   margin-top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
   padding: 14px 16px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--r-lg);
@@ -1776,6 +1780,10 @@ body::after {
     grid-template-columns: 1fr 1fr;
   }
 
+  .luxCentralFiltersWide {
+    grid-template-columns: 1fr 1fr;
+  }
+
   .luxNegMeta {
     grid-template-columns: 1fr;
   }
@@ -1815,6 +1823,10 @@ body::after {
     grid-template-columns: 1fr;
   }
 
+  .luxCentralFiltersWide {
+    grid-template-columns: 1fr;
+  }
+
   .luxNegCardTop,
   .luxNegActions {
     flex-direction: column;
@@ -1848,7 +1860,7 @@ body::after {
 
   .luxRight {
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
   }
 
   .luxBrand {
@@ -1943,6 +1955,17 @@ body::after {
   .luxResultPills {
     justify-content: flex-start;
   }
+
+  .luxResultActions {
+    padding: 14px;
+  }
+
+  .luxActionPrimary,
+  .luxActionSecondary,
+  .luxNegActions .btn {
+    width: 100%;
+    min-width: 0;
+  }
 }
 
 @media (max-width: 520px) {
@@ -1967,6 +1990,8 @@ body::after {
   .luxPill {
     font-size: 10px;
     padding: 6px 10px;
+    white-space: normal;
+    word-break: break-word;
   }
 
   .luxSection {
@@ -1981,6 +2006,17 @@ body::after {
     padding: 14px;
   }
 
+  .luxMetricCard,
+  .luxDashboardPanel,
+  .luxNegCard,
+  .luxNegEditor,
+  .luxNegTimeline,
+  .luxResultActions,
+  .luxResultIntro {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
   .luxFlowValue {
     font-size: 24px;
   }
@@ -1992,6 +2028,28 @@ body::after {
   .whats,
   .luxWhats {
     min-height: 210px;
+  }
+
+  .luxLotListHead,
+  .luxDashboardRow,
+  .luxNegTimelineHead {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .luxDashboardRowMeta {
+    align-items: flex-start;
+  }
+
+  .luxLotItem {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .luxRight,
+  .luxResultPills,
+  .luxNegPills {
+    width: 100%;
   }
 }
 

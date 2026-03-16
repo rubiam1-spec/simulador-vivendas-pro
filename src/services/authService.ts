@@ -1,6 +1,7 @@
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 
 import { hasSupabaseConfig, supabase } from "../lib/supabase";
+import type { UserProfile } from "../types/user";
 
 export type AuthUser = {
   id: string;
@@ -10,8 +11,12 @@ export type AuthUser = {
 export type AuthSession = {
   user: AuthUser;
 };
+export type AuthState = {
+  session: AuthSession | null;
+  profile: UserProfile | null;
+};
 
-const MOCK_AUTH_KEY = "bomm_auth_session";
+const MOCK_AUTH_KEY = "rr_crm_auth_session";
 const listeners = new Set<(session: AuthSession | null) => void>();
 
 function toAuthSession(session: Session | null): AuthSession | null {

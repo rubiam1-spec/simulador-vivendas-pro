@@ -1,32 +1,109 @@
-import { Outlet } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 
-import { branding } from "../config/branding";
+import { getPageMeta } from "../config/pageMeta";
 import { hasSupabaseConfig } from "../lib/supabase";
 import { useAuth } from "./AuthProvider";
 import Sidebar from "./Sidebar";
 
 export default function AppLayout() {
-  const { session } = useAuth();
+  const { session, profile, profileLoading } = useAuth();
+  const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pageMeta = getPageMeta(location.pathname);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [mobileMenuOpen]);
+
+  useEffect(() => {
+    document.title = pageMeta.browserTitle;
+  }, [pageMeta.browserTitle]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return undefined;
+
+    function handleResize() {
+      if (window.innerWidth > 1024) {
+        setMobileMenuOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMobileMenuOpen(false);
+      }
+    }
+
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mobileMenuOpen]);
 
   return (
     <div className="appShell">
-      <Sidebar />
+      <Sidebar
+        mobileMenuOpen={mobileMenuOpen}
+        onCloseMobileMenu={() => setMobileMenuOpen(false)}
+      />
 
       <div className="appShellMain">
         <header className="appShellTopbar">
-          <div>
-            <div className="appShellKicker">{branding.appHeaderSubtitle}</div>
-            <h2>{branding.appHeaderTitle}</h2>
+          <div className="appShellTopbarPrimary">
+            <button
+              type="button"
+              className="appMobileMenuButton"
+              aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="app-sidebar-nav"
+              onClick={() => setMobileMenuOpen((current) => !current)}
+            >
+              <span />
+              <span />
+              <span />
+            </button>
+
+            <div className="appShellTitleRow">
+              <div className="appShellTitleMeta">
+                <div className="appShellKicker">{pageMeta.eyebrow}</div>
+                <h2>{pageMeta.title}</h2>
+                <p>{pageMeta.description}</p>
+              </div>
+
+              {pageMeta.badge ? (
+                <span className="appShellPageBadge">{pageMeta.badge}</span>
+              ) : null}
+            </div>
           </div>
 
           <div className="appShellUser">
-            <span>{session?.user.email || "Usuario autenticado"}</span>
-            <small>{hasSupabaseConfig ? "Supabase Auth" : "Modo local"}</small>
+            <span>{profile?.nome || session?.user.email || "Usuario autenticado"}</span>
+            <small>
+              {(profileLoading ? "carregando perfil" : profile?.role || "sem perfil").toUpperCase()} •{" "}
+              {hasSupabaseConfig ? "Supabase Auth" : "Modo local"}
+            </small>
           </div>
         </header>
 
         <main className="appShellContent">
-          <Outlet />
+          <div className="appShellViewport">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

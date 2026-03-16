@@ -2,6 +2,7 @@ import jsPDF from "jspdf";
 
 import logoBomm from "../assets/logo-bomm.png";
 import logoVivendas from "../assets/logo-vivendas.png";
+import { branding } from "../config/branding";
 
 type UnidadePdf = {
   quadra: string;
@@ -436,7 +437,7 @@ function renderPageFrame(doc: jsPDF, meta: LayoutMeta) {
     CONTENT_LEFT,
     FOOTER_Y
   );
-  doc.text("BOMM Urbanizadora", PAGE_WIDTH - CONTENT_LEFT, FOOTER_Y, {
+  doc.text(branding.clientName, PAGE_WIDTH - CONTENT_LEFT, FOOTER_Y, {
     align: "right",
   });
 }
@@ -621,7 +622,7 @@ function drawSignatureSection(doc: jsPDF, y: number, meta: LayoutMeta) {
     { label: "Cliente / Proponente", x: CONTENT_LEFT },
     { label: "Corretor", x: CONTENT_LEFT + blockWidth + gap },
     {
-      label: "BOMM Urbanizadora",
+      label: branding.clientName,
       x: CONTENT_LEFT + (blockWidth + gap) * 2,
     },
   ].forEach((item) => {

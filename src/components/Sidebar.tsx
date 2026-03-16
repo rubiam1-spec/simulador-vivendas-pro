@@ -1,36 +1,87 @@
 import { NavLink } from "react-router-dom";
 
 import { branding } from "../config/branding";
+import { getNavigationSections } from "../config/navigation";
+import { useAuth } from "./AuthProvider";
 
-const NAV_ITEMS = [
-  { to: "/dashboard", label: "Dashboard" },
-  { to: "/negociacoes", label: "Negociacoes" },
-  { to: "/simulador", label: "Simulador" },
-  { to: "/configuracoes", label: "Configuracoes" },
-];
+type SidebarProps = {
+  mobileMenuOpen: boolean;
+  onCloseMobileMenu: () => void;
+};
 
-export default function Sidebar() {
+export default function Sidebar({
+  mobileMenuOpen,
+  onCloseMobileMenu,
+}: SidebarProps) {
+  const { profile, profileResolved } = useAuth();
+  const sections = getNavigationSections(profile, profileResolved);
+
   return (
-    <aside className="appSidebar">
-      <div className="appSidebarBrand">
-        <div className="appSidebarKicker">{branding.sidebarSubtitle}</div>
-        <h1>{branding.sidebarTitle}</h1>
-        <p>Operacao comercial, negociacoes, simulacoes e documentos.</p>
-      </div>
+    <>
+      <button
+        type="button"
+        className={[
+          "appSidebarBackdrop",
+          mobileMenuOpen ? "isVisible" : "",
+        ].join(" ").trim()}
+        aria-label="Fechar menu"
+        onClick={onCloseMobileMenu}
+      />
 
-      <nav className="appSidebarNav" aria-label="Menu principal">
-        {NAV_ITEMS.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              ["appSidebarLink", isActive ? "isActive" : ""].join(" ").trim()
-            }
-          >
-            {item.label}
-          </NavLink>
-        ))}
-      </nav>
-    </aside>
+      <aside
+        className={[
+          "appSidebar",
+          mobileMenuOpen ? "isMobileOpen" : "",
+        ].join(" ").trim()}
+        aria-hidden={!mobileMenuOpen && undefined}
+      >
+        <div className="appSidebarBrand">
+          <div className="appSidebarKicker">{branding.sidebarSubtitle}</div>
+          <h1>{branding.sidebarTitle}</h1>
+          <p>{branding.sidebarDescription}</p>
+          <div className="appSidebarClient">
+            <span>{branding.sidebarClientLabel}</span>
+            <strong>{branding.clientLabel}</strong>
+          </div>
+        </div>
+
+        <div id="app-sidebar-nav" className="appSidebarSections">
+          {sections.map((section) => (
+            <div key={section.label} className="appSidebarSection">
+              <div className="appSidebarSectionTitle">{section.label}</div>
+
+              <nav className="appSidebarNav" aria-label={section.label}>
+                {section.items.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    onClick={onCloseMobileMenu}
+                    className={({ isActive }) =>
+                      [
+                        "appSidebarLink",
+                        isActive ? "isActive" : "",
+                        item.badge ? "isSoon" : "",
+                      ]
+                        .join(" ")
+                        .trim()
+                    }
+                  >
+                    <span>{item.label}</span>
+                    {item.badge ? (
+                      <span className="appSidebarSoonBadge">{item.badge}</span>
+                    ) : null}
+                  </NavLink>
+                ))}
+              </nav>
+            </div>
+          ))}
+        </div>
+
+        <div className="appSidebarFooter">
+          <span>Workspace atual</span>
+          <strong>{branding.appName}</strong>
+        </div>
+      </aside>
+    </>
   );
 }

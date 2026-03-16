@@ -35,6 +35,13 @@ type CriarNegociacaoInput = {
   contraproposta: ContrapropostaSalva;
 };
 
+type PrepararNegociacaoCrmInput = {
+  base: Omit<NegociacaoSalva, "id" | "createdAt" | "updatedAt">;
+  tipo: TipoNegociacao;
+  negociacaoAtual?: NegociacaoSalva | null;
+  ultimaAcao: string;
+};
+
 export type NegociacaoReidratada = {
   tipo: TipoNegociacao;
   cliente: string;
@@ -228,6 +235,37 @@ export function mapearSimuladorParaNegociacaoSalva(
     simulacao: clonar(input.simulacao),
     proposta: clonar(input.proposta),
     contraproposta: clonar(input.contraproposta),
+  };
+}
+
+export function prepararNegociacaoParaCrm({
+  base,
+  tipo,
+  negociacaoAtual,
+  ultimaAcao,
+}: PrepararNegociacaoCrmInput): Omit<
+  NegociacaoSalva,
+  "id" | "createdAt" | "updatedAt"
+> {
+  if (!negociacaoAtual) {
+    return {
+      ...base,
+      tipo,
+      status: statusPorTipo(tipo),
+      ultimaAcao,
+      titulo: `${tipo.toUpperCase()} • ${base.cliente || "Sem cliente"}`,
+    };
+  }
+
+  return {
+    ...base,
+    tipo,
+    status: negociacaoAtual.status,
+    prioridade: negociacaoAtual.prioridade,
+    origem: negociacaoAtual.origem,
+    observacaoInterna: negociacaoAtual.observacaoInterna,
+    ultimaAcao,
+    titulo: `${tipo.toUpperCase()} • ${base.cliente || "Sem cliente"}`,
   };
 }
 
