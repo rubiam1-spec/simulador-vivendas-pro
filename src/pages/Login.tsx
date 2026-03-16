@@ -18,7 +18,7 @@ export default function Login() {
     ?.from?.pathname;
 
   if (session) {
-    return <Navigate to={destino || "/dashboard"} replace />;
+    return <Navigate to={destino || "/"} replace />;
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -28,7 +28,7 @@ export default function Login() {
 
     try {
       await login(email, senha);
-      navigate(destino || "/dashboard", { replace: true });
+      navigate(destino || "/", { replace: true });
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Nao foi possivel autenticar.";

@@ -14,7 +14,7 @@ import {
   signOut,
   type AuthSession,
 } from "../services/authService";
-import { ensureUserProfile } from "../services/usersService";
+import { bootstrapUserProfile } from "../services/profileService";
 import type { UserProfile } from "../types/user";
 
 type AuthContextValue = {
@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        const nextProfile = await ensureUserProfile(nextSession.user);
+        const nextProfile = await bootstrapUserProfile(nextSession.user);
 
         if (!mounted) return;
 
@@ -141,7 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setProfileResolved(true);
           return;
         }
-        const nextProfile = await ensureUserProfile(session.user);
+        const nextProfile = await bootstrapUserProfile(session.user);
         setProfile(nextProfile);
         setProfileResolved(true);
         setProfileError("");

@@ -7,7 +7,7 @@ import { useAuth } from "./AuthProvider";
 import Sidebar from "./Sidebar";
 
 export default function AppLayout() {
-  const { session, profile, profileLoading } = useAuth();
+  const { session, profile, profileLoading, profileError } = useAuth();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pageMeta = getPageMeta(location.pathname);
@@ -55,6 +55,10 @@ export default function AppLayout() {
     };
   }, [mobileMenuOpen]);
 
+  const profileStateLabel = profileLoading
+    ? "CARREGANDO PERFIL"
+    : (profile?.role || (profileError ? "PERFIL PENDENTE" : "SEM PERFIL")).toUpperCase();
+
   return (
     <div className="appShell">
       <Sidebar
@@ -94,8 +98,7 @@ export default function AppLayout() {
           <div className="appShellUser">
             <span>{profile?.nome || session?.user.email || "Usuario autenticado"}</span>
             <small>
-              {(profileLoading ? "carregando perfil" : profile?.role || "sem perfil").toUpperCase()} •{" "}
-              {hasSupabaseConfig ? "Supabase Auth" : "Modo local"}
+              {profileStateLabel} - {hasSupabaseConfig ? "Supabase Auth" : "Modo local"}
             </small>
           </div>
         </header>
