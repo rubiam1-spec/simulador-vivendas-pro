@@ -1,6 +1,5 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 
-import { getDefaultAppRoute } from "../config/routeAccess";
 import type { UserRole } from "../types/user";
 import { useAuth } from "./AuthProvider";
 
@@ -11,7 +10,7 @@ type ProtectedRouteProps = {
 
 export default function ProtectedRoute({
   allowedRoles,
-  redirectTo,
+  redirectTo = "/",
 }: ProtectedRouteProps) {
   const { session, profile, loading, profileLoading, profileResolved } = useAuth();
   const location = useLocation();
@@ -24,7 +23,7 @@ export default function ProtectedRoute({
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
-  if (profileLoading || !profileResolved) {
+  if (allowedRoles?.length && (profileLoading || !profileResolved)) {
     return <div className="appShellLoading">Carregando perfil...</div>;
   }
 
@@ -33,7 +32,7 @@ export default function ProtectedRoute({
   }
 
   if (allowedRoles?.length && (!profile || !allowedRoles.includes(profile.role))) {
-    return <Navigate to={redirectTo || getDefaultAppRoute(profile)} replace />;
+    return <Navigate to={redirectTo} replace />;
   }
 
   return <Outlet />;
