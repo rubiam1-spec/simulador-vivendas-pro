@@ -64,14 +64,14 @@ async function findRemoteProfile(user: AuthUserLike) {
     .from("profiles")
     .select("id, user_id, nome, email, role, ativo, created_at")
     .eq("user_id", user.id)
-    .maybeSingle();
+    .limit(1);
 
   if (byUserIdError) {
     throw byUserIdError;
   }
 
-  if (byUserId) {
-    return normalizeProfile(byUserId as ProfileRow);
+  if (Array.isArray(byUserId) && byUserId.length > 0) {
+    return normalizeProfile(byUserId[0] as ProfileRow);
   }
 
   if (!user.email) {
@@ -83,17 +83,17 @@ async function findRemoteProfile(user: AuthUserLike) {
     .from("profiles")
     .select("id, user_id, nome, email, role, ativo, created_at")
     .eq("email", normalizedEmail)
-    .maybeSingle();
+    .limit(1);
 
   if (byEmailError) {
     throw byEmailError;
   }
 
-  if (!byEmail) {
+  if (!Array.isArray(byEmail) || byEmail.length === 0) {
     return null;
   }
 
-  const profile = normalizeProfile(byEmail as ProfileRow);
+  const profile = normalizeProfile(byEmail[0] as ProfileRow);
 
   if (profile.userId !== user.id) {
     const { data: updatedByEmail, error: updateError } = await supabase

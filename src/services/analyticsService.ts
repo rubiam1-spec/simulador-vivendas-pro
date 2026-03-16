@@ -1,6 +1,18 @@
 import { getNegociacoesMetrics, listNegociacoes } from "./negociacoesService";
+import type { NegociacaoSalva } from "../types/negociacao";
+import type { NegociacoesMetrics } from "./negociacoesService";
 
-export async function getDashboardAnalytics() {
+export type DashboardAnalytics = {
+  totalNegociacoes: number;
+  valorPipeline: number;
+  negociacoesAbertas: number;
+  negociacoesAprovadas: number;
+  ticketMedio: number;
+  metrics: NegociacoesMetrics;
+  negociacoes: NegociacaoSalva[];
+};
+
+export async function getDashboardAnalytics(): Promise<DashboardAnalytics> {
   const [metrics, negociacoes] = await Promise.all([
     getNegociacoesMetrics(),
     listNegociacoes(),

@@ -57,7 +57,7 @@ export default function AppLayout() {
 
   const profileStateLabel = profileLoading
     ? "CARREGANDO PERFIL"
-    : (profile?.role || (profileError ? "PERFIL PENDENTE" : "SEM PERFIL")).toUpperCase();
+    : (profile?.role || (profileError ? "ERRO DE PERFIL" : "SEM PERFIL")).toUpperCase();
 
   return (
     <div className="appShell">

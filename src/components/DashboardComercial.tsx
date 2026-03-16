@@ -1,40 +1,13 @@
-import { useMemo } from "react";
-
-import type { NegociacaoSalva, OrigemNegociacao, PrioridadeNegociacao, StatusNegociacao } from "../types/negociacao";
-import type { NegociacoesMetrics } from "../services/negociacoesService";
+import type {
+  OrigemNegociacao,
+  PrioridadeNegociacao,
+  StatusNegociacao,
+} from "../types/negociacao";
+import type { DashboardAnalytics } from "../services/analyticsService";
 
 type DashboardComercialProps = {
-  negociacoes: NegociacaoSalva[];
+  analytics: DashboardAnalytics;
 };
-
-const PIPELINE_STATUS: StatusNegociacao[] = [
-  "rascunho",
-  "em_negociacao",
-  "aguardando_retorno",
-  "aprovada",
-];
-
-const STATUS_ORDER: StatusNegociacao[] = [
-  "rascunho",
-  "em_negociacao",
-  "aguardando_retorno",
-  "aprovada",
-  "fechada",
-  "perdida",
-  "arquivada",
-];
-
-const ORIGEM_ORDER: OrigemNegociacao[] = [
-  "corretor",
-  "cliente_direto",
-  "feira",
-  "indicacao",
-  "trafego_pago",
-  "interno",
-  "outro",
-];
-
-const PRIORIDADE_ORDER: PrioridadeNegociacao[] = ["alta", "media", "baixa"];
 
 function brl(valor: number) {
   return valor.toLocaleString("pt-BR", {
@@ -95,91 +68,41 @@ function tonePrioridade(prioridade: PrioridadeNegociacao) {
 }
 
 export default function DashboardComercial({
-  negociacoes,
+  analytics,
 }: DashboardComercialProps) {
-  const metrics = useMemo<NegociacoesMetrics>(() => {
-    const totalNegociacoes = negociacoes.length;
-    const pipelineTotal = negociacoes.reduce((acc, negociacao) => {
-      return PIPELINE_STATUS.includes(negociacao.status)
-        ? acc + negociacao.valorTotal
-        : acc;
-    }, 0);
-    const ticketMedio = totalNegociacoes
-      ? negociacoes.reduce((acc, negociacao) => acc + negociacao.valorTotal, 0) /
-        totalNegociacoes
-      : 0;
-
-    const porStatus = STATUS_ORDER.map((status) => {
-      const itens = negociacoes.filter((negociacao) => negociacao.status === status);
-      return {
-        status,
-        quantidade: itens.length,
-        valor: itens.reduce((acc, negociacao) => acc + negociacao.valorTotal, 0),
-      };
-    });
-
-    const porOrigem = ORIGEM_ORDER.map((origem) => ({
-      origem,
-      quantidade: negociacoes.filter((negociacao) => negociacao.origem === origem)
-        .length,
-    })).filter((item) => item.quantidade > 0);
-
-    const porPrioridade = PRIORIDADE_ORDER.map((prioridade) => ({
-      prioridade,
-      quantidade: negociacoes.filter(
-        (negociacao) => negociacao.prioridade === prioridade
-      ).length,
-    }));
-
-    const recentes = [...negociacoes]
-      .sort(
-        (a, b) =>
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-      )
-      .slice(0, 5);
-
-    return {
-      total: totalNegociacoes,
-      totalSimulacoes: negociacoes.filter(
-        (negociacao) => negociacao.status === "simulacao"
-      ).length,
-      totalPropostasEnviadas: negociacoes.filter((negociacao) =>
-        ["proposta_enviada", "contraproposta"].includes(negociacao.status)
-      ).length,
-      totalEmAndamento: negociacoes.filter((negociacao) =>
-        ["em_negociacao", "aguardando_retorno", "aprovada"].includes(
-          negociacao.status
-        )
-      ).length,
-      totalFechadas: negociacoes.filter(
-        (negociacao) => negociacao.status === "fechada"
-      ).length,
-      totalPerdidas: negociacoes.filter(
-        (negociacao) => negociacao.status === "perdida"
-      ).length,
-      pipelineValor: pipelineTotal,
-      ticketMedio,
-      porStatus,
-      porOrigem,
-      porPrioridade,
-      recentes,
-    };
-  }, [negociacoes]);
+  const metrics = analytics.metrics;
+  const temDados = analytics.totalNegociacoes > 0;
 
   return (
     <div className="crmStack">
+      {!temDados ? (
+        <section className="crmSection">
+          <div className="crmSectionHeader">
+            <div>
+              <span className="crmSectionEyebrow">Estado atual</span>
+              <h3 className="crmSectionTitle">Dashboard pronto para ganhar volume</h3>
+              <p className="crmSectionText">
+                Ainda nao existem negociacoes salvas no CRM. Assim que a primeira
+                simulacao for registrada como negociacao, os indicadores passam a
+                refletir pipeline, aprovacao e ticket medio automaticamente.
+              </p>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
       <section className="crmMetricGrid">
         <article className="crmMetricCard">
           <span className="crmMetricLabel">Negociacoes ativas</span>
           <strong className="crmMetricValue">
-            {metrics.total.toLocaleString("pt-BR")}
+            {analytics.totalNegociacoes.toLocaleString("pt-BR")}
           </strong>
           <span className="crmMetricHint">Volume total em acompanhamento.</span>
         </article>
 
         <article className="crmMetricCard crmMetricCardAccent">
           <span className="crmMetricLabel">Pipeline financeiro</span>
-          <strong className="crmMetricValue">{brl(metrics.pipelineValor)}</strong>
+          <strong className="crmMetricValue">{brl(analytics.valorPipeline)}</strong>
           <span className="crmMetricHint">
             Soma das oportunidades em rascunho, negociacao, retorno e aprovacao.
           </span>
@@ -188,7 +111,7 @@ export default function DashboardComercial({
         <article className="crmMetricCard">
           <span className="crmMetricLabel">Negociacoes em aberto</span>
           <strong className="crmMetricValue">
-            {metrics.totalEmAndamento.toLocaleString("pt-BR")}
+            {analytics.negociacoesAbertas.toLocaleString("pt-BR")}
           </strong>
           <span className="crmMetricHint">Negociacoes em fase ativa do funil.</span>
         </article>
@@ -196,7 +119,9 @@ export default function DashboardComercial({
         <article className="crmMetricCard">
           <span className="crmMetricLabel">Aprovadas e fechadas</span>
           <strong className="crmMetricValue">
-            {(metrics.totalFechadas + (metrics.porStatus.find((item) => item.status === "aprovada")?.quantidade || 0)).toLocaleString("pt-BR")}
+            {(metrics.totalFechadas + analytics.negociacoesAprovadas).toLocaleString(
+              "pt-BR"
+            )}
           </strong>
           <span className="crmMetricHint">
             Sinal positivo consolidado entre aprovacao comercial e fechamento.
@@ -205,7 +130,7 @@ export default function DashboardComercial({
 
         <article className="crmMetricCard">
           <span className="crmMetricLabel">Ticket medio</span>
-          <strong className="crmMetricValue">{brl(metrics.ticketMedio)}</strong>
+          <strong className="crmMetricValue">{brl(analytics.ticketMedio)}</strong>
           <span className="crmMetricHint">
             Media de valor das negociacoes registradas.
           </span>

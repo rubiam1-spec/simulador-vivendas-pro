@@ -1,11 +1,36 @@
 import { useEffect, useState } from "react";
 
 import DashboardComercial from "../components/DashboardComercial";
-import { getDashboardAnalytics } from "../services/analyticsService";
-import type { NegociacaoSalva } from "../types/negociacao";
+import {
+  getDashboardAnalytics,
+  type DashboardAnalytics,
+} from "../services/analyticsService";
+
+const EMPTY_ANALYTICS: DashboardAnalytics = {
+  totalNegociacoes: 0,
+  valorPipeline: 0,
+  negociacoesAbertas: 0,
+  negociacoesAprovadas: 0,
+  ticketMedio: 0,
+  metrics: {
+    total: 0,
+    totalSimulacoes: 0,
+    totalPropostasEnviadas: 0,
+    totalEmAndamento: 0,
+    totalFechadas: 0,
+    totalPerdidas: 0,
+    pipelineValor: 0,
+    ticketMedio: 0,
+    porStatus: [],
+    porOrigem: [],
+    porPrioridade: [],
+    recentes: [],
+  },
+  negociacoes: [],
+};
 
 export default function DashboardPage() {
-  const [negociacoes, setNegociacoes] = useState<NegociacaoSalva[]>([]);
+  const [analytics, setAnalytics] = useState<DashboardAnalytics>(EMPTY_ANALYTICS);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState("");
 
@@ -19,9 +44,10 @@ export default function DashboardPage() {
         const analytics = await getDashboardAnalytics();
 
         if (!active) return;
-        setNegociacoes(analytics.negociacoes);
+        setAnalytics(analytics);
       } catch (error) {
         if (!active) return;
+        setAnalytics(EMPTY_ANALYTICS);
         setErro(
           error instanceof Error
             ? error.message
@@ -41,11 +67,19 @@ export default function DashboardPage() {
       void carregarDashboard();
     }
 
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        void carregarDashboard();
+      }
+    }
+
     window.addEventListener("storage", handleStorage);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       active = false;
       window.removeEventListener("storage", handleStorage);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
@@ -56,7 +90,7 @@ export default function DashboardPage() {
       {loading ? (
         <div className="appShellLoadingInline">Carregando indicadores do CRM...</div>
       ) : (
-        <DashboardComercial negociacoes={negociacoes} />
+        <DashboardComercial analytics={analytics} />
       )}
     </div>
   );

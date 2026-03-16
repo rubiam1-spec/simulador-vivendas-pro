@@ -31,6 +31,19 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function getErrorMessage(error: unknown) {
+  if (typeof error === "string") return error;
+  if (error instanceof Error && error.message) return error.message;
+
+  if (error && typeof error === "object") {
+    const maybeError = error as { message?: unknown; details?: unknown };
+    if (typeof maybeError.message === "string") return maybeError.message;
+    if (typeof maybeError.details === "string") return maybeError.details;
+  }
+
+  return "Nao foi possivel carregar o perfil do usuario.";
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -76,11 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         setProfile(null);
         setProfileResolved(true);
-        setProfileError(
-          error instanceof Error
-            ? error.message
-            : "Nao foi possivel carregar o perfil do usuario."
-        );
+        setProfileError(getErrorMessage(error));
       } finally {
         if (mounted) {
           setProfileLoading(false);
@@ -139,12 +148,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!session?.user) {
           setProfile(null);
           setProfileResolved(true);
+          setProfileError("");
           return;
         }
-        const nextProfile = await bootstrapUserProfile(session.user);
-        setProfile(nextProfile);
-        setProfileResolved(true);
-        setProfileError("");
+        setProfileLoading(true);
+        setProfileResolved(false);
+
+        try {
+          const nextProfile = await bootstrapUserProfile(session.user);
+          setProfile(nextProfile);
+          setProfileResolved(true);
+          setProfileError("");
+        } catch (error) {
+          setProfile(null);
+          setProfileResolved(true);
+          setProfileError(getErrorMessage(error));
+        } finally {
+          setProfileLoading(false);
+        }
       },
     }),
     [loading, profile, profileError, profileLoading, profileResolved, session]

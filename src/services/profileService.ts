@@ -50,14 +50,43 @@ function readLocalProfiles() {
   }
 }
 
-function isRetryableProfileError(error: unknown) {
-  if (!(error instanceof Error)) return false;
+function getProfileErrorText(error: unknown) {
+  if (typeof error === "string") return error;
 
-  const message = error.message.toLowerCase();
+  if (error && typeof error === "object") {
+    const maybeError = error as {
+      message?: unknown;
+      details?: unknown;
+      hint?: unknown;
+      code?: unknown;
+    };
+
+    const segments = [
+      typeof maybeError.message === "string" ? maybeError.message : "",
+      typeof maybeError.details === "string" ? maybeError.details : "",
+      typeof maybeError.hint === "string" ? maybeError.hint : "",
+      typeof maybeError.code === "string" ? maybeError.code : "",
+    ].filter(Boolean);
+
+    if (segments.length > 0) {
+      return segments.join(" | ");
+    }
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return "Nao foi possivel carregar o perfil do usuario.";
+}
+
+function isRetryableProfileError(error: unknown) {
+  const message = getProfileErrorText(error).toLowerCase();
   return (
     message.includes("duplicate key") ||
     message.includes("23505") ||
     message.includes("json object requested, multiple") ||
+    message.includes("multiple rows") ||
     message.includes("row-level security") ||
     message.includes("permission")
   );
@@ -115,15 +144,23 @@ export async function bootstrapUserProfile(user: AuthUser): Promise<UserProfile>
       throw error;
     }
 
-    if (!isRetryableProfileError(error)) {
-      throw error;
+    try {
+      const existing = await findRemoteProfileByUser(user);
+      if (existing) {
+        return existing;
+      }
+    } catch (lookupError) {
+      if (!isRetryableProfileError(error) && !isRetryableProfileError(lookupError)) {
+        throw new Error(getProfileErrorText(lookupError));
+      }
     }
 
-    const existing = await findRemoteProfileByUser(user);
-    if (existing) {
-      return existing;
+    if (isRetryableProfileError(error)) {
+      throw new Error(
+        "O perfil do usuario existe, mas nao foi possivel sincroniza-lo automaticamente."
+      );
     }
 
-    throw error;
+    throw new Error(getProfileErrorText(error));
   }
 }
