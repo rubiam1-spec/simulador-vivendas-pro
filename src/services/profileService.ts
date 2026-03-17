@@ -1,4 +1,4 @@
-import { hasSupabaseConfig, supabase } from "../lib/supabase";
+import { supabase } from "../lib/supabase";
 import type { AuthUser } from "./authService";
 import { ensureUserProfile } from "./usersService";
 import type { UserProfile, UserRole } from "../types/user";
@@ -50,46 +50,23 @@ function readLocalProfiles() {
   }
 }
 
-function getProfileErrorText(error: unknown) {
-  if (typeof error === "string") return error;
+function createFallbackProfile(user: AuthUser): UserProfile {
+  const normalizedEmail = user.email?.trim().toLowerCase() || "";
+  const nomeBase = normalizedEmail.split("@")[0] || "Usuario";
 
-  if (error && typeof error === "object") {
-    const maybeError = error as {
-      message?: unknown;
-      details?: unknown;
-      hint?: unknown;
-      code?: unknown;
-    };
-
-    const segments = [
-      typeof maybeError.message === "string" ? maybeError.message : "",
-      typeof maybeError.details === "string" ? maybeError.details : "",
-      typeof maybeError.hint === "string" ? maybeError.hint : "",
-      typeof maybeError.code === "string" ? maybeError.code : "",
-    ].filter(Boolean);
-
-    if (segments.length > 0) {
-      return segments.join(" | ");
-    }
-  }
-
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-
-  return "Nao foi possivel carregar o perfil do usuario.";
-}
-
-function isRetryableProfileError(error: unknown) {
-  const message = getProfileErrorText(error).toLowerCase();
-  return (
-    message.includes("duplicate key") ||
-    message.includes("23505") ||
-    message.includes("json object requested, multiple") ||
-    message.includes("multiple rows") ||
-    message.includes("row-level security") ||
-    message.includes("permission")
-  );
+  return {
+    id: createId("profile"),
+    userId: user.id,
+    nome: nomeBase
+      .split(/[._-]+/)
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" "),
+    email: normalizedEmail,
+    role: "gestor",
+    ativo: true,
+    createdAt: new Date().toISOString(),
+  };
 }
 
 async function findRemoteProfileByUser(user: AuthUser): Promise<UserProfile | null> {
@@ -135,32 +112,27 @@ async function findRemoteProfileByUser(user: AuthUser): Promise<UserProfile | nu
 export async function bootstrapUserProfile(user: AuthUser): Promise<UserProfile> {
   try {
     return await ensureUserProfile(user);
-  } catch (error) {
-    if (!hasSupabaseConfig || !supabase) {
-      const localProfile = readLocalProfiles().find((profile) => profile.userId === user.id);
-      if (localProfile) {
-        return localProfile;
-      }
-      throw error;
-    }
-
+  } catch {
     try {
       const existing = await findRemoteProfileByUser(user);
       if (existing) {
         return existing;
       }
-    } catch (lookupError) {
-      if (!isRetryableProfileError(error) && !isRetryableProfileError(lookupError)) {
-        throw new Error(getProfileErrorText(lookupError));
-      }
+    } catch {
+      // continua para fallback local
     }
 
-    if (isRetryableProfileError(error)) {
-      throw new Error(
-        "O perfil do usuario existe, mas nao foi possivel sincroniza-lo automaticamente."
-      );
+    const normalizedEmail = user.email?.trim().toLowerCase() || "";
+    const localProfile = readLocalProfiles().find(
+      (profile) =>
+        profile.userId === user.id ||
+        (!!normalizedEmail && profile.email.trim().toLowerCase() === normalizedEmail)
+    );
+
+    if (localProfile) {
+      return localProfile;
     }
 
-    throw new Error(getProfileErrorText(error));
+    return createFallbackProfile(user);
   }
 }

@@ -105,18 +105,6 @@ export default function AppLayout() {
 
         <main className="appShellContent">
           <div className="appShellViewport">
-            <div
-              style={{
-                background: "#ffffff",
-                color: "#000000",
-                padding: "24px",
-                marginBottom: "16px",
-                borderRadius: "12px",
-                fontWeight: 700,
-              }}
-            >
-              TESTE APP LAYOUT
-            </div>
             <Outlet />
           </div>
         </main>
