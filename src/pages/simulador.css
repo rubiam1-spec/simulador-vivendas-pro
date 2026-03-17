@@ -1,44 +1,44 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300..900;1,9..40,300..900&family=DM+Mono:wght@400;500&display=swap");
 
 :root {
-  --bg0: #122019;
-  --bg1: #182a22;
-  --bg2: #1f342a;
-  --bg3: #274136;
+  --bg0: #060d1a;
+  --bg1: #0a1528;
+  --bg2: #0d1c35;
+  --bg3: #0f2040;
 
-  --surface-1: rgba(28, 44, 36, 0.84);
-  --surface-2: rgba(34, 53, 43, 0.72);
-  --surface-3: rgba(43, 68, 56, 0.52);
+  --surface-1: rgba(13, 28, 53, 0.88);
+  --surface-2: rgba(20, 42, 82, 0.65);
+  --surface-3: rgba(30, 58, 110, 0.45);
 
-  --field-bg: rgba(255, 255, 255, 0.055);
-  --field-bg-hover: rgba(255, 255, 255, 0.078);
-  --field-bg-focus: rgba(255, 255, 255, 0.095);
+  --field-bg: rgba(13, 28, 53, 0.6);
+  --field-bg-hover: rgba(20, 42, 82, 0.7);
+  --field-bg-focus: rgba(20, 42, 82, 0.85);
 
-  --line: rgba(255, 255, 255, 0.09);
-  --line-2: rgba(255, 255, 255, 0.15);
-  --line-3: rgba(255, 255, 255, 0.22);
-  --line-accent: rgba(57, 163, 118, 0.34);
-  --line-accent-hi: rgba(57, 163, 118, 0.68);
+  --line: rgba(80, 130, 255, 0.12);
+  --line-2: rgba(80, 130, 255, 0.22);
+  --line-3: rgba(80, 130, 255, 0.36);
+  --line-accent: rgba(48, 112, 240, 0.34);
+  --line-accent-hi: rgba(48, 112, 240, 0.68);
 
-  --text: rgba(255, 255, 255, 0.97);
-  --muted: rgba(255, 255, 255, 0.76);
-  --muted2: rgba(255, 255, 255, 0.55);
-  --muted3: rgba(255, 255, 255, 0.34);
+  --text: #eaf0ff;
+  --muted: rgba(200, 220, 255, 0.65);
+  --muted2: rgba(150, 185, 255, 0.45);
+  --muted3: rgba(100, 150, 255, 0.28);
 
-  --accent: #39a376;
-  --accent-hi: #45ba87;
-  --accent-glow: rgba(57, 163, 118, 0.18);
+  --accent: #3070f0;
+  --accent-hi: #6da0ff;
+  --accent-glow: rgba(48, 112, 240, 0.18);
 
-  --success: #8ef1c8;
-  --success-bg: rgba(142, 241, 200, 0.10);
-  --warning: #ffd089;
-  --warning-bg: rgba(255, 205, 121, 0.10);
-  --danger: #ffaaaa;
-  --danger-bg: rgba(255, 110, 110, 0.10);
+  --success: #34d9a0;
+  --success-bg: rgba(52, 217, 160, 0.10);
+  --warning: #f5a623;
+  --warning-bg: rgba(245, 166, 35, 0.10);
+  --danger: #ff5c6a;
+  --danger-bg: rgba(255, 92, 106, 0.10);
 
-  --font-display: "DM Serif Display", Georgia, serif;
-  --font-body: "DM Sans", system-ui, sans-serif;
-  --font-mono: "DM Mono", ui-monospace, monospace;
+  --font-display: 'Inter', 'Helvetica Neue', Arial, system-ui, sans-serif;
+  --font-body: 'Inter', 'Helvetica Neue', Arial, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
 
   --text-xs: clamp(10px, 0.68rem + 0.1vw, 11px);
   --text-sm: clamp(12px, 0.78rem + 0.1vw, 13px);

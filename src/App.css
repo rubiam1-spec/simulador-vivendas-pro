@@ -150,6 +150,38 @@
   --z-modal:   200;
   --z-toast:   300;
   --z-tooltip: 400;
+
+  /* ── Tema Azul Marinho — tokens operacionais ────────────── */
+  --bg0: #060d1a;
+  --bg1: #0a1528;
+  --bg2: #0d1c35;
+  --bg3: #0f2040;
+  --surface-1: rgba(13,28,53,0.88);
+  --surface-2: rgba(20,42,82,0.65);
+  --surface-3: rgba(30,58,110,0.45);
+  --line: rgba(80,130,255,0.12);
+  --line-2: rgba(80,130,255,0.22);
+  --line-3: rgba(80,130,255,0.36);
+  --line-accent: rgba(48,112,240,0.34);
+  --line-accent-hi: rgba(48,112,240,0.68);
+  --text: #eaf0ff;
+  --muted: rgba(200,220,255,0.65);
+  --muted2: rgba(150,185,255,0.45);
+  --muted3: rgba(100,150,255,0.28);
+  --accent: #3070f0;
+  --accent-hi: #6da0ff;
+  --accent-glow: rgba(48,112,240,0.18);
+  --success: #34d9a0;
+  --success-bg: rgba(52,217,160,0.1);
+  --warning: #f5a623;
+  --warning-bg: rgba(245,166,35,0.1);
+  --danger: #ff5c6a;
+  --danger-bg: rgba(255,92,106,0.1);
+  --field-bg: rgba(13,28,53,0.6);
+  --field-bg-hover: rgba(20,42,82,0.7);
+  --field-bg-focus: rgba(20,42,82,0.85);
+  --font-display: 'Inter','Helvetica Neue',Arial,system-ui,sans-serif;
+  --font-body: 'Inter','Helvetica Neue',Arial,system-ui,sans-serif;
 }
 
 /* ── Modo Claro ─────────────────────────────────────────────── */
@@ -1861,3 +1893,104 @@ textarea::placeholder {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--navy-500);
 }
+
+/* ── TEMA AZUL MARINHO ── */
+body, html {
+  background: #060d1a;
+  color: #eaf0ff;
+  font-family: 'Inter','Helvetica Neue',Arial,system-ui,sans-serif;
+}
+
+.appShellSidebar {
+  background: linear-gradient(180deg,#070e1c 0%,#09101f 100%);
+  border-right: 1px solid rgba(80,130,255,0.1);
+}
+
+.appSidebarLink { color: rgba(160,200,255,0.55); }
+.appSidebarLink:hover {
+  background: rgba(48,112,240,0.1);
+  color: #b0d0ff;
+}
+.appSidebarLink.isActive {
+  background: linear-gradient(135deg,rgba(48,112,240,0.18),rgba(109,160,255,0.07));
+  color: #7ab0ff;
+}
+.appSidebarLink.isActive::before {
+  background: linear-gradient(180deg,#3070f0,#6da0ff);
+}
+
+.btn {
+  background: linear-gradient(135deg,#0e3fa0,#3070f0);
+  border: 1px solid rgba(48,112,240,0.5);
+  color: #fff;
+  font-family: 'Inter',system-ui,sans-serif;
+}
+.btn:hover {
+  background: linear-gradient(135deg,#1247b0,#3d7af5);
+  box-shadow: 0 4px 16px rgba(48,112,240,0.3);
+  transform: translateY(-1px);
+}
+.btnGhost {
+  background: rgba(48,112,240,0.06);
+  border-color: rgba(80,130,255,0.22);
+  color: #7ab0ff;
+}
+.btnGhost:hover {
+  background: rgba(48,112,240,0.12);
+  border-color: rgba(80,130,255,0.38);
+  color: #a0c8ff;
+}
+
+.luxField input,
+.luxField select,
+.whats {
+  background: rgba(10,20,45,0.7);
+  border: 1px solid rgba(80,130,255,0.18);
+  color: #eaf0ff;
+  font-family: 'Inter',system-ui,sans-serif;
+}
+.luxField input:focus,
+.luxField select:focus,
+.whats:focus {
+  border-color: rgba(48,112,240,0.7);
+  box-shadow: 0 0 0 4px rgba(48,112,240,0.14);
+}
+.luxField input::placeholder,
+.whats::placeholder { color: rgba(100,150,255,0.3); }
+.luxField select option { background: #0a1528; color: #eaf0ff; }
+
+/* ── MODO CLARO ── */
+[data-theme="light"] body,
+[data-theme="light"] html {
+  background: #f4f6fb;
+  color: #08142d;
+}
+[data-theme="light"] .appShellSidebar {
+  background: linear-gradient(180deg,#fff,#f8faff);
+  border-right: 1px solid rgba(14,63,160,0.1);
+}
+[data-theme="light"] .appSidebarLink { color: rgba(8,20,45,0.5); }
+[data-theme="light"] .appSidebarLink:hover {
+  background: rgba(26,95,212,0.07); color: #1a5fd4;
+}
+[data-theme="light"] .appSidebarLink.isActive {
+  background: rgba(26,95,212,0.1); color: #1a5fd4;
+}
+[data-theme="light"] .appSidebarLink.isActive::before {
+  background: linear-gradient(180deg,#1a5fd4,#3070f0);
+}
+[data-theme="light"] .luxField input,
+[data-theme="light"] .luxField select,
+[data-theme="light"] .whats {
+  background: #fff;
+  border-color: rgba(14,63,160,0.18);
+  color: #08142d;
+}
+[data-theme="light"] .luxSection,
+[data-theme="light"] .crmPanel,
+[data-theme="light"] .crmMetricCard {
+  background: #fff;
+  border-color: rgba(14,63,160,0.1);
+}
+[data-theme="light"] .luxField input::placeholder { color: rgba(8,20,45,0.3); }
+[data-theme="light"] .luxField select option { background: #fff; color: #08142d; }

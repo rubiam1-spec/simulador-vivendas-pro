@@ -149,7 +149,7 @@ export default function Sidebar({
       >
         <div className="appSidebarBrand">
           <div className="appSidebarKicker">{branding.sidebarSubtitle}</div>
-          <LogoRRCRM variant="compact" height={36} theme="dark" />
+          <LogoRRCRM variant="compact" height={36} theme={theme === "light" ? "light" : "dark"} />
           <p>{branding.sidebarDescription}</p>
           <div className="appSidebarClient">
             <span>{branding.sidebarClientLabel}</span>

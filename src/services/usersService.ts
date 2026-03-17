@@ -167,7 +167,7 @@ export async function listUsers(): Promise<UserProfile[]> {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, user_id, nome, email, role, ativo, created_at, nome_exibicao, avatar_url, telefone, cargo")
+    .select("id, user_id, nome, email, role, ativo, created_at, nome_exibicao")
     .order("created_at", { ascending: false });
 
   if (error) {
