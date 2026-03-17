@@ -13,7 +13,7 @@ const pageMetaMap: Array<{ match: string; meta: PageMeta }> = [
     match: "/dashboard",
     meta: {
       title: "Dashboard",
-      eyebrow: "Visao comercial",
+      eyebrow: "Visão comercial",
       description:
         "Leitura consolidada do pipeline, prioridades e ritmo operacional da equipe.",
       browserTitle: `Dashboard - ${branding.appName}`,
@@ -22,40 +22,40 @@ const pageMetaMap: Array<{ match: string; meta: PageMeta }> = [
   {
     match: "/negociacoes",
     meta: {
-      title: "Negociacoes",
+      title: "Negociações",
       eyebrow: "Central operacional",
       description:
-        "Acompanhe propostas, contrapropostas, prioridades, origem e ultimas acoes do funil.",
-      browserTitle: `Negociacoes - ${branding.appName}`,
+        "Acompanhe propostas, contrapropostas, prioridades, origem e últimas ações do funil.",
+      browserTitle: `Negociações - ${branding.appName}`,
     },
   },
   {
     match: "/simulador",
     meta: {
       title: "Simulador Comercial",
-      eyebrow: "Estruturacao financeira",
+      eyebrow: "Estruturação financeira",
       description:
-        "Monte simulacoes, propostas, contrapropostas e PDFs sem misturar dashboards ou modulos paralelos.",
+        "Monte simulações, propostas, contrapropostas e PDFs sem misturar dashboards ou módulos paralelos.",
       browserTitle: `Simulador - ${branding.appName}`,
     },
   },
   {
     match: "/configuracoes",
     meta: {
-      title: "Configuracoes",
+      title: "Configurações",
       eyebrow: "Conta e ambiente",
       description:
-        "Centralize informacoes da conta, autenticacao, branding do cliente e proximas preferencias da operacao.",
-      browserTitle: `Configuracoes - ${branding.appName}`,
+        "Centralize informações da conta, autenticação, branding do cliente e próximas preferências da operação.",
+      browserTitle: `Configurações - ${branding.appName}`,
     },
   },
   {
     match: "/acessos",
     meta: {
       title: "Acessos",
-      eyebrow: "Administracao",
+      eyebrow: "Administração",
       description:
-        "Gerencie usuarios, perfis e disponibilidade do ambiente com controles claros para a operacao.",
+        "Gerencie usuários, perfis e disponibilidade do ambiente com controles claros para a operação.",
       browserTitle: `Acessos - ${branding.appName}`,
     },
   },
@@ -65,7 +65,7 @@ const pageMetaMap: Array<{ match: string; meta: PageMeta }> = [
       title: "Clientes",
       eyebrow: "Relacionamento comercial",
       description:
-        "Gerencie a base de clientes com estrutura pronta para conectar simulador, negociacoes e relacionamento comercial.",
+        "Gerencie a base de clientes com estrutura pronta para conectar simulador, negociações e relacionamento comercial.",
       browserTitle: `Clientes - ${branding.appName}`,
     },
   },
@@ -73,9 +73,9 @@ const pageMetaMap: Array<{ match: string; meta: PageMeta }> = [
     match: "/corretores",
     meta: {
       title: "Corretores",
-      eyebrow: "Operacao de parceiros",
+      eyebrow: "Operação de parceiros",
       description:
-        "Organize corretores, equipes e parceiros com base pronta para integrar futuras negociacoes e atribuicoes.",
+        "Organize corretores, equipes e parceiros com base pronta para integrar futuras negociações e atribuições.",
       browserTitle: `Corretores - ${branding.appName}`,
     },
   },

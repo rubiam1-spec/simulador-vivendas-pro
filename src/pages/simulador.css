@@ -2155,3 +2155,27 @@ body,
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Fix layout cards financeiros */
+.luxSplit.luxSplitSingle .luxSection {
+  width: 100%;
+}
+
+.luxSplitSingle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+}
+
+.luxValueRow {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.4fr) minmax(140px, 1fr) minmax(140px, 1fr);
+  gap: 16px;
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .luxValueRow {
+    grid-template-columns: 1fr;
+  }
+}
