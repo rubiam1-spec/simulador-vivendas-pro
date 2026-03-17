@@ -6,7 +6,7 @@ import {
   excluirNegociacao,
   listarNegociacoesSalvas,
   salvarNovaNegociacao,
-} from "./negociacoesStorage";
+} from "./negociacoesStorageSupabase";
 import type {
   NegociacaoSalva,
   OrigemNegociacao,

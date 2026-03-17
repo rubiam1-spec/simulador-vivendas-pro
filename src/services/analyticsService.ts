@@ -21,7 +21,17 @@ export async function getDashboardAnalytics(): Promise<DashboardAnalytics> {
   return {
     totalNegociacoes: metrics.total,
     valorPipeline: metrics.pipelineValor,
-    negociacoesAbertas: metrics.totalEmAndamento,
+    negociacoesAbertas: metrics.porStatus
+      .filter((item) =>
+        [
+          "simulacao",
+          "proposta_enviada",
+          "contraproposta",
+          "em_negociacao",
+          "aguardando_retorno",
+        ].includes(item.status)
+      )
+      .reduce((acc, item) => acc + item.quantidade, 0),
     negociacoesAprovadas: metrics.porStatus.find(
       (item) => item.status === "aprovada"
     )?.quantidade || 0,
