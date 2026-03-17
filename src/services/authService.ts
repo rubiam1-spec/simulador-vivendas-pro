@@ -17,7 +17,9 @@ export type AuthState = {
 };
 
 const MOCK_AUTH_KEY = "rr_crm_auth_session";
-const listeners = new Set<(session: AuthSession | null) => void>();
+const listeners = new Set<
+  (event: AuthChangeEvent | "SIGNED_IN" | "SIGNED_OUT", session: AuthSession | null) => void
+>();
 
 function toAuthSession(session: Session | null): AuthSession | null {
   if (!session?.user) return null;
@@ -52,8 +54,11 @@ function writeMockSession(session: AuthSession | null) {
   }
 }
 
-function emit(session: AuthSession | null) {
-  listeners.forEach((listener) => listener(session));
+function emit(
+  event: AuthChangeEvent | "SIGNED_IN" | "SIGNED_OUT",
+  session: AuthSession | null
+) {
+  listeners.forEach((listener) => listener(event, session));
 }
 
 export async function signIn(email: string, password: string) {
@@ -79,7 +84,7 @@ export async function signIn(email: string, password: string) {
   };
 
   writeMockSession(session);
-  emit(session);
+  emit("SIGNED_IN", session);
   return session;
 }
 
@@ -91,7 +96,7 @@ export async function signOut() {
   }
 
   writeMockSession(null);
-  emit(null);
+  emit("SIGNED_OUT", null);
 }
 
 export async function getSession(): Promise<AuthSession | null> {
@@ -105,12 +110,15 @@ export async function getSession(): Promise<AuthSession | null> {
 }
 
 export function onAuthStateChange(
-  callback: (session: AuthSession | null) => void
+  callback: (
+    event: AuthChangeEvent | "SIGNED_IN" | "SIGNED_OUT",
+    session: AuthSession | null
+  ) => void
 ) {
   if (hasSupabaseConfig && supabase) {
     const { data } = supabase.auth.onAuthStateChange(
-      (_event: AuthChangeEvent, session: Session | null) => {
-        callback(toAuthSession(session));
+      (event: AuthChangeEvent, session: Session | null) => {
+        callback(event, toAuthSession(session));
       }
     );
 

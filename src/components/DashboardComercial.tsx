@@ -90,11 +90,29 @@ function tonePrioridade(prioridade: PrioridadeNegociacao) {
   return "isSuccess";
 }
 
+function metricIcon(label: string) {
+  if (label === "Negociacoes ativas") return "◎";
+  if (label === "Pipeline financeiro") return "$";
+  if (label === "Negociacoes em aberto") return "↺";
+  if (label === "Aprovadas e fechadas") return "✓";
+  return "≈";
+}
+
+function getInitials(value: string) {
+  return value
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
 export default function DashboardComercial({
   analytics = EMPTY_ANALYTICS,
 }: DashboardComercialProps) {
   const metrics = analytics.metrics;
   const temDados = analytics.totalNegociacoes > 0;
+  const totalStatus = metrics.porStatus.reduce((acc, item) => acc + item.quantidade, 0) || 1;
 
   return (
     <div className="crmStack">
@@ -116,6 +134,9 @@ export default function DashboardComercial({
 
       <section className="crmMetricGrid">
         <article className="crmMetricCard">
+          <span className="crmMetricIcon" aria-hidden="true">
+            {metricIcon("Negociacoes ativas")}
+          </span>
           <span className="crmMetricLabel">Negociacoes ativas</span>
           <strong className="crmMetricValue">
             {analytics.totalNegociacoes.toLocaleString("pt-BR")}
@@ -124,6 +145,9 @@ export default function DashboardComercial({
         </article>
 
         <article className="crmMetricCard crmMetricCardAccent">
+          <span className="crmMetricIcon" aria-hidden="true">
+            {metricIcon("Pipeline financeiro")}
+          </span>
           <span className="crmMetricLabel">Pipeline financeiro</span>
           <strong className="crmMetricValue">{brl(analytics.valorPipeline)}</strong>
           <span className="crmMetricHint">
@@ -132,6 +156,9 @@ export default function DashboardComercial({
         </article>
 
         <article className="crmMetricCard">
+          <span className="crmMetricIcon" aria-hidden="true">
+            {metricIcon("Negociacoes em aberto")}
+          </span>
           <span className="crmMetricLabel">Negociacoes em aberto</span>
           <strong className="crmMetricValue">
             {analytics.negociacoesAbertas.toLocaleString("pt-BR")}
@@ -140,6 +167,9 @@ export default function DashboardComercial({
         </article>
 
         <article className="crmMetricCard">
+          <span className="crmMetricIcon" aria-hidden="true">
+            {metricIcon("Aprovadas e fechadas")}
+          </span>
           <span className="crmMetricLabel">Aprovadas e fechadas</span>
           <strong className="crmMetricValue">
             {(metrics.totalFechadas + analytics.negociacoesAprovadas).toLocaleString(
@@ -152,6 +182,9 @@ export default function DashboardComercial({
         </article>
 
         <article className="crmMetricCard">
+          <span className="crmMetricIcon" aria-hidden="true">
+            {metricIcon("Ticket medio")}
+          </span>
           <span className="crmMetricLabel">Ticket medio</span>
           <strong className="crmMetricValue">{brl(analytics.ticketMedio)}</strong>
           <span className="crmMetricHint">
@@ -174,10 +207,16 @@ export default function DashboardComercial({
           <div className="crmInlineList">
             {metrics.porStatus.map((item) => (
               <div key={item.status} className="crmInlineListItem crmInlineListItemSplit">
-                <div>
+                <div className="crmStatusLine">
                   <span className={["crmBadge", toneStatus(item.status)].join(" ")}>
                     {labelStatus(item.status)}
                   </span>
+                  <div className="crmStatusProgress">
+                    <span
+                      className="crmStatusProgressBar"
+                      style={{ width: `${(item.quantidade / totalStatus) * 100}%` }}
+                    />
+                  </div>
                 </div>
                 <div className="crmInlineListMeta">
                   <strong>{item.quantidade}</strong>
@@ -252,16 +291,19 @@ export default function DashboardComercial({
             {metrics.recentes.map((negociacao) => (
               <div
                 key={negociacao.id}
-                className="crmInlineListItem crmInlineListItemRich"
+                className="crmInlineListItem crmInlineListItemRich crmRecentCard"
               >
-                <div>
+                <div className="crmRecentIdentity">
+                  <span className="crmRecentAvatar">
+                    {getInitials(negociacao.cliente || negociacao.titulo || "RR")}
+                  </span>
                   <strong>{negociacao.cliente || negociacao.titulo}</strong>
                   <p>{negociacao.ultimaAcao || "Sem ultima acao registrada."}</p>
                 </div>
 
                 <div className="crmInlineListMeta">
                   <span>{formatarData(negociacao.updatedAt)}</span>
-                  <strong>{brl(negociacao.valorTotal)}</strong>
+                  <strong className="crmRecentValue">{brl(negociacao.valorTotal)}</strong>
                 </div>
               </div>
             ))}

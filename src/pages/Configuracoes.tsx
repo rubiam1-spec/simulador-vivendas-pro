@@ -6,9 +6,9 @@ export default function ConfiguracoesPage() {
   const { session, profile, logout } = useAuth();
 
   return (
-    <div className="crmStack">
+    <div className="crmStack crmSettingsStack">
       <div className="crmPanelGrid crmPanelGridWide">
-        <section className="crmPanel">
+        <section className="crmPanel crmPanelSeparated">
           <div className="crmPanelHead">
             <div>
               <h3 className="crmPanelTitle">Conta</h3>
@@ -46,7 +46,7 @@ export default function ConfiguracoesPage() {
           </div>
         </section>
 
-        <section className="crmPanel">
+        <section className="crmPanel crmPanelSeparated">
           <div className="crmPanelHead">
             <div>
               <h3 className="crmPanelTitle">Autenticacao</h3>
@@ -74,7 +74,7 @@ export default function ConfiguracoesPage() {
       </div>
 
       <div className="crmPanelGrid">
-        <section className="crmPanel">
+        <section className="crmPanel crmPanelSeparated">
           <div className="crmPanelHead">
             <div>
               <h3 className="crmPanelTitle">Branding do cliente</h3>
@@ -105,7 +105,7 @@ export default function ConfiguracoesPage() {
           </div>
         </section>
 
-        <section className="crmPanel">
+        <section className="crmPanel crmPanelSeparated">
           <div className="crmPanelHead">
             <div>
               <h3 className="crmPanelTitle">Preferencias futuras</h3>

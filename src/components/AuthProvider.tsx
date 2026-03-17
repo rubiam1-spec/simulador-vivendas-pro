@@ -16,6 +16,7 @@ import {
 } from "../services/authService";
 import { bootstrapUserProfile } from "../services/profileService";
 import type { UserProfile } from "../types/user";
+import type { AuthChangeEvent } from "@supabase/supabase-js";
 
 type AuthContextValue = {
   session: AuthSession | null;
@@ -54,6 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    let previousSessionUserId: string | null = null;
 
     async function loadProfile(nextSession: AuthSession | null) {
       setProfileLoading(true);
@@ -103,6 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (mounted) {
           setSession(current);
         }
+        previousSessionUserId = current?.user.id ?? null;
         await loadProfile(current);
       } finally {
         if (mounted) {
@@ -113,11 +116,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     init();
 
-    const subscription = onAuthStateChange((nextSession) => {
+    const subscription = onAuthStateChange((event, nextSession) => {
       void (async () => {
-        setSession(nextSession);
-        await loadProfile(nextSession);
-        setLoading(false);
+        if (!mounted) return;
+
+        const nextUserId = nextSession?.user.id ?? null;
+
+        if (event === "TOKEN_REFRESHED") {
+          previousSessionUserId = nextUserId;
+          return;
+        }
+
+        if (event === "SIGNED_IN") {
+          if (previousSessionUserId) {
+            previousSessionUserId = nextUserId;
+            return;
+          }
+
+          previousSessionUserId = nextUserId;
+          setSession(nextSession);
+          await loadProfile(nextSession);
+          setLoading(false);
+          return;
+        }
+
+        if (event === "SIGNED_OUT") {
+          previousSessionUserId = null;
+          setSession(null);
+          await loadProfile(null);
+          setLoading(false);
+          return;
+        }
+
+        if (event === "INITIAL_SESSION") {
+          previousSessionUserId = nextUserId;
+          return;
+        }
+
+        if (event === ("USER_UPDATED" as AuthChangeEvent)) {
+          previousSessionUserId = nextUserId;
+          setSession(nextSession);
+          return;
+        }
+
+        previousSessionUserId = nextUserId;
       })();
     });
 

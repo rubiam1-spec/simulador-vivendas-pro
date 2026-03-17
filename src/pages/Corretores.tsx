@@ -41,6 +41,15 @@ function badgeClass(status: CorretorStatus) {
   return "isDanger";
 }
 
+function getInitials(nome: string) {
+  return nome
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((parte) => parte[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
 export default function CorretoresPage() {
   const [corretores, setCorretores] = useState<Corretor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -268,7 +277,11 @@ export default function CorretoresPage() {
       {error ? <div className="loginError">{error}</div> : null}
 
       <div className="crmAccessGrid crmEntityGrid">
-        <section className="crmPanel">
+        <section
+          className={["crmPanel", "crmPanelExpandable", showForm ? "isOpen" : ""]
+            .join(" ")
+            .trim()}
+        >
           <div className="crmPanelHead">
             <div>
               <h3 className="crmPanelTitle">
@@ -450,10 +463,13 @@ export default function CorretoresPage() {
                     .trim()}
                 >
                   <div className="crmEntityHeader">
-                    <div className="crmAccessIdentity">
+                    <div className="crmAccessIdentity crmIdentityWithAvatar">
+                      <span className="crmEntityAvatar">{getInitials(corretor.nome)}</span>
+                      <div>
                       <span className="crmDealOverline">Corretor</span>
                       <h3>{corretor.nome}</h3>
                       <p>{corretor.imobiliaria || "Imobiliaria nao informada"}</p>
+                      </div>
                     </div>
                     <div className="crmDealStatus">
                       <span className={`crmBadge ${badgeClass(corretor.status)}`}>
@@ -465,11 +481,27 @@ export default function CorretoresPage() {
                   <div className="crmDealMetaGrid crmEntityMetaGrid">
                     <div className="crmDealMetaItem">
                       <span className="crmDealMetaLabel">Telefone</span>
-                      <strong>{corretor.telefone || "Nao informado"}</strong>
+                      <strong>
+                        {corretor.telefone ? (
+                          <a className="crmContactLink" href={`tel:${corretor.telefone}`}>
+                            {corretor.telefone}
+                          </a>
+                        ) : (
+                          "Nao informado"
+                        )}
+                      </strong>
                     </div>
                     <div className="crmDealMetaItem">
                       <span className="crmDealMetaLabel">Email</span>
-                      <strong>{corretor.email || "Nao informado"}</strong>
+                      <strong>
+                        {corretor.email ? (
+                          <a className="crmContactLink" href={`mailto:${corretor.email}`}>
+                            {corretor.email}
+                          </a>
+                        ) : (
+                          "Nao informado"
+                        )}
+                      </strong>
                     </div>
                     <div className="crmDealMetaItem">
                       <span className="crmDealMetaLabel">CRECI</span>

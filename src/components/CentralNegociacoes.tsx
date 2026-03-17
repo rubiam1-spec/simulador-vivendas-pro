@@ -48,6 +48,16 @@ const STATUS: Array<{ value: StatusNegociacao | "todos"; label: string }> = [
   { value: "arquivada", label: "Arquivada" },
 ];
 
+const STATUS_PILLS: Array<{ value: StatusNegociacao | "todos"; label: string }> = [
+  { value: "todos", label: "Todos" },
+  { value: "simulacao", label: "Simulacao" },
+  { value: "proposta_enviada", label: "Propostas" },
+  { value: "em_negociacao", label: "Em negociacao" },
+  { value: "aguardando_retorno", label: "Retorno" },
+  { value: "aprovada", label: "Aprovadas" },
+  { value: "fechada", label: "Fechadas" },
+];
+
 const ETAPAS: Array<{ value: EtapaNegociacao | "todas"; label: string }> = [
   { value: "todas", label: "Todas" },
   { value: "inicial", label: "Inicial" },
@@ -189,6 +199,7 @@ export default function CentralNegociacoes({
   const [historicoAbertoId, setHistoricoAbertoId] = useState<string | null>(
     null
   );
+  const [menuAbertoId, setMenuAbertoId] = useState<string | null>(null);
 
   const negociacoesFiltradas = useMemo(() => {
     const buscaNormalizada = busca.trim().toLowerCase();
@@ -327,22 +338,6 @@ export default function CentralNegociacoes({
           </label>
 
           <label className="crmField">
-            <span>Status</span>
-            <select
-              value={statusFiltro}
-              onChange={(event) =>
-                setStatusFiltro(event.target.value as StatusNegociacao | "todos")
-              }
-            >
-              {STATUS.map((status) => (
-                <option key={status.value} value={status.value}>
-                  {status.label}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="crmField">
             <span>Etapa</span>
             <select
               value={etapaFiltro}
@@ -391,6 +386,24 @@ export default function CentralNegociacoes({
               ))}
             </select>
           </label>
+        </div>
+
+        <div className="crmStatusPills" role="tablist" aria-label="Filtro de status">
+          {STATUS_PILLS.map((status) => (
+            <button
+              key={status.value}
+              type="button"
+              className={[
+                "crmStatusPill",
+                statusFiltro === status.value ? "isActive" : "",
+              ]
+                .join(" ")
+                .trim()}
+              onClick={() => setStatusFiltro(status.value)}
+            >
+              {status.label}
+            </button>
+          ))}
         </div>
 
         <section className="crmMetricGrid">
@@ -470,22 +483,57 @@ export default function CentralNegociacoes({
                       <p>{negociacao.titulo}</p>
                     </div>
 
-                    <div className="crmDealStatus">
-                      <span className={["crmBadge", statusTone(negociacao.status)].join(" ")}>
-                        {labelStatus(negociacao.status)}
-                      </span>
-                      <span className="crmBadge isMuted">{labelEtapa(negociacao.etapa)}</span>
-                      <span
-                        className={[
-                          "crmBadge",
-                          prioridadeTone(negociacao.prioridade),
-                        ].join(" ")}
-                      >
-                        {labelPrioridade(negociacao.prioridade)}
-                      </span>
-                      <span className={["crmBadge", origemTone(negociacao.origem)].join(" ")}>
-                        {labelOrigem(negociacao.origem)}
-                      </span>
+                    <div className="crmDealStatusArea">
+                      <div className="crmDealStatus">
+                        <span className={["crmBadge", statusTone(negociacao.status)].join(" ")}>
+                          {labelStatus(negociacao.status)}
+                        </span>
+                        <span className="crmBadge isMuted">{labelEtapa(negociacao.etapa)}</span>
+                        <span
+                          className={[
+                            "crmBadge",
+                            prioridadeTone(negociacao.prioridade),
+                          ].join(" ")}
+                        >
+                          {labelPrioridade(negociacao.prioridade)}
+                        </span>
+                        <span className={["crmBadge", origemTone(negociacao.origem)].join(" ")}>
+                          {labelOrigem(negociacao.origem)}
+                        </span>
+                      </div>
+
+                      <div className="crmDealActionsMenu">
+                        <button
+                          type="button"
+                          className="btn btnGhost crmIconButton"
+                          onClick={() =>
+                            setMenuAbertoId((anterior) =>
+                              anterior === negociacao.id ? null : negociacao.id
+                            )
+                          }
+                          aria-label="Abrir acoes"
+                        >
+                          ...
+                        </button>
+
+                        {menuAbertoId === negociacao.id ? (
+                          <div className="crmMenuDropdown">
+                            <button type="button" onClick={() => onGerarPdf(negociacao)}>
+                              Gerar PDF
+                            </button>
+                            <button type="button" onClick={() => onDuplicar(negociacao.id)}>
+                              Duplicar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => onExcluir(negociacao.id)}
+                              className="isDanger"
+                            >
+                              Excluir
+                            </button>
+                          </div>
+                        ) : null}
+                      </div>
                     </div>
                   </div>
 
@@ -706,27 +754,6 @@ export default function CentralNegociacoes({
                       }
                     >
                       {historicoAberto ? "Ocultar historico" : "Ver historico"}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btnGhost"
-                      onClick={() => onGerarPdf(negociacao)}
-                    >
-                      Gerar PDF
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btnGhost"
-                      onClick={() => onDuplicar(negociacao.id)}
-                    >
-                      Duplicar
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btnGhost btnDanger"
-                      onClick={() => onExcluir(negociacao.id)}
-                    >
-                      Excluir
                     </button>
                   </div>
                 </article>
