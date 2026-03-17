@@ -1118,8 +1118,7 @@ function drawSimulacaoLayout(doc: jsPDF, payload: PdfSimulacaoPayload) {
   );
 
   y = drawTextSection(doc, y, "Detalhes da negociação", textBlocks.detalhes, meta);
-  y = drawTextSection(doc, y, "Observação", textBlocks.observacao, meta);
-  drawSignatureSection(doc, y, meta);
+  drawTextSection(doc, y, "Observação", textBlocks.observacao, meta);
 }
 
 export function gerarPdfProposta(dados: PdfPropostaPayload) {

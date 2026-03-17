@@ -4,22 +4,22 @@ export const branding = {
   clientLabel: "Bomm Urbanizadora",
   browserTitle: "RR CRM \u2022 Bomm Urbanizadora",
   clientSummary:
-    "Ambiente comercial da Bomm Urbanizadora para pipeline, simulacoes e operacao de acessos.",
+    "Ambiente comercial da Bomm Urbanizadora para pipeline, simulações e operação de acessos.",
   loginTitle: "Entrar no RR CRM",
   sidebarTitle: "RR CRM",
   sidebarSubtitle: "Plataforma comercial",
   sidebarDescription:
-    "Negociacoes, simulacoes, acessos e operacao imobiliaria em um unico ambiente.",
+    "Negociações, simulações, acessos e operação imobiliária em um único ambiente.",
   sidebarClientLabel: "Cliente ativo",
   loginSubtitle:
-    "Acesse o ambiente comercial da Bomm Urbanizadora com um usuario autorizado da operacao.",
-  settingsTitle: "Configuracoes",
-  settingsSubtitle: "Conta, autenticacao e preferencias da operacao",
+    "Acesse o ambiente comercial da Bomm Urbanizadora com um usuário autorizado da operação.",
+  settingsTitle: "Configurações",
+  settingsSubtitle: "Conta, autenticação e preferências da operação",
   logoutLabel: "Sair do RR CRM",
   accessTitle: "Acessos",
-  accessSubtitle: "Administracao",
+  accessSubtitle: "Administração",
   accessDescription:
-    "Controle usuarios, perfis e disponibilidade do RR CRM com uma base pronta para evoluir com Supabase.",
+    "Controle usuários, perfis e disponibilidade do RR CRM com uma base pronta para evoluir com Supabase.",
   simulatorSubtitle: "Simulador Comercial \u2022 Bomm Urbanizadora",
   faviconPath: "/favicon-32x32.png",
 } as const;

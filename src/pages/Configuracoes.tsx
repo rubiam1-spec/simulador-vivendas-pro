@@ -49,7 +49,7 @@ export default function ConfiguracoesPage() {
         <section className="crmPanel crmPanelSeparated">
           <div className="crmPanelHead">
             <div>
-              <h3 className="crmPanelTitle">Autenticacao</h3>
+              <h3 className="crmPanelTitle">Autenticação</h3>
               <p className="crmPanelDescription">
                 Camada atual de acesso e compatibilidade com o Supabase.
               </p>
@@ -62,7 +62,7 @@ export default function ConfiguracoesPage() {
               <strong>{hasSupabaseConfig ? "Supabase Auth" : "Modo local"}</strong>
             </div>
             <div className="crmInlineListItem crmInlineListItemSplit">
-              <span className="crmBadge isMuted">Sessao</span>
+              <span className="crmBadge isMuted">Sessão</span>
               <strong>{session ? "Ativa" : "Não autenticada"}</strong>
             </div>
             <div className="crmHint">
@@ -126,7 +126,7 @@ export default function ConfiguracoesPage() {
       <section className="crmSection">
         <div className="crmSectionHeader">
           <div>
-            <span className="crmSectionEyebrow">Sessao</span>
+            <span className="crmSectionEyebrow">Sessão</span>
             <h3 className="crmSectionTitle">Encerramento seguro</h3>
             <p className="crmSectionText">
               Saia do ambiente mantendo a organização do shell e a compatibilidade

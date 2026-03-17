@@ -151,7 +151,7 @@ export default function DashboardComercial({
           <span className="crmMetricLabel">Pipeline financeiro</span>
           <strong className="crmMetricValue">{brl(analytics.valorPipeline)}</strong>
           <span className="crmMetricHint">
-            Soma das oportunidades em rascunho, negociacao, retorno e aprovacao.
+            Soma das oportunidades em rascunho, negociação, retorno e aprovação.
           </span>
         </article>
 

@@ -1616,7 +1616,7 @@ body,
 
 .luxValueRow {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: minmax(200px, 1.4fr) minmax(160px, 1fr) minmax(160px, 1fr);
   gap: 16px;
   align-items: stretch;
   width: 100%;
@@ -1624,14 +1624,15 @@ body,
 
 .luxValueMain {
   min-width: 0;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.028));
+  border-radius: var(--r-lg);
+  padding: 18px 20px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 .luxMiniCard {
   min-width: 0;
-}
-
-.luxValueMain,
-.luxMiniCard {
   border: 1px solid var(--line);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.028));
   border-radius: var(--r-lg);
