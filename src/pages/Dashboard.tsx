@@ -5,6 +5,7 @@ import {
   getDashboardAnalytics,
   type DashboardAnalytics,
 } from "../services/analyticsService";
+import { migrarNegociacoesParaSupabase } from "../scripts/migrarLocalStorage";
 
 const EMPTY_ANALYTICS: DashboardAnalytics = {
   totalNegociacoes: 0,
@@ -29,10 +30,23 @@ const EMPTY_ANALYTICS: DashboardAnalytics = {
   negociacoes: [],
 };
 
+function temNegociacoesAntigas() {
+  try {
+    const raw = localStorage.getItem("central_negociacoes_bomm");
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0;
+  } catch {
+    return false;
+  }
+}
+
 export default function DashboardPage() {
   const [analytics, setAnalytics] = useState<DashboardAnalytics>(EMPTY_ANALYTICS);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState("");
+  const [temDadosAntigos, setTemDadosAntigos] = useState(() => temNegociacoesAntigas());
+  const [migrando, setMigrando] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -83,8 +97,30 @@ export default function DashboardPage() {
     };
   }, []);
 
+  async function handleMigrar() {
+    setMigrando(true);
+    try {
+      await migrarNegociacoesParaSupabase();
+    } finally {
+      setMigrando(false);
+      setTemDadosAntigos(temNegociacoesAntigas());
+      window.location.reload();
+    }
+  }
+
   return (
     <div className="appPageStack">
+      {temDadosAntigos && (
+        <div className="appInlineFeedback">
+          <button
+            onClick={() => void handleMigrar()}
+            disabled={migrando}
+          >
+            {migrando ? "Migrando..." : "Migrar negociacoes antigas"}
+          </button>
+        </div>
+      )}
+
       {erro ? <div className="appInlineFeedback">{erro}</div> : null}
 
       {loading ? (
