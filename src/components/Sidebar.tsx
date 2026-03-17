@@ -9,6 +9,25 @@ type SidebarProps = {
   onCloseMobileMenu: () => void;
 };
 
+function getInitials(nome: string) {
+  return nome
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
+function roleLabelShort(role: string) {
+  const map: Record<string, string> = {
+    admin: "Admin",
+    gestor: "Gestor",
+    corretor: "Corretor",
+    consultora: "Consultora",
+  };
+  return map[role] ?? role;
+}
+
 function SidebarIcon({ label }: { label: string }) {
   const commonProps = {
     viewBox: "0 0 24 24",
@@ -132,6 +151,30 @@ export default function Sidebar({
             <strong>{branding.clientLabel}</strong>
           </div>
         </div>
+
+        {profileResolved && profile ? (
+          <div className="appSidebarUser">
+            <span className="appSidebarUserAvatar">
+              {profile.avatarUrl ? (
+                <img
+                  src={profile.avatarUrl}
+                  alt={profile.nomeExibicao ?? profile.nome}
+                  style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }}
+                />
+              ) : (
+                getInitials(profile.nomeExibicao ?? profile.nome)
+              )}
+            </span>
+            <div className="appSidebarUserInfo">
+              <span className="appSidebarUserName">
+                {profile.nomeExibicao ?? profile.nome}
+              </span>
+              <span className="appSidebarUserRole">
+                {profile.cargo ?? roleLabelShort(profile.role)}
+              </span>
+            </div>
+          </div>
+        ) : null}
 
         <div id="app-sidebar-nav" className="appSidebarSections">
           {sections.map((section) => (

@@ -3,8 +3,10 @@ import { type FormEvent, useDeferredValue, useEffect, useMemo, useState } from "
 import {
   createCorretor,
   listCorretores,
+  migrarCorretoresDoLocalStorage,
   updateCorretor,
-} from "../services/corretoresService";
+} from "../services/corretoresServiceSupabase";
+import { listImobiliarias, type Imobiliaria } from "../services/imobiliariasService";
 import type {
   Corretor,
   CorretorStatus,
@@ -52,8 +54,10 @@ function getInitials(nome: string) {
 
 export default function CorretoresPage() {
   const [corretores, setCorretores] = useState<Corretor[]>([]);
+  const [imobiliarias, setImobiliarias] = useState<Imobiliaria[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [migrando, setMigrando] = useState(false);
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
   const [query, setQuery] = useState("");
@@ -69,9 +73,13 @@ export default function CorretoresPage() {
     async function load() {
       try {
         setLoading(true);
-        const data = await listCorretores();
+        const [data, imobs] = await Promise.all([
+          listCorretores(),
+          listImobiliarias().catch(() => [] as Imobiliaria[]),
+        ]);
         if (!cancelled) {
           setCorretores(data);
+          setImobiliarias(imobs);
           setError("");
         }
       } catch (loadError) {
@@ -95,6 +103,24 @@ export default function CorretoresPage() {
       cancelled = true;
     };
   }, []);
+
+  async function handleMigrar() {
+    setMigrando(true);
+    try {
+      const resultado = await migrarCorretoresDoLocalStorage();
+      if (resultado.migrados > 0) {
+        const data = await listCorretores();
+        setCorretores(data);
+        setFeedback(`${resultado.migrados} corretor(es) migrado(s) com sucesso.`);
+      } else {
+        setFeedback("Nenhum dado local encontrado para migrar.");
+      }
+    } catch {
+      setError("Erro durante a migração.");
+    } finally {
+      setMigrando(false);
+    }
+  }
 
   const corretoresFiltrados = useMemo(() => {
     const normalizedQuery = deferredQuery.trim().toLowerCase();
@@ -231,6 +257,14 @@ export default function CorretoresPage() {
             </p>
           </div>
           <div className="crmToolbarActions">
+            <button
+              type="button"
+              className="btn btnGhost"
+              onClick={() => void handleMigrar()}
+              disabled={migrando}
+            >
+              {migrando ? "Migrando..." : "Migrar dados locais"}
+            </button>
             <button type="button" className="btn" onClick={handleNew}>
               Novo cadastro
             </button>
@@ -340,16 +374,36 @@ export default function CorretoresPage() {
                 </label>
 
                 <label className="crmField">
-                  <span>Imobiliaria</span>
-                  <input
-                    value={form.imobiliaria}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        imobiliaria: event.target.value,
-                      }))
-                    }
-                  />
+                  <span>Imobiliária</span>
+                  {imobiliarias.length > 0 ? (
+                    <select
+                      value={form.imobiliaria}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          imobiliaria: event.target.value,
+                        }))
+                      }
+                    >
+                      <option value="">Selecionar...</option>
+                      {imobiliarias.map((imob) => (
+                        <option key={imob.id} value={imob.nome}>
+                          {imob.nome}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      value={form.imobiliaria}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          imobiliaria: event.target.value,
+                        }))
+                      }
+                      placeholder="Nome da imobiliária"
+                    />
+                  )}
                 </label>
               </div>
 

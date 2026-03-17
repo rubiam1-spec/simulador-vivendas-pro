@@ -217,6 +217,53 @@
   color: rgba(237, 243, 238, 0.84);
 }
 
+.appSidebarUser {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.appSidebarUserAvatar {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #f5fbf6;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  letter-spacing: 0.03em;
+}
+
+.appSidebarUserInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.appSidebarUserName {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f5fbf6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.appSidebarUserRole {
+  font-size: 11px;
+  color: rgba(237, 243, 238, 0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 .appShellMain {
   min-width: 0;
   display: flex;

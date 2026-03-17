@@ -3,8 +3,9 @@ import { type FormEvent, useDeferredValue, useEffect, useMemo, useState } from "
 import {
   createCliente,
   listClientes,
+  migrarClientesDoLocalStorage,
   updateCliente,
-} from "../services/clientesService";
+} from "../services/clientesServiceSupabase";
 import type {
   Cliente,
   ClienteStatus,
@@ -82,6 +83,25 @@ export default function ClientesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<CreateClienteInput>(emptyForm);
+  const [migrando, setMigrando] = useState(false);
+
+  async function handleMigrar() {
+    setMigrando(true);
+    try {
+      const resultado = await migrarClientesDoLocalStorage();
+      if (resultado.migrados > 0) {
+        const data = await listClientes();
+        setClientes(data);
+        setFeedback(`${resultado.migrados} cliente(s) migrado(s) com sucesso.`);
+      } else {
+        setFeedback("Nenhum dado local encontrado para migrar.");
+      }
+    } catch {
+      setError("Erro durante a migração.");
+    } finally {
+      setMigrando(false);
+    }
+  }
   const deferredQuery = useDeferredValue(query);
 
   useEffect(() => {
@@ -257,6 +277,14 @@ export default function ClientesPage() {
             </p>
           </div>
           <div className="crmToolbarActions">
+            <button
+              type="button"
+              className="btn btnGhost"
+              onClick={() => void handleMigrar()}
+              disabled={migrando}
+            >
+              {migrando ? "Migrando..." : "Migrar dados locais"}
+            </button>
             <button type="button" className="btn" onClick={handleNew}>
               Novo cadastro
             </button>
