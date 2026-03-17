@@ -148,20 +148,21 @@ export async function listarNegociacoesSalvas(options?: {
   consultoraUserId?: string | null;
 }): Promise<NegociacaoSalva[]> {
   if (!supabase) {
-    console.error("[negociacoes] supabase client nao inicializado");
+    console.error('[RR CRM] Supabase não inicializado');
     return [];
   }
 
   const { data: { user }, error: authError } = await supabase.auth.getUser();
+
   if (authError || !user) {
-    console.error("[negociacoes] sem sessao ativa:", authError?.message);
+    console.error('[RR CRM] Sessão inválida:', authError?.message);
     return [];
   }
 
   let query = supabase
-    .from("negociacoes")
-    .select("*", { count: "exact" })
-    .order("updated_at", { ascending: false });
+    .from('negociacoes')
+    .select('*', { count: 'exact' })
+    .order('updated_at', { ascending: false });
 
   if (options?.consultoraUserId) {
     query = query.or(`user_id.eq.${options.consultoraUserId},created_by.eq.${options.consultoraUserId}`);
@@ -170,12 +171,15 @@ export async function listarNegociacoesSalvas(options?: {
   const { data, error, count } = await query;
 
   if (error) {
-    const { code, message, details, hint } = error as typeof error & { code?: string; hint?: string };
-    console.error("[negociacoes] erro RLS/query:", { code, message, details, hint });
+    console.error('[RR CRM] Erro ao buscar negociações:', {
+      code: error.code,
+      message: error.message,
+      hint: (error as typeof error & { hint?: string }).hint,
+    });
     return [];
   }
 
-  console.log(`[negociacoes] ok — ${count} registro(s) para user ${user.email}`);
+  console.log(`[RR CRM] ${count ?? 0} negociação(ões) carregada(s) para ${user.email}`);
   return (data ?? []).map((row) => fromDb(row as Record<string, unknown>));
 }
 

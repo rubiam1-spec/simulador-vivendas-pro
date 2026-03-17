@@ -148,10 +148,14 @@ export default function Sidebar({
         aria-hidden={!mobileMenuOpen && undefined}
       >
         <div className="appSidebarBrand">
-          <div style={{ marginBottom: 16 }}>
+          <div style={{
+            marginBottom: 20,
+            paddingBottom: 20,
+            borderBottom: "1px solid var(--clr-border-subtle)",
+          }}>
             <LogoRRCRM
               variant="compact"
-              height={36}
+              height={44}
               theme={theme === "light" ? "light" : "dark"}
             />
           </div>

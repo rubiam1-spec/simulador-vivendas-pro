@@ -225,8 +225,14 @@
 }
 
 .appSidebarBrand {
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--clr-border-subtle);
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.appSidebar svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
 }
 
 .appSidebarKicker,
@@ -471,8 +477,8 @@
   align-items: flex-start;
   gap: 20px;
   padding: 24px 30px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(10, 21, 40, 0.88);
+  border-bottom: 1px solid var(--clr-border-subtle);
+  background: rgba(8, 16, 38, 0.90);
   backdrop-filter: blur(16px);
 }
 

@@ -4,6 +4,7 @@ import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../components/AuthProvider";
 import { branding } from "../config/branding";
 import { hasSupabaseConfig } from "../lib/supabase";
+import { LogoRRCRM } from "../components/LogoRRCRM";
 
 export default function Login() {
   const { session, login } = useAuth();
@@ -41,6 +42,18 @@ export default function Login() {
   return (
     <div className="loginPage">
       <div className="loginCard">
+
+        {/* Logo centralizado no topo */}
+        <div style={{
+          display: "flex",
+          justifyContent: "center",
+          marginBottom: 32,
+          paddingBottom: 28,
+          borderBottom: "1px solid rgba(80, 130, 255, 0.12)",
+        }}>
+          <LogoRRCRM variant="full" height={54} theme="dark" />
+        </div>
+
         <div className="loginKicker">{branding.sidebarSubtitle}</div>
         <h1>{branding.loginTitle}</h1>
         <p>{branding.loginSubtitle}</p>
