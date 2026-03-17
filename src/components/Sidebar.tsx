@@ -148,12 +148,12 @@ export default function Sidebar({
         aria-hidden={!mobileMenuOpen && undefined}
       >
         <div className="appSidebarBrand">
-          <div style={{
-            padding: "20px 16px 16px",
-            borderBottom: "1px solid var(--clr-border-subtle)",
-            marginBottom: 8,
-          }}>
-            <LogoRRCRM variant="compact" height={30} theme={theme === "light" ? "light" : "dark"} />
+          <div style={{ marginBottom: 16 }}>
+            <LogoRRCRM
+              variant="compact"
+              height={36}
+              theme={theme === "light" ? "light" : "dark"}
+            />
           </div>
           <div className="appSidebarKicker">{branding.sidebarSubtitle}</div>
           <p>{branding.sidebarDescription}</p>

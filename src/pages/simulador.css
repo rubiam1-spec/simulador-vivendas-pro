@@ -350,8 +350,8 @@ body,
   border-radius: var(--r-2xl);
   border: 1px solid var(--line-2);
   background:
-    radial-gradient(ellipse 820px 460px at 14% 26%, rgba(67, 173, 122, 0.18), transparent 56%),
-    radial-gradient(ellipse 560px 340px at 84% 70%, rgba(56, 125, 93, 0.12), transparent 52%),
+    radial-gradient(ellipse 820px 460px at 14% 26%, rgba(48, 112, 240, 0.10), transparent 56%),
+    radial-gradient(ellipse 560px 340px at 84% 70%, rgba(26, 95, 212, 0.07), transparent 52%),
     linear-gradient(180deg, var(--clr-surface-1), var(--clr-surface-2));
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.05) inset,
@@ -931,7 +931,7 @@ body,
   border: 1px solid var(--line);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.025)),
-    rgba(17, 28, 23, 0.38);
+    rgba(8, 14, 32, 0.38);
   box-shadow: var(--shadow-card);
 }
 
@@ -1361,7 +1361,7 @@ body,
 .luxField input:focus,
 .luxField select:focus,
 .whats:focus {
-  border-color: rgba(57, 170, 121, 0.72);
+  border-color: rgba(48, 112, 240, 0.72);
   box-shadow: 0 0 0 4px var(--accent-glow);
   background: var(--field-bg-focus);
 }
@@ -1715,11 +1715,11 @@ body,
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: 1px solid rgba(57, 170, 121, 0.52);
+  border: 1px solid rgba(48, 112, 240, 0.50);
   background: linear-gradient(
-    158deg,
-    rgba(57, 170, 121, 0.82) 0%,
-    rgba(40, 129, 91, 0.74) 100%
+    135deg,
+    #0e3fa0 0%,
+    #3070f0 100%
   );
   color: rgba(255, 255, 255, 0.98);
   font-family: var(--font-body);
