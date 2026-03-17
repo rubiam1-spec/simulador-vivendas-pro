@@ -1595,3 +1595,269 @@
     font-size: 30px;
   }
 }
+
+/* ============================================================
+   RR CRM — Design System v2 — Overrides de componentes
+   NUNCA remova. Adicione regras APÓS este bloco se precisar.
+   ============================================================ */
+
+/* ── Shell / Background ─────────────────────────────────────── */
+.appShell {
+  background: var(--surface-bg) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ── Sidebar ────────────────────────────────────────────────── */
+.appSidebar {
+  background: var(--sidebar-bg) !important;
+  border-right: 1px solid var(--sidebar-border) !important;
+}
+
+.appSidebarBrand {
+  border-bottom: 1px solid var(--sidebar-border) !important;
+}
+
+.appSidebarBrand h1 {
+  color: var(--text-primary) !important;
+  font-size: 1.25rem !important;
+  font-weight: var(--weight-bold) !important;
+  letter-spacing: -0.02em !important;
+}
+
+.appSidebarKicker {
+  color: var(--sidebar-text-muted) !important;
+  font-size: var(--text-xs) !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+}
+
+.appSidebarBrand p {
+  color: var(--sidebar-text-muted) !important;
+  font-size: var(--text-xs) !important;
+  line-height: 1.5 !important;
+}
+
+.appSidebarClient {
+  background: rgba(30, 58, 110, 0.35) !important;
+  border: 1px solid var(--navy-600) !important;
+  border-radius: var(--radius-md) !important;
+}
+
+.appSidebarClient span {
+  color: var(--navy-100) !important;
+  font-size: var(--text-xs) !important;
+}
+
+.appSidebarClient strong {
+  color: var(--text-primary) !important;
+}
+
+.appSidebarSectionTitle {
+  color: var(--sidebar-text-muted) !important;
+  font-size: var(--text-xs) !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+}
+
+.appSidebarLink {
+  color: var(--sidebar-text) !important;
+  border-radius: var(--radius-md) !important;
+  transition: background var(--transition-fast), color var(--transition-fast) !important;
+}
+
+.appSidebarLink:hover {
+  background: var(--sidebar-hover) !important;
+  color: #ffffff !important;
+}
+
+.appSidebarLink.isActive {
+  background: var(--sidebar-active-bg) !important;
+  color: var(--sidebar-active-text) !important;
+  box-shadow: inset 3px 0 0 var(--sidebar-active-indicator) !important;
+  font-weight: var(--weight-semibold) !important;
+}
+
+.appSidebarFooter {
+  background: var(--navy-850, #091120) !important;
+  border-top: 1px solid var(--sidebar-border) !important;
+  color: var(--sidebar-text-muted) !important;
+}
+
+.appSidebarFooter strong {
+  color: var(--text-primary) !important;
+}
+
+/* ── Metric cards ────────────────────────────────────────────── */
+.crmMetricCard {
+  background: var(--card-bg) !important;
+  border: 1px solid var(--card-border) !important;
+  box-shadow: var(--card-shadow) !important;
+  border-radius: var(--radius-lg) !important;
+}
+
+.crmMetricLabel {
+  color: var(--text-muted) !important;
+  font-size: var(--text-xs) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+}
+
+.crmMetricValue {
+  color: var(--text-primary) !important;
+  font-weight: var(--weight-extrabold) !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────── */
+.btn,
+button.btn {
+  background: linear-gradient(135deg, var(--btn-primary-from), var(--btn-primary-to)) !important;
+  color: var(--btn-primary-text) !important;
+  border: none !important;
+  border-radius: var(--radius-md) !important;
+  font-weight: var(--weight-semibold) !important;
+  font-size: var(--text-sm) !important;
+  padding: 10px 20px !important;
+  cursor: pointer !important;
+  transition: filter var(--transition-fast), transform var(--transition-fast) !important;
+}
+
+.btn:hover:not(:disabled),
+button.btn:hover:not(:disabled) {
+  filter: brightness(1.1) !important;
+  transform: translateY(-1px) !important;
+}
+
+.btn:active:not(:disabled),
+button.btn:active:not(:disabled) {
+  transform: translateY(0) !important;
+}
+
+.btn:disabled,
+button.btn:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+/* ── Inputs ──────────────────────────────────────────────────── */
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]),
+select,
+textarea {
+  background: var(--input-bg) !important;
+  border: 1px solid var(--input-border) !important;
+  color: var(--input-text) !important;
+  border-radius: var(--radius-md) !important;
+  font-size: var(--text-sm) !important;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast) !important;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):focus,
+select:focus,
+textarea:focus {
+  outline: none !important;
+  border-color: var(--input-border-focus) !important;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.18) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--input-placeholder) !important;
+}
+
+/* ── Panels / Sections ───────────────────────────────────────── */
+.crmPanel,
+.crmSection {
+  background: var(--card-bg) !important;
+  border: 1px solid var(--card-border) !important;
+  border-radius: var(--radius-lg) !important;
+}
+
+.crmPanelTitle,
+.crmSectionTitle {
+  color: var(--text-primary) !important;
+  font-weight: var(--weight-semibold) !important;
+}
+
+.crmPanelDescription,
+.crmSectionText {
+  color: var(--text-muted) !important;
+  font-size: var(--text-sm) !important;
+}
+
+.crmSectionEyebrow {
+  color: var(--blue-300) !important;
+  font-size: var(--text-xs) !important;
+  font-weight: var(--weight-semibold) !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+}
+
+/* ── Data items / labels ─────────────────────────────────────── */
+.crmDataLabel {
+  color: var(--text-muted) !important;
+  font-size: var(--text-xs) !important;
+}
+
+.crmDataValue {
+  color: var(--text-primary) !important;
+  font-weight: var(--weight-semibold) !important;
+}
+
+/* ── Inline feedback ─────────────────────────────────────────── */
+.appInlineFeedback {
+  background: rgba(37, 99, 235, 0.15) !important;
+  border: 1px solid var(--blue-500) !important;
+  border-radius: var(--radius-md) !important;
+  color: var(--blue-200) !important;
+  font-size: var(--text-sm) !important;
+  padding: 10px 16px !important;
+}
+
+/* ── User avatar (sidebar) ───────────────────────────────────── */
+.appSidebarUser {
+  border-bottom: 1px solid var(--sidebar-border) !important;
+}
+
+.appSidebarUserAvatar {
+  background: var(--navy-700) !important;
+  color: var(--text-primary) !important;
+  border: 2px solid var(--navy-600) !important;
+}
+
+.appSidebarUserName {
+  color: var(--text-primary) !important;
+  font-weight: var(--weight-medium) !important;
+}
+
+.appSidebarUserRole {
+  color: var(--sidebar-text-muted) !important;
+  font-size: var(--text-xs) !important;
+}
+
+/* ── Page headings ───────────────────────────────────────────── */
+.appPageStack h2,
+.appPageStack h3,
+.crmStack h2,
+.crmStack h3 {
+  color: var(--text-primary) !important;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--navy-600);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--navy-500);
+}
