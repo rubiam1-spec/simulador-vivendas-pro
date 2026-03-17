@@ -1,3 +1,198 @@
+/* ============================================================
+   RR CRM — Design System v2 — Azul Marinho
+   Tokens globais — NUNCA remova este bloco
+   ============================================================ */
+
+:root {
+  /* ── Paleta Navy / Azul-marinho ─────────────────────────── */
+  --navy-950: #040a14;
+  --navy-900: #060d1a;
+  --navy-850: #091120;
+  --navy-800: #0c1628;
+  --navy-750: #0f1c33;
+  --navy-700: #13233e;
+  --navy-600: #1a2f54;
+  --navy-500: #1e3a6e;
+  --navy-400: #2550a0;
+  --navy-300: #3366c8;
+  --navy-200: #5588e8;
+  --navy-100: #99bbf5;
+  --navy-50:  #d6e6ff;
+
+  /* ── Azul Accent / Destaques ────────────────────────────── */
+  --blue-600: #1a56db;
+  --blue-500: #2563eb;
+  --blue-400: #3b82f6;
+  --blue-300: #60a5fa;
+  --blue-200: #93c5fd;
+  --blue-100: #bfdbfe;
+  --blue-50:  #eff6ff;
+
+  /* ── Gold / Destaques premium ───────────────────────────── */
+  --gold-600: #b45309;
+  --gold-500: #d97706;
+  --gold-400: #f59e0b;
+  --gold-300: #fbbf24;
+  --gold-200: #fde68a;
+  --gold-100: #fef3c7;
+
+  /* ── Neutros (escuro → claro) ───────────────────────────── */
+  --neutral-950: #030712;
+  --neutral-900: #111827;
+  --neutral-800: #1f2937;
+  --neutral-700: #374151;
+  --neutral-600: #4b5563;
+  --neutral-500: #6b7280;
+  --neutral-400: #9ca3af;
+  --neutral-300: #d1d5db;
+  --neutral-200: #e5e7eb;
+  --neutral-100: #f3f4f6;
+  --neutral-50:  #f9fafb;
+
+  /* ── Semânticos ─────────────────────────────────────────── */
+  --color-success:  #10b981;
+  --color-warning:  #f59e0b;
+  --color-danger:   #ef4444;
+  --color-info:     #3b82f6;
+
+  /* ── Superfícies (modo escuro — padrão) ─────────────────── */
+  --surface-bg:        var(--navy-950);
+  --surface-elevated:  var(--navy-900);
+  --surface-card:      var(--navy-850);
+  --surface-overlay:   var(--navy-800);
+  --surface-border:    var(--navy-700);
+  --surface-border-subtle: var(--navy-750);
+
+  /* ── Sidebar ────────────────────────────────────────────── */
+  --sidebar-bg:          var(--navy-900);
+  --sidebar-hover:       var(--navy-800);
+  --sidebar-active-bg:   var(--navy-700);
+  --sidebar-active-text: #ffffff;
+  --sidebar-active-indicator: var(--blue-400);
+  --sidebar-text:        var(--navy-100);
+  --sidebar-text-muted:  var(--navy-200);
+  --sidebar-border:      var(--navy-700);
+
+  /* ── Texto ──────────────────────────────────────────────── */
+  --text-primary:   #f0f4ff;
+  --text-secondary: var(--navy-100);
+  --text-muted:     var(--navy-200);
+  --text-disabled:  var(--neutral-600);
+  --text-inverse:   var(--neutral-900);
+
+  /* ── Botões ─────────────────────────────────────────────── */
+  --btn-primary-from: var(--blue-600);
+  --btn-primary-to:   var(--blue-400);
+  --btn-primary-text: #ffffff;
+  --btn-secondary-bg: var(--navy-700);
+  --btn-secondary-text: var(--text-primary);
+  --btn-secondary-border: var(--navy-600);
+
+  /* ── Inputs ─────────────────────────────────────────────── */
+  --input-bg:            var(--navy-850);
+  --input-border:        var(--navy-600);
+  --input-border-focus:  var(--blue-400);
+  --input-text:          var(--text-primary);
+  --input-placeholder:   var(--navy-200);
+
+  /* ── Cards / Métricas ───────────────────────────────────── */
+  --card-bg:      var(--navy-850);
+  --card-border:  var(--navy-700);
+  --card-shadow:  0 2px 12px rgba(4,10,20,0.6);
+
+  /* ── Espaçamento ────────────────────────────────────────── */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  /* ── Raios ──────────────────────────────────────────────── */
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-2xl:  24px;
+  --radius-full: 9999px;
+
+  /* ── Tipografia ─────────────────────────────────────────── */
+  --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+
+  --text-xs:   0.75rem;
+  --text-sm:   0.875rem;
+  --text-base: 1rem;
+  --text-lg:   1.125rem;
+  --text-xl:   1.25rem;
+  --text-2xl:  1.5rem;
+  --text-3xl:  1.875rem;
+  --text-4xl:  2.25rem;
+
+  --weight-normal:   400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+  --weight-extrabold:800;
+
+  /* ── Transições ─────────────────────────────────────────── */
+  --transition-fast:   120ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow:   350ms ease;
+
+  /* ── Z-index ────────────────────────────────────────────── */
+  --z-base:    0;
+  --z-raised:  10;
+  --z-overlay: 100;
+  --z-modal:   200;
+  --z-toast:   300;
+  --z-tooltip: 400;
+}
+
+/* ── Modo Claro ─────────────────────────────────────────────── */
+[data-theme="light"] {
+  --surface-bg:             #f0f4ff;
+  --surface-elevated:       #ffffff;
+  --surface-card:           #ffffff;
+  --surface-overlay:        #f8faff;
+  --surface-border:         #c8d6f0;
+  --surface-border-subtle:  #dde8fc;
+
+  --sidebar-bg:             var(--navy-800);
+  --sidebar-hover:          var(--navy-700);
+  --sidebar-active-bg:      var(--navy-600);
+  --sidebar-active-text:    #ffffff;
+  --sidebar-active-indicator: var(--blue-300);
+  --sidebar-text:           #e8f0ff;
+  --sidebar-text-muted:     var(--navy-100);
+  --sidebar-border:         var(--navy-700);
+
+  --text-primary:   var(--neutral-900);
+  --text-secondary: var(--neutral-700);
+  --text-muted:     var(--neutral-500);
+  --text-disabled:  var(--neutral-400);
+  --text-inverse:   #ffffff;
+
+  --input-bg:            #ffffff;
+  --input-border:        #c8d6f0;
+  --input-border-focus:  var(--blue-500);
+  --input-text:          var(--neutral-900);
+  --input-placeholder:   var(--neutral-500);
+
+  --card-bg:     #ffffff;
+  --card-border: #dde8fc;
+  --card-shadow: 0 2px 12px rgba(30,58,110,0.10);
+
+  --btn-secondary-bg:     #eef4ff;
+  --btn-secondary-text:   var(--navy-700);
+  --btn-secondary-border: #c8d6f0;
+}
+
+/* ─────────────────────────────────────────────────────────── */
+
 #root {
   min-height: 100vh;
 }
