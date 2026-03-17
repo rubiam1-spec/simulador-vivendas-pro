@@ -1787,7 +1787,12 @@ export default function Simulador() {
               </div>
 
               <div className="luxNote" style={{ marginTop: 16 }}>
-                <strong>Modo atual:</strong> {modoDocumento}
+                <strong>Modo atual:</strong>{" "}
+                {modoDocumento === "simulacao"
+                  ? "Simulação"
+                  : modoDocumento === "proposta"
+                    ? "Proposta"
+                    : "Contraproposta"}
               </div>
             </div>
           </section>

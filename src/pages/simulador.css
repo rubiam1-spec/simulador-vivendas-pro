@@ -502,6 +502,7 @@ body,
   gap: 24px;
   align-items: start;
   min-width: 0;
+  width: 100%;
 }
 
 .luxContent {
@@ -1610,24 +1611,23 @@ body,
   grid-template-columns: minmax(0, 1.24fr) minmax(0, 0.86fr);
   gap: 24px;
   align-items: start;
+  width: 100%;
 }
 
 .luxValueRow {
-  display: flex;
-  flex-direction: row;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 16px;
   align-items: stretch;
-  flex-wrap: nowrap;
+  width: 100%;
 }
 
 .luxValueMain {
-  flex: 1.4;
-  min-width: 200px;
+  min-width: 0;
 }
 
 .luxMiniCard {
-  flex: 1;
-  min-width: 180px;
+  min-width: 0;
 }
 
 .luxValueMain,
@@ -1884,13 +1884,7 @@ body,
 
 @media (max-width: 900px) {
   .luxValueRow {
-    flex-direction: column;
-  }
-  .luxValueMain,
-  .luxMiniCard {
-    flex: none;
-    width: 100%;
-    min-width: 0;
+    grid-template-columns: 1fr;
   }
 }
 

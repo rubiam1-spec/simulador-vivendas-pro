@@ -24,18 +24,18 @@ export function getNavigationSections(
 
   return [
     {
-      label: "Operacao",
+      label: "Operação",
       items: [
         ...(!isCorretor ? [{ label: "Dashboard", to: "/dashboard" }] : []),
-        { label: "Negociacoes", to: "/negociacoes" },
+        { label: "Negociações", to: "/negociacoes" },
         { label: "Simulador", to: "/simulador" },
       ],
     },
     {
-      label: "Administracao",
+      label: "Administração",
       items: [
         ...(isAdmin ? [{ label: "Acessos", to: "/acessos" }] : []),
-        { label: "Configuracoes", to: "/configuracoes" },
+        { label: "Configurações", to: "/configuracoes" },
       ],
     },
     ...(!isCorretor

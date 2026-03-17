@@ -31,7 +31,7 @@ function SidebarIcon({ label }: { label: string }) {
     );
   }
 
-  if (label === "Negociacoes") {
+  if (label === "Negociações") {
     return (
       <svg {...commonProps}>
         <path d="M5 7h14v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7Z" />
@@ -54,7 +54,7 @@ function SidebarIcon({ label }: { label: string }) {
     );
   }
 
-  if (label === "Configuracoes") {
+  if (label === "Configurações") {
     return (
       <svg {...commonProps}>
         <path d="M12 3.5v3" />
