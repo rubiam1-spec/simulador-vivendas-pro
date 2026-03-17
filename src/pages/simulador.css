@@ -115,10 +115,10 @@ body,
   overflow: hidden;
   border-radius: 32px;
   background:
-    radial-gradient(ellipse 1800px 1100px at 8% 6%, rgba(73, 170, 125, 0.18), transparent 52%),
-    radial-gradient(ellipse 1300px 860px at 36% 18%, rgba(53, 128, 93, 0.14), transparent 50%),
-    radial-gradient(ellipse 1100px 760px at 84% 12%, rgba(39, 98, 71, 0.11), transparent 48%),
-    radial-gradient(ellipse 1200px 760px at 16% 82%, rgba(66, 154, 112, 0.09), transparent 54%),
+    radial-gradient(ellipse 1800px 1100px at 8% 6%, rgba(26, 70, 180, 0.16), transparent 52%),
+    radial-gradient(ellipse 1300px 860px at 36% 18%, rgba(18, 60, 160, 0.12), transparent 50%),
+    radial-gradient(ellipse 1100px 760px at 84% 12%, rgba(12, 46, 130, 0.10), transparent 48%),
+    radial-gradient(ellipse 1200px 760px at 16% 82%, rgba(22, 72, 200, 0.08), transparent 54%),
     linear-gradient(160deg, var(--bg0) 0%, var(--bg1) 38%, var(--bg2) 72%, var(--bg3) 100%);
 }
 
@@ -135,7 +135,7 @@ body,
   color: rgba(255, 255, 255, 0.028);
   text-shadow:
     0 0 35px rgba(255, 255, 255, 0.012),
-    0 0 88px rgba(57, 163, 118, 0.05);
+    0 0 88px rgba(48, 112, 240, 0.05);
   filter: blur(1.6px);
   white-space: nowrap;
   z-index: -1;
@@ -156,7 +156,7 @@ body,
   color: rgba(255, 255, 255, 0.022);
   text-shadow:
     0 0 24px rgba(255, 255, 255, 0.010),
-    0 0 64px rgba(57, 163, 118, 0.04);
+    0 0 64px rgba(48, 112, 240, 0.04);
   filter: blur(1.6px);
   white-space: nowrap;
   z-index: -1;
@@ -174,16 +174,16 @@ body,
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(57, 170, 121, 0.34);
+  background: rgba(48, 112, 240, 0.34);
   border-radius: var(--r-full);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(57, 170, 121, 0.56);
+  background: rgba(48, 112, 240, 0.56);
 }
 
 ::selection {
-  background: rgba(57, 170, 121, 0.28);
+  background: rgba(26, 95, 212, 0.28);
   color: var(--text);
 }
 
@@ -252,8 +252,8 @@ body,
   border-radius: var(--r-xl);
   background: linear-gradient(
     145deg,
-    rgba(31, 48, 39, 0.82) 0%,
-    rgba(24, 38, 31, 0.70) 100%
+    var(--clr-surface-1) 0%,
+    var(--clr-surface-2) 100%
   );
   box-shadow:
     0 1px 0 0 rgba(255, 255, 255, 0.05) inset,
@@ -352,7 +352,7 @@ body,
   background:
     radial-gradient(ellipse 820px 460px at 14% 26%, rgba(67, 173, 122, 0.18), transparent 56%),
     radial-gradient(ellipse 560px 340px at 84% 70%, rgba(56, 125, 93, 0.12), transparent 52%),
-    linear-gradient(180deg, rgba(30, 46, 38, 0.82), rgba(27, 42, 34, 0.64));
+    linear-gradient(180deg, var(--clr-surface-1), var(--clr-surface-2));
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.05) inset,
     var(--shadow-lg);
@@ -439,15 +439,15 @@ body,
 
 .luxStep.isActive {
   border-color: var(--line-accent-hi);
-  background: linear-gradient(180deg, rgba(57, 163, 118, 0.16), rgba(57, 163, 118, 0.08));
+  background: linear-gradient(180deg, var(--clr-accent-subtle), var(--clr-accent-subtle));
   box-shadow:
     0 0 0 4px var(--accent-glow),
     var(--shadow-sm);
 }
 
 .luxStep.isDone {
-  border-color: rgba(142, 241, 200, 0.24);
-  background: linear-gradient(180deg, rgba(142, 241, 200, 0.10), rgba(255, 255, 255, 0.03));
+  border-color: var(--clr-border-default);
+  background: linear-gradient(180deg, var(--clr-accent-subtle), rgba(255, 255, 255, 0.03));
 }
 
 .luxStepIndex {
@@ -466,8 +466,8 @@ body,
 
 .luxStep.isActive .luxStepIndex,
 .luxStep.isDone .luxStepIndex {
-  border-color: rgba(57, 163, 118, 0.46);
-  background: rgba(57, 163, 118, 0.18);
+  border-color: var(--clr-border-accent);
+  background: var(--clr-accent-subtle);
 }
 
 .luxStepBody {
@@ -533,7 +533,7 @@ body,
 
 .luxFlowPanel {
   border: 1px solid var(--line);
-  background: linear-gradient(180deg, rgba(29, 46, 38, 0.88), rgba(24, 37, 31, 0.82));
+  background: linear-gradient(180deg, var(--clr-surface-1), var(--clr-surface-1));
   border-radius: var(--r-xl);
   box-shadow: var(--shadow-card);
   overflow: hidden;
@@ -547,7 +547,7 @@ body,
 }
 
 .luxFlowPanelSoft {
-  background: linear-gradient(180deg, rgba(33, 49, 40, 0.80), rgba(25, 38, 32, 0.74));
+  background: linear-gradient(180deg, var(--clr-surface-2), var(--clr-surface-2));
 }
 
 .luxFlowHead {
@@ -590,8 +590,8 @@ body,
 }
 
 .luxFlowItem.isAccent {
-  border-color: rgba(82, 183, 136, 0.34);
-  background: linear-gradient(180deg, rgba(82, 183, 136, 0.16), rgba(82, 183, 136, 0.06));
+  border-color: var(--clr-border-accent);
+  background: linear-gradient(180deg, var(--clr-accent-subtle), var(--clr-accent-subtle));
 }
 
 .luxFlowItem.isApplied {
@@ -604,11 +604,11 @@ body,
 }
 
 .luxFlowItem.isFinal {
-  border-color: rgba(142, 241, 200, 0.28);
-  background: linear-gradient(180deg, rgba(142, 241, 200, 0.12), rgba(255, 255, 255, 0.035));
+  border-color: var(--clr-border-strong);
+  background: linear-gradient(180deg, var(--clr-accent-subtle), rgba(255, 255, 255, 0.035));
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 10px 24px rgba(57, 163, 118, 0.10);
+    0 10px 24px var(--clr-accent-subtle);
 }
 
 .luxFlowBadge {
@@ -621,8 +621,8 @@ body,
   font-size: 11px;
   font-weight: 800;
   color: var(--text);
-  background: rgba(57, 163, 118, 0.18);
-  border: 1px solid rgba(57, 163, 118, 0.34);
+  background: var(--clr-accent-subtle);
+  border: 1px solid var(--clr-border-accent);
 }
 
 .luxFlowBody {
@@ -664,8 +664,8 @@ body,
   display: inline-flex;
   align-items: center;
   border-radius: var(--r-full);
-  border: 1px solid rgba(57, 163, 118, 0.28);
-  background: rgba(57, 163, 118, 0.12);
+  border: 1px solid var(--clr-accent-glow);
+  background: var(--clr-accent-subtle);
   color: var(--text);
   padding: 8px 12px;
   font-size: var(--text-xs);
@@ -760,15 +760,15 @@ body,
   border: 1px solid var(--line);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.025)),
-    rgba(17, 28, 23, 0.34);
+    rgba(8, 16, 36, 0.34);
   box-shadow: var(--shadow-card);
 }
 
 .luxMetricCardAccent {
-  border-color: rgba(57, 163, 118, 0.28);
+  border-color: var(--clr-accent-glow);
   background:
-    linear-gradient(180deg, rgba(57, 163, 118, 0.12), rgba(255, 255, 255, 0.03)),
-    rgba(17, 28, 23, 0.34);
+    linear-gradient(180deg, var(--clr-accent-subtle), rgba(255, 255, 255, 0.03)),
+    rgba(8, 16, 36, 0.34);
 }
 
 .luxMetricLabel {
@@ -857,8 +857,8 @@ body,
 }
 
 .luxDashPill.isGreen {
-  border-color: rgba(142, 241, 200, 0.22);
-  background: rgba(142, 241, 200, 0.08);
+  border-color: var(--clr-border-default);
+  background: var(--clr-accent-subtle);
   color: var(--success);
 }
 
@@ -971,7 +971,7 @@ body,
 }
 
 .luxStatusPill.isPositive {
-  border-color: rgba(142, 241, 200, 0.26);
+  border-color: var(--clr-border-strong);
   background: rgba(142, 241, 200, 0.1);
   color: var(--success);
 }
@@ -999,14 +999,14 @@ body,
 }
 
 .luxPriorityPill.isLow {
-  border-color: rgba(142, 241, 200, 0.22);
-  background: rgba(142, 241, 200, 0.08);
+  border-color: var(--clr-border-default);
+  background: var(--clr-accent-subtle);
   color: var(--success);
 }
 
 .luxOriginPill.isAccent {
-  border-color: rgba(57, 163, 118, 0.34);
-  background: rgba(57, 163, 118, 0.14);
+  border-color: var(--clr-border-accent);
+  background: var(--clr-accent-subtle);
 }
 
 .luxOriginPill.isWarm {
@@ -1054,7 +1054,7 @@ body,
   padding: 14px 15px;
   border-radius: var(--r-md);
   border: 1px solid rgba(255, 255, 255, 0.07);
-  background: rgba(8, 13, 11, 0.15);
+  background: rgba(6, 12, 28, 0.15);
   display: flex;
   flex-direction: column;
   gap: 7px;
@@ -1072,10 +1072,10 @@ body,
   gap: 14px;
   padding: 16px;
   border-radius: var(--r-lg);
-  border: 1px solid rgba(57, 163, 118, 0.18);
+  border: 1px solid var(--clr-accent-subtle);
   background:
-    linear-gradient(180deg, rgba(57, 163, 118, 0.08), rgba(255, 255, 255, 0.02)),
-    rgba(10, 18, 14, 0.28);
+    linear-gradient(180deg, var(--clr-accent-subtle), rgba(255, 255, 255, 0.02)),
+    rgba(8, 14, 32, 0.28);
 }
 
 .luxFieldFull {
@@ -1128,7 +1128,7 @@ body,
   margin-top: 6px;
   border-radius: 50%;
   background: var(--accent);
-  box-shadow: 0 0 0 4px rgba(57, 163, 118, 0.14);
+  box-shadow: 0 0 0 4px var(--clr-accent-subtle);
 }
 
 .luxNegTimelineBody {
@@ -1193,7 +1193,7 @@ body,
   position: absolute;
   inset: 0 0 auto 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(82, 183, 136, 0.42), transparent);
+  background: linear-gradient(90deg, transparent, var(--clr-border-accent), transparent);
 }
 
 .luxResultIntro {
@@ -1228,10 +1228,10 @@ body,
 
 .luxWhatsPremium {
   min-height: 380px;
-  border-color: rgba(82, 183, 136, 0.2);
+  border-color: var(--clr-border-default);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.03)),
-    rgba(19, 29, 24, 0.72);
+    var(--clr-surface-1);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.03),
     0 18px 34px rgba(0, 0, 0, 0.12);
@@ -1372,7 +1372,7 @@ body,
 }
 
 .luxField select option {
-  background: #243a30;
+  background: var(--clr-bg-elevated);
   color: var(--text);
 }
 
@@ -1532,10 +1532,10 @@ body,
 }
 
 .luxLotItem.isSelected {
-  border-color: rgba(114, 226, 167, 0.62);
+  border-color: var(--clr-border-accent);
   background:
-    linear-gradient(180deg, rgba(57, 163, 118, 0.22), rgba(57, 163, 118, 0.11)),
-    rgba(17, 33, 25, 0.82);
+    linear-gradient(180deg, var(--clr-border-default), var(--clr-accent-subtle)),
+    var(--clr-surface-1);
   box-shadow:
     inset 0 0 0 1px rgba(181, 255, 214, 0.18),
     0 0 0 4px var(--accent-glow),
@@ -1584,7 +1584,7 @@ body,
 }
 
 .luxTag.isOk {
-  border-color: rgba(57, 163, 118, 0.42);
+  border-color: var(--clr-border-accent);
   background: var(--success-bg);
   color: var(--success);
 }
@@ -1740,7 +1740,7 @@ body,
 .btn:hover {
   filter: brightness(1.05);
   transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(57, 163, 118, 0.22);
+  box-shadow: 0 10px 24px var(--clr-border-default);
 }
 
 .btn:active {

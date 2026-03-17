@@ -148,8 +148,14 @@ export default function Sidebar({
         aria-hidden={!mobileMenuOpen && undefined}
       >
         <div className="appSidebarBrand">
+          <div style={{
+            padding: "20px 16px 16px",
+            borderBottom: "1px solid var(--clr-border-subtle)",
+            marginBottom: 8,
+          }}>
+            <LogoRRCRM variant="compact" height={30} theme={theme === "light" ? "light" : "dark"} />
+          </div>
           <div className="appSidebarKicker">{branding.sidebarSubtitle}</div>
-          <LogoRRCRM variant="compact" height={36} theme={theme === "light" ? "light" : "dark"} />
           <p>{branding.sidebarDescription}</p>
           <div className="appSidebarClient">
             <span>{branding.sidebarClientLabel}</span>
@@ -232,23 +238,41 @@ export default function Sidebar({
           <button
             type="button"
             onClick={toggleTheme}
-            title={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
             style={{
-              background: "none",
-              border: "1px solid var(--sidebar-border)",
-              borderRadius: "var(--radius-full)",
-              color: "var(--sidebar-text-muted)",
-              cursor: "pointer",
-              fontSize: "var(--text-xs)",
-              padding: "4px 10px",
-              marginTop: 6,
               display: "flex",
               alignItems: "center",
-              gap: 5,
-              transition: "background var(--transition-fast)",
+              gap: 8,
+              width: "100%",
+              padding: "10px 12px",
+              borderRadius: "var(--r-md)",
+              border: "1px solid var(--clr-border-subtle)",
+              background: "var(--clr-surface-2)",
+              color: "var(--clr-text-secondary)",
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "var(--font-sans)",
+              letterSpacing: "0.02em",
+              transition: "all var(--t-base) var(--ease-out)",
+              marginTop: 8,
+            }}
+            onMouseEnter={(e) => {
+              const btn = e.currentTarget;
+              btn.style.background = "var(--clr-surface-3)";
+              btn.style.color = "var(--clr-text-primary)";
+              btn.style.borderColor = "var(--clr-border-default)";
+            }}
+            onMouseLeave={(e) => {
+              const btn = e.currentTarget;
+              btn.style.background = "var(--clr-surface-2)";
+              btn.style.color = "var(--clr-text-secondary)";
+              btn.style.borderColor = "var(--clr-border-subtle)";
             }}
           >
-            {theme === "dark" ? "☀ Claro" : "☾ Escuro"}
+            <span style={{ fontSize: 14 }}>
+              {theme === "dark" ? "☀" : "☾"}
+            </span>
+            {theme === "dark" ? "Modo claro" : "Modo escuro"}
           </button>
         </div>
       </aside>

@@ -147,24 +147,35 @@ function toDb(neg: Partial<NegociacaoSalva>) {
 export async function listarNegociacoesSalvas(options?: {
   consultoraUserId?: string | null;
 }): Promise<NegociacaoSalva[]> {
-  if (!supabase) return [];
+  if (!supabase) {
+    console.error("[negociacoes] supabase client nao inicializado");
+    return [];
+  }
+
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    console.error("[negociacoes] sem sessao ativa:", authError?.message);
+    return [];
+  }
 
   let query = supabase
     .from("negociacoes")
-    .select("*")
+    .select("*", { count: "exact" })
     .order("updated_at", { ascending: false });
 
   if (options?.consultoraUserId) {
     query = query.or(`user_id.eq.${options.consultoraUserId},created_by.eq.${options.consultoraUserId}`);
   }
 
-  const { data, error } = await query;
+  const { data, error, count } = await query;
 
   if (error) {
-    console.error("[negociacoesStorageSupabase] erro ao listar", error);
+    const { code, message, details, hint } = error as typeof error & { code?: string; hint?: string };
+    console.error("[negociacoes] erro RLS/query:", { code, message, details, hint });
     return [];
   }
 
+  console.log(`[negociacoes] ok — ${count} registro(s) para user ${user.email}`);
   return (data ?? []).map((row) => fromDb(row as Record<string, unknown>));
 }
 
