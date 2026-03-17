@@ -5,6 +5,7 @@ import { getNavigationSections } from "../config/navigation";
 import { useAuth } from "./AuthProvider";
 import { useBranding } from "../hooks/useBranding";
 import { LogoRRCRM } from "./LogoRRCRM";
+import { useTheme } from "../contexts/ThemeContext";
 
 type SidebarProps = {
   mobileMenuOpen: boolean;
@@ -124,6 +125,7 @@ export default function Sidebar({
 }: SidebarProps) {
   const { profile, profileResolved } = useAuth();
   const clienteBranding = useBranding();
+  const { theme, toggleTheme } = useTheme();
   const sections = getNavigationSections(profile, profileResolved);
 
   return (
@@ -227,6 +229,27 @@ export default function Sidebar({
         <div className="appSidebarFooter">
           <span>Workspace atual</span>
           <strong>{branding.appName}</strong>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            title={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
+            style={{
+              background: "none",
+              border: "1px solid var(--sidebar-border)",
+              borderRadius: "var(--radius-full)",
+              color: "var(--sidebar-text-muted)",
+              cursor: "pointer",
+              fontSize: "var(--text-xs)",
+              padding: "4px 10px",
+              marginTop: 6,
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
+              transition: "background var(--transition-fast)",
+            }}
+          >
+            {theme === "dark" ? "☀ Claro" : "☾ Escuro"}
+          </button>
         </div>
       </aside>
     </>

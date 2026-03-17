@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import "./App.css";
 import AppLayout from "./components/AppLayout";
 import { AuthProvider } from "./components/AuthProvider";
+import { ThemeProvider } from "./contexts/ThemeContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { branding } from "./config/branding";
 import AcessosPage from "./pages/Acessos";
@@ -50,6 +51,7 @@ export default function App() {
   }, []);
 
   return (
+    <ThemeProvider>
     <AuthProvider>
       <BrowserRouter>
         <Routes>
@@ -91,5 +93,6 @@ export default function App() {
         </Routes>
       </BrowserRouter>
     </AuthProvider>
+    </ThemeProvider>
   );
 }
