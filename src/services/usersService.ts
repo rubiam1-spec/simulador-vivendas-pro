@@ -23,6 +23,10 @@ type ProfileRow = {
   role: UserRole;
   ativo: boolean;
   created_at?: string;
+  nome_exibicao?: string | null;
+  avatar_url?: string | null;
+  telefone?: string | null;
+  cargo?: string | null;
 };
 
 function createId(prefix: string) {
@@ -54,6 +58,10 @@ function normalizeProfile(row: ProfileRow | UserProfile): UserProfile {
     role: (maybe.role as UserRole) || "gestor",
     ativo: typeof maybe.ativo === "boolean" ? maybe.ativo : true,
     createdAt: String(maybe.createdAt || maybe.created_at || new Date().toISOString()),
+    nomeExibicao: maybe.nomeExibicao ?? (maybe as ProfileRow).nome_exibicao ?? undefined,
+    avatarUrl: maybe.avatarUrl ?? (maybe as ProfileRow).avatar_url ?? undefined,
+    telefone: maybe.telefone ?? (maybe as ProfileRow).telefone ?? undefined,
+    cargo: maybe.cargo ?? (maybe as ProfileRow).cargo ?? undefined,
   };
 }
 
@@ -62,7 +70,7 @@ async function findRemoteProfile(user: AuthUserLike) {
 
   const { data: byUserId, error: byUserIdError } = await supabase
     .from("profiles")
-    .select("id, user_id, nome, email, role, ativo, created_at")
+    .select("id, user_id, nome, email, role, ativo, created_at, nome_exibicao, avatar_url, telefone, cargo")
     .eq("user_id", user.id)
     .limit(1);
 
@@ -81,7 +89,7 @@ async function findRemoteProfile(user: AuthUserLike) {
   const normalizedEmail = user.email.trim().toLowerCase();
   const { data: byEmail, error: byEmailError } = await supabase
     .from("profiles")
-    .select("id, user_id, nome, email, role, ativo, created_at")
+    .select("id, user_id, nome, email, role, ativo, created_at, nome_exibicao, avatar_url, telefone, cargo")
     .eq("email", normalizedEmail)
     .limit(1);
 
@@ -103,7 +111,7 @@ async function findRemoteProfile(user: AuthUserLike) {
         email: normalizedEmail,
       })
       .eq("id", profile.id)
-      .select("id, user_id, nome, email, role, ativo, created_at")
+      .select("id, user_id, nome, email, role, ativo, created_at, nome_exibicao, avatar_url, telefone, cargo")
       .single();
 
     if (updateError) {
@@ -159,7 +167,7 @@ export async function listUsers(): Promise<UserProfile[]> {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, user_id, nome, email, role, ativo, created_at")
+    .select("id, user_id, nome, email, role, ativo, created_at, nome_exibicao, avatar_url, telefone, cargo")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -211,7 +219,7 @@ export async function ensureUserProfile(user: AuthUserLike): Promise<UserProfile
   const { data, error } = await supabase
     .from("profiles")
     .insert(payload)
-    .select("id, user_id, nome, email, role, ativo, created_at")
+    .select("id, user_id, nome, email, role, ativo, created_at, nome_exibicao, avatar_url, telefone, cargo")
     .single();
 
   if (error) {
@@ -269,7 +277,7 @@ export async function createUserAccess(
       role: input.role,
       ativo: input.ativo,
     })
-    .select("id, user_id, nome, email, role, ativo, created_at")
+    .select("id, user_id, nome, email, role, ativo, created_at, nome_exibicao, avatar_url, telefone, cargo")
     .single();
 
   if (profileError) {
@@ -309,7 +317,7 @@ export async function updateUserAccess(
     .from("profiles")
     .update(payload)
     .eq("id", profileId)
-    .select("id, user_id, nome, email, role, ativo, created_at")
+    .select("id, user_id, nome, email, role, ativo, created_at, nome_exibicao, avatar_url, telefone, cargo")
     .single();
 
   if (error) {

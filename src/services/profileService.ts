@@ -13,6 +13,10 @@ type ProfileRow = {
   role: UserRole;
   ativo: boolean;
   created_at?: string;
+  nome_exibicao?: string | null;
+  avatar_url?: string | null;
+  telefone?: string | null;
+  cargo?: string | null;
 };
 
 function createId(prefix: string) {
@@ -34,6 +38,10 @@ function normalizeProfile(row: ProfileRow | UserProfile): UserProfile {
     role: (maybe.role as UserRole) || "gestor",
     ativo: typeof maybe.ativo === "boolean" ? maybe.ativo : true,
     createdAt: String(maybe.createdAt || maybe.created_at || new Date().toISOString()),
+    nomeExibicao: maybe.nomeExibicao ?? (maybe as ProfileRow).nome_exibicao ?? undefined,
+    avatarUrl: maybe.avatarUrl ?? (maybe as ProfileRow).avatar_url ?? undefined,
+    telefone: maybe.telefone ?? (maybe as ProfileRow).telefone ?? undefined,
+    cargo: maybe.cargo ?? (maybe as ProfileRow).cargo ?? undefined,
   };
 }
 
@@ -76,7 +84,7 @@ async function findRemoteProfileByUser(user: AuthUser): Promise<UserProfile | nu
 
   const { data: byUserId, error: byUserIdError } = await supabase
     .from("profiles")
-    .select("id, user_id, nome, email, role, ativo, created_at")
+    .select("id, user_id, nome, email, role, ativo, created_at, nome_exibicao, avatar_url, telefone, cargo")
     .eq("user_id", user.id)
     .limit(1);
 
@@ -94,7 +102,7 @@ async function findRemoteProfileByUser(user: AuthUser): Promise<UserProfile | nu
 
   const { data: byEmail, error: byEmailError } = await supabase
     .from("profiles")
-    .select("id, user_id, nome, email, role, ativo, created_at")
+    .select("id, user_id, nome, email, role, ativo, created_at, nome_exibicao, avatar_url, telefone, cargo")
     .eq("email", normalizedEmail)
     .limit(1);
 
@@ -135,4 +143,66 @@ export async function bootstrapUserProfile(user: AuthUser): Promise<UserProfile>
 
     return createFallbackProfile(user);
   }
+}
+
+export type UpdateProfileInput = {
+  nomeExibicao?: string;
+  telefone?: string;
+  cargo?: string;
+};
+
+export async function updateProfile(
+  profileId: string,
+  input: UpdateProfileInput
+): Promise<UserProfile | null> {
+  if (!supabase) return null;
+
+  const payload: Record<string, unknown> = {};
+  if (input.nomeExibicao !== undefined)
+    payload.nome_exibicao = input.nomeExibicao || null;
+  if (input.telefone !== undefined)
+    payload.telefone = input.telefone || null;
+  if (input.cargo !== undefined)
+    payload.cargo = input.cargo || null;
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .update(payload)
+    .eq("id", profileId)
+    .select(
+      "id, user_id, nome, email, role, ativo, created_at, nome_exibicao, avatar_url, telefone, cargo"
+    )
+    .single();
+
+  if (error || !data) return null;
+  return normalizeProfile(data as ProfileRow);
+}
+
+export async function uploadAvatar(
+  profileId: string,
+  file: File
+): Promise<string | null> {
+  if (!supabase) return null;
+
+  const ext = file.name.split(".").pop() ?? "jpg";
+  const path = `${profileId}/avatar.${ext}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("avatars")
+    .upload(path, file, { upsert: true });
+
+  if (uploadError) throw uploadError;
+
+  const { data: urlData } = supabase.storage
+    .from("avatars")
+    .getPublicUrl(path);
+
+  const publicUrl = urlData.publicUrl;
+
+  await supabase
+    .from("profiles")
+    .update({ avatar_url: publicUrl })
+    .eq("id", profileId);
+
+  return publicUrl;
 }

@@ -1,4 +1,4 @@
-export type UserRole = "admin" | "gestor" | "corretor";
+export type UserRole = "admin" | "gestor" | "corretor" | "consultora";
 
 export type UserProfile = {
   id: string;
@@ -8,6 +8,10 @@ export type UserProfile = {
   role: UserRole;
   ativo: boolean;
   createdAt: string;
+  nomeExibicao?: string;
+  avatarUrl?: string;
+  telefone?: string;
+  cargo?: string;
 };
 
 export type CreateUserAccessInput = {

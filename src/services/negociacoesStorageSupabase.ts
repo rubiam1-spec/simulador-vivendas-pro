@@ -191,6 +191,7 @@ export async function salvarNovaNegociacao(
   const payload = {
     ...toDb({ ...negociacao, historico: historicoCombinado }),
     user_id: user?.id ?? null,
+    created_by: user?.id ?? null,
     updated_at: new Date().toISOString(),
   };
 
