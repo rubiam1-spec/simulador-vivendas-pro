@@ -12,8 +12,10 @@ import ClientesPage from "./pages/Clientes";
 import ConfiguracoesPage from "./pages/Configuracoes";
 import CorretoresPage from "./pages/Corretores";
 import DashboardPage from "./pages/Dashboard";
+import ImobiliariasPage from "./pages/Imobiliarias";
 import Login from "./pages/Login";
 import Simulador from "./pages/Simulador";
+import UsuariosPage from "./pages/Usuarios";
 import { useAuth } from "./components/AuthProvider";
 
 function HomeRedirect() {
@@ -67,6 +69,12 @@ export default function App() {
                 element={<ProtectedRoute allowedRoles={["admin"]} />}
               >
                 <Route path="acessos" element={<AcessosPage />} />
+              </Route>
+              <Route
+                element={<ProtectedRoute allowedRoles={["admin", "gestor"]} redirectTo="/" />}
+              >
+                <Route path="usuarios" element={<UsuariosPage />} />
+                <Route path="imobiliarias" element={<ImobiliariasPage />} />
               </Route>
               <Route path="configuracoes" element={<ConfiguracoesPage />} />
               <Route

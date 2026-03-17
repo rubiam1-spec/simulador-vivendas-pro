@@ -35,6 +35,8 @@ export function getNavigationSections(
       label: "Administração",
       items: [
         ...(isAdmin ? [{ label: "Acessos", to: "/acessos" }] : []),
+        ...(!isCorretor ? [{ label: "Usuários", to: "/usuarios" }] : []),
+        ...(!isCorretor ? [{ label: "Imobiliárias", to: "/imobiliarias" }] : []),
         { label: "Configurações", to: "/configuracoes" },
       ],
     },
