@@ -306,6 +306,8 @@ export function mapearSimuladorParaNegociacaoSalva(
     corretor: input.corretor,
     creci: input.creci,
     imobiliaria: input.imobiliaria,
+    consultoraId: null,
+    consultoraNome: "",
     unidades,
     valorTotal: numeroSeguro(input.valorTotal),
     entrada,

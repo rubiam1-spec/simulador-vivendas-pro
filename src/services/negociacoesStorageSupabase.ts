@@ -81,6 +81,8 @@ function fromDb(row: Record<string, unknown>): NegociacaoSalva {
     corretor: (row.corretor as string) ?? "",
     creci: (row.creci as string) ?? "",
     imobiliaria: (row.imobiliaria as string) ?? "",
+    consultoraId: (row.consultora_id as string | null) ?? null,
+    consultoraNome: (row.consultora_nome as string) ?? "",
     valorTotal: Number(row.valor_total ?? 0),
     entrada: Number(row.entrada ?? 0),
     saldoFinal: Number(row.saldo_final ?? 0),
@@ -125,6 +127,8 @@ function toDb(neg: Partial<NegociacaoSalva>) {
   if (neg.corretor !== undefined) result.corretor = neg.corretor;
   if (neg.creci !== undefined) result.creci = neg.creci;
   if (neg.imobiliaria !== undefined) result.imobiliaria = neg.imobiliaria;
+  if (neg.consultoraId !== undefined) result.consultora_id = neg.consultoraId || null;
+  if (neg.consultoraNome !== undefined) result.consultora_nome = neg.consultoraNome;
   if (neg.valorTotal !== undefined) result.valor_total = neg.valorTotal;
   if (neg.entrada !== undefined) result.entrada = neg.entrada;
   if (neg.saldoFinal !== undefined) result.saldo_final = neg.saldoFinal;
@@ -140,13 +144,21 @@ function toDb(neg: Partial<NegociacaoSalva>) {
   return result;
 }
 
-export async function listarNegociacoesSalvas(): Promise<NegociacaoSalva[]> {
+export async function listarNegociacoesSalvas(options?: {
+  consultoraUserId?: string | null;
+}): Promise<NegociacaoSalva[]> {
   if (!supabase) return [];
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("negociacoes")
     .select("*")
     .order("updated_at", { ascending: false });
+
+  if (options?.consultoraUserId) {
+    query = query.or(`user_id.eq.${options.consultoraUserId},created_by.eq.${options.consultoraUserId}`);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("[negociacoesStorageSupabase] erro ao listar", error);

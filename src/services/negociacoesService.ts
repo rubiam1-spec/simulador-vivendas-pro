@@ -85,8 +85,10 @@ export type NegociacoesMetrics = {
   recentes: NegociacaoSalva[];
 };
 
-export async function listNegociacoes(): Promise<NegociacaoSalva[]> {
-  return listarNegociacoesSalvas();
+export async function listNegociacoes(options?: {
+  consultoraUserId?: string | null;
+}): Promise<NegociacaoSalva[]> {
+  return listarNegociacoesSalvas(options);
 }
 
 export async function getNegociacaoById(
@@ -127,8 +129,10 @@ export async function appendNegociacaoEvent(
   return adicionarEventoNegociacao(id, evento);
 }
 
-export async function getNegociacoesMetrics(): Promise<NegociacoesMetrics> {
-  const negociacoes = await listNegociacoes();
+export async function getNegociacoesMetrics(options?: {
+  consultoraUserId?: string | null;
+}): Promise<NegociacoesMetrics> {
+  const negociacoes = await listNegociacoes(options);
   const total = negociacoes.length;
   const totalSimulacoes = negociacoes.filter(
     (negociacao) => negociacao.status === "simulacao"

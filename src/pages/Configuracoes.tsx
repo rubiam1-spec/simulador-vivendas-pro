@@ -5,6 +5,16 @@ import { useAuth } from "../components/AuthProvider";
 import { hasSupabaseConfig } from "../lib/supabase";
 import { updateProfile, uploadAvatar } from "../services/profileService";
 
+function formatarRole(role: string) {
+  const map: Record<string, string> = {
+    admin: "Administrador",
+    gestor: "Gestor",
+    corretor: "Corretor",
+    consultora: "Consultora",
+  };
+  return map[role] ?? role;
+}
+
 function getInitials(nome: string) {
   return nome
     .split(" ")
@@ -152,7 +162,7 @@ export default function ConfiguracoesPage() {
               <div className="crmDataItem">
                 <span className="crmDataLabel">Cargo / função</span>
                 <strong className="crmDataValue">
-                  {profile?.cargo || profile?.role || "Não definido"}
+                  {profile?.cargo || (profile?.role ? formatarRole(profile.role) : "Não definido")}
                 </strong>
               </div>
             </div>
@@ -194,7 +204,7 @@ export default function ConfiguracoesPage() {
             <div className="crmDataItem">
               <span className="crmDataLabel">Perfil</span>
               <strong className="crmDataValue">
-                {profile?.role || "Não definido"}
+                {profile?.role ? formatarRole(profile.role) : "Não definido"}
               </strong>
             </div>
             <div className="crmDataItem">

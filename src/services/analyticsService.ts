@@ -12,10 +12,12 @@ export type DashboardAnalytics = {
   negociacoes: NegociacaoSalva[];
 };
 
-export async function getDashboardAnalytics(): Promise<DashboardAnalytics> {
+export async function getDashboardAnalytics(options?: {
+  consultoraUserId?: string | null;
+}): Promise<DashboardAnalytics> {
   const [metrics, negociacoes] = await Promise.all([
-    getNegociacoesMetrics(),
-    listNegociacoes(),
+    getNegociacoesMetrics(options),
+    listNegociacoes(options),
   ]);
 
   return {

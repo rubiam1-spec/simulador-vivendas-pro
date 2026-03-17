@@ -829,6 +829,12 @@
   color: #d9e6ff;
 }
 
+.crmBadge.isPurple {
+  border-color: rgba(180, 130, 255, 0.28);
+  background: rgba(160, 100, 255, 0.1);
+  color: #d9c2ff;
+}
+
 .crmBadge.isDanger {
   border-color: rgba(255, 110, 110, 0.24);
   background: rgba(255, 110, 110, 0.08);

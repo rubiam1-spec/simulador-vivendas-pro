@@ -544,6 +544,14 @@ export default function CentralNegociacoes({
                         {negociacao.corretorNome || negociacao.corretor || "Não informado"}
                       </strong>
                     </div>
+                    {negociacao.consultoraId ? (
+                      <div className="crmDealMetaItem">
+                        <span className="crmDealMetaLabel">Consultora</span>
+                        <strong>
+                          {negociacao.consultoraNome || negociacao.consultoraId}
+                        </strong>
+                      </div>
+                    ) : null}
                     <div className="crmDealMetaItem">
                       <span className="crmDealMetaLabel">Valor</span>
                       <strong>{formatarMoeda(negociacao.valorTotal)}</strong>

@@ -18,8 +18,9 @@ import {
   updateNegociacaoById,
 } from "../services/negociacoesService";
 import { consumirNegociacaoAgendada } from "../services/negociacoesSession";
-import { listClientes } from "../services/clientesService";
-import { listCorretores } from "../services/corretoresService";
+import { useAuth } from "../components/AuthProvider";
+import { listClientes } from "../services/clientesServiceSupabase";
+import { listCorretores } from "../services/corretoresServiceSupabase";
 import type { Cliente } from "../types/cliente";
 import type { Corretor } from "../types/corretor";
 import type { NegociacaoSalva } from "../types/negociacao";
@@ -265,6 +266,7 @@ function calcularResumoFinanceiro(
 }
 
 export default function Simulador() {
+  const { profile } = useAuth();
   const [lotes, setLotes] = useState<Lote[]>([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState("");
@@ -1188,12 +1190,16 @@ export default function Simulador() {
       },
     });
 
-    const negociacao = prepararNegociacaoParaCrm({
-      base,
-      tipo,
-      negociacaoAtual,
-      ultimaAcao: configuracao.ultimaAcao,
-    });
+    const negociacao = {
+      ...prepararNegociacaoParaCrm({
+        base,
+        tipo,
+        negociacaoAtual,
+        ultimaAcao: configuracao.ultimaAcao,
+      }),
+      consultoraId: profile?.id ?? null,
+      consultoraNome: profile?.nomeExibicao ?? profile?.nome ?? "",
+    };
 
     let negociacaoPersistida: NegociacaoSalva | null = null;
 

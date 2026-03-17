@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { useAuth } from "../components/AuthProvider";
 import CentralNegociacoes from "../components/CentralNegociacoes";
 import { gerarPdfDaNegociacaoSalva } from "../services/negociacoesMapper";
 import {
@@ -15,11 +16,17 @@ import type { NegociacaoSalva } from "../types/negociacao";
 
 export default function CentralNegociacoesPage() {
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const [negociacoes, setNegociacoes] = useState<NegociacaoSalva[]>([]);
   const [feedback, setFeedback] = useState("");
 
+  const consultoraUserId =
+    profile?.role === "consultora" || profile?.role === "corretor"
+      ? profile.userId
+      : null;
+
   async function recarregar() {
-    setNegociacoes(await listNegociacoes());
+    setNegociacoes(await listNegociacoes({ consultoraUserId }));
   }
 
   function notificar(texto: string) {

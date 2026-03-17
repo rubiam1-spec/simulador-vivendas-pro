@@ -92,6 +92,7 @@ export async function createCliente(
   input: CreateClienteInput
 ): Promise<Cliente> {
   const client = getClient();
+  const { data: { user } } = await client.auth.getUser();
   const { data, error } = await client
     .from("clientes")
     .insert({
@@ -104,6 +105,7 @@ export async function createCliente(
       status: input.status,
       corretor_responsavel: input.corretorResponsavel || null,
       observacoes: input.observacoes || null,
+      user_id: user?.id ?? null,
     })
     .select("*")
     .single();

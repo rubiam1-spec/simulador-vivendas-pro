@@ -180,6 +180,8 @@ export type NegociacaoSalva = {
   corretor: string;
   creci: string;
   imobiliaria: string;
+  consultoraId: string | null;
+  consultoraNome: string;
   unidades: UnidadeNegociacao[];
   valorTotal: number;
   entrada: number;

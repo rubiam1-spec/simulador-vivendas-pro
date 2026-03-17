@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react";
 
+import { useAuth } from "../components/AuthProvider";
 import { supabase } from "../lib/supabase";
 import {
   createUserAccess,
@@ -10,7 +11,7 @@ import type { UserProfile, UserRole } from "../types/user";
 
 function roleLabel(role: UserRole) {
   const map: Record<UserRole, string> = {
-    admin: "Admin",
+    admin: "Administrador",
     gestor: "Gestor",
     corretor: "Corretor",
     consultora: "Consultora",
@@ -19,10 +20,10 @@ function roleLabel(role: UserRole) {
 }
 
 function roleBadge(role: UserRole) {
-  if (role === "admin") return "isDanger";
-  if (role === "gestor") return "isWarning";
+  if (role === "admin") return "isPurple";
+  if (role === "gestor") return "isSuccess";
   if (role === "consultora") return "isInfo";
-  return "isMuted";
+  return "isWarning";
 }
 
 function getInitials(nome: string) {
@@ -35,6 +36,7 @@ function getInitials(nome: string) {
 }
 
 export default function UsuariosPage() {
+  const { profile: selfProfile } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -52,10 +54,18 @@ export default function UsuariosPage() {
   async function load() {
     try {
       setLoading(true);
-      setUsers(await listUsers());
+      const data = await listUsers();
+      // Ensure the currently logged-in user always appears in the list
+      if (selfProfile && !data.find((u) => u.id === selfProfile.id)) {
+        setUsers([selfProfile, ...data]);
+      } else {
+        setUsers(data);
+      }
       setError("");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro ao carregar usuários.");
+      // Fallback: show at least the logged-in user
+      if (selfProfile) setUsers([selfProfile]);
     } finally {
       setLoading(false);
     }

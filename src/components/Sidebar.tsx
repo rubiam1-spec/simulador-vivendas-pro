@@ -18,9 +18,9 @@ function getInitials(nome: string) {
     .join("");
 }
 
-function roleLabelShort(role: string) {
+function formatarRole(role: string) {
   const map: Record<string, string> = {
-    admin: "Admin",
+    admin: "Administrador",
     gestor: "Gestor",
     corretor: "Corretor",
     consultora: "Consultora",
@@ -170,7 +170,7 @@ export default function Sidebar({
                 {profile.nomeExibicao ?? profile.nome}
               </span>
               <span className="appSidebarUserRole">
-                {profile.cargo ?? roleLabelShort(profile.role)}
+                {profile.cargo ?? formatarRole(profile.role)}
               </span>
             </div>
           </div>

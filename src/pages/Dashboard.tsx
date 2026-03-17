@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { useAuth } from "../components/AuthProvider";
 import DashboardComercial from "../components/DashboardComercial";
 import {
   getDashboardAnalytics,
@@ -30,6 +31,7 @@ const EMPTY_ANALYTICS: DashboardAnalytics = {
 };
 
 export default function DashboardPage() {
+  const { profile } = useAuth();
   const [analytics, setAnalytics] = useState<DashboardAnalytics>(EMPTY_ANALYTICS);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState("");
@@ -41,7 +43,11 @@ export default function DashboardPage() {
       try {
         setLoading(true);
         setErro("");
-        const nextAnalytics = await getDashboardAnalytics();
+        const consultoraUserId =
+          profile?.role === "consultora" || profile?.role === "corretor"
+            ? profile.userId
+            : null;
+        const nextAnalytics = await getDashboardAnalytics({ consultoraUserId });
 
         if (!active) return;
         setAnalytics(nextAnalytics);
@@ -81,7 +87,7 @@ export default function DashboardPage() {
       window.removeEventListener("storage", handleStorage);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, []);
+  }, [profile]);
 
   return (
     <div className="appPageStack">
