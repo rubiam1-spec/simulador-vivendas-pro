@@ -79,7 +79,7 @@ export default function CorretoresPage() {
           setError(
             loadError instanceof Error
               ? loadError.message
-              : "Nao foi possivel carregar corretores."
+              : "Não foi possível carregar corretores."
           );
         }
       } finally {
@@ -168,7 +168,7 @@ export default function CorretoresPage() {
       if (editingId) {
         const updated = await updateCorretor(editingId, form);
         if (!updated) {
-          throw new Error("Corretor nao encontrado para atualizacao.");
+          throw new Error("Corretor não encontrado para atualização.");
         }
 
         setCorretores((current) =>
@@ -188,7 +188,7 @@ export default function CorretoresPage() {
       setError(
         submitError instanceof Error
           ? submitError.message
-          : "Nao foi possivel salvar o corretor."
+          : "Não foi possível salvar o corretor."
       );
     } finally {
       setSaving(false);
@@ -201,7 +201,7 @@ export default function CorretoresPage() {
         <article className="crmMetricCard crmMetricCardAccent">
           <span className="crmMetricLabel">Corretores ativos</span>
           <strong className="crmMetricValue">{metricas.ativos}</strong>
-          <span className="crmMetricHint">Prontos para vinculo com clientes e negociacoes</span>
+          <span className="crmMetricHint">Prontos para vínculo com clientes e negociações</span>
         </article>
         <article className="crmMetricCard">
           <span className="crmMetricLabel">Total cadastrado</span>
@@ -223,11 +223,11 @@ export default function CorretoresPage() {
       <section className="crmSection crmFilterShell">
         <div className="crmSectionHeader">
           <div>
-            <span className="crmSectionEyebrow">Operacao de parceiros</span>
+            <span className="crmSectionEyebrow">Operação de parceiros</span>
             <h2 className="crmSectionTitle">Base de corretores</h2>
             <p className="crmSectionText">
-              O modulo ja nasce pronto para integrar corretores ao simulador, aos
-              clientes e ao cadastro futuro de negociacoes vinculadas.
+              O módulo já nasce pronto para integrar corretores ao simulador, aos
+              clientes e ao cadastro futuro de negociações vinculadas.
             </p>
           </div>
           <div className="crmToolbarActions">
@@ -289,7 +289,7 @@ export default function CorretoresPage() {
               </h3>
               <p className="crmPanelDescription">
                 Estrutura orientada a dados para futura tabela `corretores` no
-                Supabase sem mudar a UX da pagina.
+                Supabase sem mudar a UX da página.
               </p>
             </div>
             {!showForm ? (
@@ -401,7 +401,7 @@ export default function CorretoresPage() {
 
               <div className="crmButtonRow">
                 <button type="submit" className="btn" disabled={saving}>
-                  {saving ? "Salvando..." : editingId ? "Salvar alteracoes" : "Cadastrar corretor"}
+                  {saving ? "Salvando..." : editingId ? "Salvar alterações" : "Cadastrar corretor"}
                 </button>
                 <button
                   type="button"
@@ -418,11 +418,11 @@ export default function CorretoresPage() {
             </form>
           ) : (
             <div className="crmEmptyState">
-              <span className="crmBadge">Operacao preparada</span>
+              <span className="crmBadge">Operação preparada</span>
               <h3>Abrir formulario de corretor</h3>
               <p>
                 Comece a estruturar a rede comercial e deixe o CRM pronto para
-                vincular responsaveis a clientes, propostas e negociacoes.
+                vincular responsáveis a clientes, propostas e negociações.
               </p>
             </div>
           )}
@@ -434,7 +434,7 @@ export default function CorretoresPage() {
               <h3 className="crmPanelTitle">Listagem operacional</h3>
               <p className="crmPanelDescription">
                 Leitura direta da base comercial com foco em status, contato e
-                origem da operacao.
+                origem da operação.
               </p>
             </div>
           </div>
@@ -446,8 +446,8 @@ export default function CorretoresPage() {
               <span className="crmBadge">Sem registros</span>
               <h3>Nenhum corretor encontrado</h3>
               <p>
-                Crie o primeiro cadastro para preparar o CRM para atribuicao de
-                responsavel comercial nos modulos atuais e futuros.
+                Crie o primeiro cadastro para preparar o CRM para atribuição de
+                responsável comercial nos módulos atuais e futuros.
               </p>
             </div>
           ) : (
@@ -468,7 +468,7 @@ export default function CorretoresPage() {
                       <div>
                       <span className="crmDealOverline">Corretor</span>
                       <h3>{corretor.nome}</h3>
-                      <p>{corretor.imobiliaria || "Imobiliaria nao informada"}</p>
+                      <p>{corretor.imobiliaria || "Imobiliária não informada"}</p>
                       </div>
                     </div>
                     <div className="crmDealStatus">
@@ -487,7 +487,7 @@ export default function CorretoresPage() {
                             {corretor.telefone}
                           </a>
                         ) : (
-                          "Nao informado"
+                          "Não informado"
                         )}
                       </strong>
                     </div>
@@ -499,13 +499,13 @@ export default function CorretoresPage() {
                             {corretor.email}
                           </a>
                         ) : (
-                          "Nao informado"
+                          "Não informado"
                         )}
                       </strong>
                     </div>
                     <div className="crmDealMetaItem">
                       <span className="crmDealMetaLabel">CRECI</span>
-                      <strong>{corretor.creci || "Nao informado"}</strong>
+                      <strong>{corretor.creci || "Não informado"}</strong>
                     </div>
                     <div className="crmDealMetaItem">
                       <span className="crmDealMetaLabel">Criado em</span>

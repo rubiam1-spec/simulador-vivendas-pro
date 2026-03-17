@@ -49,10 +49,10 @@ function formatarData(valor: string) {
 }
 
 function labelStatus(status: StatusNegociacao) {
-  if (status === "simulacao") return "Simulacao";
+  if (status === "simulacao") return "Simulação";
   if (status === "proposta_enviada") return "Proposta enviada";
   if (status === "contraproposta") return "Contraproposta";
-  if (status === "em_negociacao") return "Em negociacao";
+  if (status === "em_negociacao") return "Em negociação";
   if (status === "aguardando_retorno") return "Aguardando retorno";
   if (status === "aprovada") return "Aprovada";
   if (status === "fechada") return "Fechada";
@@ -63,8 +63,8 @@ function labelStatus(status: StatusNegociacao) {
 
 function labelOrigem(origem: OrigemNegociacao) {
   if (origem === "cliente_direto") return "Cliente direto";
-  if (origem === "indicacao") return "Indicacao";
-  if (origem === "trafego_pago") return "Trafego pago";
+  if (origem === "indicacao") return "Indicação";
+  if (origem === "trafego_pago") return "Tráfego pago";
   if (origem === "interno") return "Interno";
   if (origem === "feira") return "Feira";
   if (origem === "corretor") return "Corretor";
@@ -91,9 +91,9 @@ function tonePrioridade(prioridade: PrioridadeNegociacao) {
 }
 
 function metricIcon(label: string) {
-  if (label === "Negociacoes ativas") return "◎";
+  if (label === "Negociações ativas") return "◎";
   if (label === "Pipeline financeiro") return "$";
-  if (label === "Negociacoes em aberto") return "↺";
+  if (label === "Negociações em aberto") return "↺";
   if (label === "Aprovadas e fechadas") return "✓";
   return "≈";
 }
@@ -123,9 +123,9 @@ export default function DashboardComercial({
               <span className="crmSectionEyebrow">Estado atual</span>
               <h3 className="crmSectionTitle">Dashboard pronto para ganhar volume</h3>
               <p className="crmSectionText">
-                Ainda nao existem negociacoes salvas no CRM. Assim que a primeira
-                simulacao for registrada como negociacao, os indicadores passam a
-                refletir pipeline, aprovacao e ticket medio automaticamente.
+                Ainda não existem negociações salvas no CRM. Assim que a primeira
+                simulação for registrada como negociação, os indicadores passam a
+                refletir pipeline, aprovação e ticket médio automaticamente.
               </p>
             </div>
           </div>
@@ -135,9 +135,9 @@ export default function DashboardComercial({
       <section className="crmMetricGrid">
         <article className="crmMetricCard">
           <span className="crmMetricIcon" aria-hidden="true">
-            {metricIcon("Negociacoes ativas")}
+            {metricIcon("Negociações ativas")}
           </span>
-          <span className="crmMetricLabel">Negociacoes ativas</span>
+          <span className="crmMetricLabel">Negociações ativas</span>
           <strong className="crmMetricValue">
             {analytics.totalNegociacoes.toLocaleString("pt-BR")}
           </strong>
@@ -157,13 +157,13 @@ export default function DashboardComercial({
 
         <article className="crmMetricCard">
           <span className="crmMetricIcon" aria-hidden="true">
-            {metricIcon("Negociacoes em aberto")}
+            {metricIcon("Negociações em aberto")}
           </span>
-          <span className="crmMetricLabel">Negociacoes em aberto</span>
+          <span className="crmMetricLabel">Negociações em aberto</span>
           <strong className="crmMetricValue">
             {analytics.negociacoesAbertas.toLocaleString("pt-BR")}
           </strong>
-          <span className="crmMetricHint">Negociacoes em fase ativa do funil.</span>
+          <span className="crmMetricHint">Negociações em fase ativa do funil.</span>
         </article>
 
         <article className="crmMetricCard">
@@ -177,7 +177,7 @@ export default function DashboardComercial({
             )}
           </strong>
           <span className="crmMetricHint">
-            Sinal positivo consolidado entre aprovacao comercial e fechamento.
+            Sinal positivo consolidado entre aprovação comercial e fechamento.
           </span>
         </article>
 
@@ -185,10 +185,10 @@ export default function DashboardComercial({
           <span className="crmMetricIcon" aria-hidden="true">
             {metricIcon("Ticket medio")}
           </span>
-          <span className="crmMetricLabel">Ticket medio</span>
+          <span className="crmMetricLabel">Ticket médio</span>
           <strong className="crmMetricValue">{brl(analytics.ticketMedio)}</strong>
           <span className="crmMetricHint">
-            Media de valor das negociacoes registradas.
+            Média de valor das negociações registradas.
           </span>
         </article>
       </section>
@@ -199,7 +199,7 @@ export default function DashboardComercial({
             <div>
               <h3 className="crmPanelTitle">Leitura por status</h3>
               <p className="crmPanelDescription">
-                Distribuicao do funil com quantidade e valor acumulado.
+                Distribuição do funil com quantidade e valor acumulado.
               </p>
             </div>
           </div>
@@ -232,7 +232,7 @@ export default function DashboardComercial({
             <div>
               <h3 className="crmPanelTitle">Origem e prioridade</h3>
               <p className="crmPanelDescription">
-                Sinais rapidos para leitura operacional do pipeline.
+                Sinais rápidos para leitura operacional do pipeline.
               </p>
             </div>
           </div>
@@ -278,10 +278,10 @@ export default function DashboardComercial({
       <section className="crmSection">
         <div className="crmSectionHeader">
           <div>
-            <span className="crmSectionEyebrow">Pulso da operacao</span>
-            <h3 className="crmSectionTitle">Ultimas movimentacoes</h3>
+            <span className="crmSectionEyebrow">Pulso da operação</span>
+            <h3 className="crmSectionTitle">Últimas movimentações</h3>
             <p className="crmSectionText">
-              Negociacoes mais recentes para leitura rapida e decisao de proxima acao.
+              Negociações mais recentes para leitura rápida e decisão de próxima ação.
             </p>
           </div>
         </div>
@@ -298,7 +298,7 @@ export default function DashboardComercial({
                     {getInitials(negociacao.cliente || negociacao.titulo || "RR")}
                   </span>
                   <strong>{negociacao.cliente || negociacao.titulo}</strong>
-                  <p>{negociacao.ultimaAcao || "Sem ultima acao registrada."}</p>
+                  <p>{negociacao.ultimaAcao || "Sem última ação registrada."}</p>
                 </div>
 
                 <div className="crmInlineListMeta">
@@ -310,11 +310,11 @@ export default function DashboardComercial({
           </div>
         ) : (
           <div className="crmEmptyState">
-            <span className="crmBadge">Sem negociacoes</span>
-            <h3>O dashboard ficara mais util conforme o CRM ganhar volume</h3>
+            <span className="crmBadge">Sem negociações</span>
+            <h3>O dashboard ficará mais útil conforme o CRM ganhar volume</h3>
             <p>
-              Assim que novas negociacoes forem salvas, os indicadores passam a
-              refletir pipeline, prioridades e movimentacoes reais.
+              Assim que novas negociações forem salvas, os indicadores passam a
+              refletir pipeline, prioridades e movimentações reais.
             </p>
           </div>
         )}

@@ -23,8 +23,8 @@ export default function ModulePlaceholder({
             <div>
               <h3 className="crmPanelTitle">Base estrutural pronta</h3>
               <p className="crmPanelDescription">
-                A navegacao, o shell global e o padrao visual ja consideram este
-                modulo para a evolucao do CRM.
+                A navegação, o shell global e o padrão visual já consideram este
+                módulo para a evolução do CRM.
               </p>
             </div>
           </div>
@@ -32,11 +32,11 @@ export default function ModulePlaceholder({
           <div className="crmDataGrid">
             <div className="crmDataItem">
               <span className="crmDataLabel">Status</span>
-              <strong className="crmDataValue">Em preparacao</strong>
+              <strong className="crmDataValue">Em preparação</strong>
             </div>
             <div className="crmDataItem">
               <span className="crmDataLabel">Objetivo</span>
-              <strong className="crmDataValue">Expansao modular do CRM</strong>
+              <strong className="crmDataValue">Expansão modular do CRM</strong>
             </div>
           </div>
         </section>
@@ -44,13 +44,13 @@ export default function ModulePlaceholder({
         <section className="crmPanel">
           <div className="crmPanelHead">
             <div>
-              <h3 className="crmPanelTitle">Proximos passos sugeridos</h3>
+              <h3 className="crmPanelTitle">Próximos passos sugeridos</h3>
             </div>
           </div>
 
           <div className="crmInlineList">
             <div className="crmInlineListItem">Definir entidade e campos principais.</div>
-            <div className="crmInlineListItem">Conectar filtros, cards e historico.</div>
+            <div className="crmInlineListItem">Conectar filtros, cards e histórico.</div>
             <div className="crmInlineListItem">Integrar ao funil comercial existente.</div>
           </div>
         </section>

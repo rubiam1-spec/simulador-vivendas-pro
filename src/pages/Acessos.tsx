@@ -58,7 +58,7 @@ export default function AcessosPage() {
       const message =
         currentError instanceof Error
           ? currentError.message
-          : "Nao foi possivel carregar os acessos.";
+          : "Não foi possível carregar os acessos.";
       setError(message);
     } finally {
       setLoadingUsers(false);
@@ -105,7 +105,7 @@ export default function AcessosPage() {
       const message =
         currentError instanceof Error
           ? currentError.message
-          : "Nao foi possivel criar o acesso.";
+          : "Não foi possível criar o acesso.";
       setError(message);
     } finally {
       setSubmitting(false);
@@ -130,7 +130,7 @@ export default function AcessosPage() {
       const message =
         currentError instanceof Error
           ? currentError.message
-          : "Nao foi possivel atualizar o acesso.";
+          : "Não foi possível atualizar o acesso.";
       setError(message);
     } finally {
       setBusyUserId(null);
@@ -145,12 +145,12 @@ export default function AcessosPage() {
         ativo: !user.ativo,
       });
       await loadUsers();
-      notify(user.ativo ? "Usuario inativado." : "Usuario ativado.");
+      notify(user.ativo ? "Usuário inativado." : "Usuário ativado.");
     } catch (currentError) {
       const message =
         currentError instanceof Error
           ? currentError.message
-          : "Nao foi possivel atualizar o status do usuario.";
+          : "Não foi possível atualizar o status do usuário.";
       setError(message);
     } finally {
       setBusyUserId(null);
@@ -161,24 +161,24 @@ export default function AcessosPage() {
     <div className="crmStack">
       <section className="crmMetricGrid">
         <article className="crmMetricCard">
-          <span className="crmMetricLabel">Usuarios</span>
+          <span className="crmMetricLabel">Usuários</span>
           <strong className="crmMetricValue">{summary.total}</strong>
           <span className="crmMetricHint">Base total de acessos no ambiente.</span>
         </article>
         <article className="crmMetricCard crmMetricCardAccent">
           <span className="crmMetricLabel">Ativos</span>
           <strong className="crmMetricValue">{summary.active}</strong>
-          <span className="crmMetricHint">Usuarios aptos a operar o RR CRM.</span>
+          <span className="crmMetricHint">Usuários aptos a operar o RR CRM.</span>
         </article>
         <article className="crmMetricCard">
           <span className="crmMetricLabel">Inativos</span>
           <strong className="crmMetricValue">{summary.inactive}</strong>
-          <span className="crmMetricHint">Acessos pausados sem exclusao de registro.</span>
+          <span className="crmMetricHint">Acessos pausados sem exclusão de registro.</span>
         </article>
         <article className="crmMetricCard">
           <span className="crmMetricLabel">Admins</span>
           <strong className="crmMetricValue">{summary.admin}</strong>
-          <span className="crmMetricHint">Usuarios com governanca do ambiente.</span>
+          <span className="crmMetricHint">Usuários com governança do ambiente.</span>
         </article>
       </section>
 
@@ -191,7 +191,7 @@ export default function AcessosPage() {
             <div>
               <h3 className="crmPanelTitle">Novo acesso</h3>
               <p className="crmPanelDescription">
-                Cadastre usuarios com perfil inicial e status operacional.
+                Cadastre usuários com perfil inicial e status operacional.
               </p>
             </div>
           </div>
@@ -293,23 +293,23 @@ export default function AcessosPage() {
         <section className="crmSection">
           <div className="crmSectionHeader">
             <div>
-              <span className="crmSectionEyebrow">Usuarios cadastrados</span>
+              <span className="crmSectionEyebrow">Usuários cadastrados</span>
               <h3 className="crmSectionTitle">Controle operacional de acessos</h3>
               <p className="crmSectionText">
-                Visualizacao mais limpa para editar perfil, status e dados basicos sem
-                misturar criacao e manutencao.
+                Visualização mais limpa para editar perfil, status e dados básicos sem
+                misturar criação e manutenção.
               </p>
             </div>
           </div>
 
           {loadingUsers ? (
-            <div className="appShellLoadingInline">Carregando usuarios...</div>
+            <div className="appShellLoadingInline">Carregando usuários...</div>
           ) : users.length === 0 ? (
             <div className="crmEmptyState">
-              <span className="crmBadge">Sem usuarios</span>
+              <span className="crmBadge">Sem usuários</span>
               <h3>Nenhum acesso cadastrado ainda</h3>
               <p>
-                Use o formulario ao lado para criar o primeiro usuario do ambiente.
+                Use o formulário ao lado para criar o primeiro usuário do ambiente.
               </p>
             </div>
           ) : (
@@ -418,7 +418,7 @@ export default function AcessosPage() {
                             onClick={handleSaveEdit}
                             disabled={isBusy}
                           >
-                            {isBusy ? "Salvando..." : "Salvar alteracoes"}
+                            {isBusy ? "Salvando..." : "Salvar alterações"}
                           </button>
                           <button
                             type="button"

@@ -23,8 +23,8 @@ const statusOptions: Array<{ value: ClienteStatus; label: string }> = [
 
 const origemOptions: Array<{ value: OrigemLead; label: string }> = [
   { value: "site", label: "Site" },
-  { value: "indicacao", label: "Indicacao" },
-  { value: "trafego_pago", label: "Trafego pago" },
+  { value: "indicacao", label: "Indicação" },
+  { value: "trafego_pago", label: "Tráfego pago" },
   { value: "corretor", label: "Corretor" },
   { value: "feira", label: "Feira" },
   { value: "whatsapp", label: "WhatsApp" },
@@ -97,7 +97,7 @@ export default function ClientesPage() {
         }
       } catch (loadError) {
         if (!cancelled) {
-          setError(loadError instanceof Error ? loadError.message : "Nao foi possivel carregar clientes.");
+          setError(loadError instanceof Error ? loadError.message : "Não foi possível carregar clientes.");
         }
       } finally {
         if (!cancelled) {
@@ -194,7 +194,7 @@ export default function ClientesPage() {
       if (editingId) {
         const updated = await updateCliente(editingId, form);
         if (!updated) {
-          throw new Error("Cliente nao encontrado para atualizacao.");
+          throw new Error("Cliente não encontrado para atualização.");
         }
 
         setClientes((current) =>
@@ -214,7 +214,7 @@ export default function ClientesPage() {
       setError(
         submitError instanceof Error
           ? submitError.message
-          : "Nao foi possivel salvar o cliente."
+          : "Não foi possível salvar o cliente."
       );
     } finally {
       setSaving(false);
@@ -227,22 +227,22 @@ export default function ClientesPage() {
         <article className="crmMetricCard crmMetricCardAccent">
           <span className="crmMetricLabel">Base ativa</span>
           <strong className="crmMetricValue">{metricas.ativos}</strong>
-          <span className="crmMetricHint">Clientes em operacao no CRM</span>
+          <span className="crmMetricHint">Clientes em operação no CRM</span>
         </article>
         <article className="crmMetricCard">
           <span className="crmMetricLabel">Total cadastrado</span>
           <strong className="crmMetricValue">{metricas.total}</strong>
-          <span className="crmMetricHint">Registros preparados para integracao</span>
+          <span className="crmMetricHint">Registros preparados para integração</span>
         </article>
         <article className="crmMetricCard">
-          <span className="crmMetricLabel">Em negociacao</span>
+          <span className="crmMetricLabel">Em negociação</span>
           <strong className="crmMetricValue">{metricas.negociando}</strong>
           <span className="crmMetricHint">Leads em proposta ou conversa ativa</span>
         </article>
         <article className="crmMetricCard">
           <span className="crmMetricLabel">Convertidos</span>
           <strong className="crmMetricValue">{metricas.convertidos}</strong>
-          <span className="crmMetricHint">Base pronta para cruzar com negociacoes</span>
+          <span className="crmMetricHint">Base pronta para cruzar com negociações</span>
         </article>
       </section>
 
@@ -253,7 +253,7 @@ export default function ClientesPage() {
             <h2 className="crmSectionTitle">Base de clientes</h2>
             <p className="crmSectionText">
               Estrutura pronta para receber a tabela `clientes` e conectar cliente,
-              corretor e negociacao no fluxo do simulador.
+              corretor e negociação no fluxo do simulador.
             </p>
           </div>
           <div className="crmToolbarActions">
@@ -331,7 +331,7 @@ export default function ClientesPage() {
                 {editingId ? "Editar cliente" : "Cadastro de cliente"}
               </h3>
               <p className="crmPanelDescription">
-                Formulario ja organizado para futuras operacoes de insert e update
+                Formulário já organizado para futuras operações de insert e update
                 via Supabase.
               </p>
             </div>
@@ -460,7 +460,7 @@ export default function ClientesPage() {
               </div>
 
               <label className="crmField">
-                <span>Observacoes</span>
+                <span>Observações</span>
                 <textarea
                   className="crmTextarea"
                   value={form.observacoes}
@@ -470,13 +470,13 @@ export default function ClientesPage() {
                       observacoes: event.target.value,
                     }))
                   }
-                  placeholder="Contexto do lead, restricoes, perfil de compra e observacoes da operacao."
+                  placeholder="Contexto do lead, restrições, perfil de compra e observações da operação."
                 />
               </label>
 
               <div className="crmButtonRow">
                 <button type="submit" className="btn" disabled={saving}>
-                  {saving ? "Salvando..." : editingId ? "Salvar alteracoes" : "Cadastrar cliente"}
+                  {saving ? "Salvando..." : editingId ? "Salvar alterações" : "Cadastrar cliente"}
                 </button>
                 <button
                   type="button"
@@ -496,7 +496,7 @@ export default function ClientesPage() {
               <span className="crmBadge">Cadastro pronto</span>
               <h3>Abrir formulario de cliente</h3>
               <p>
-                Use o modulo para iniciar a base comercial e preparar o simulador
+                Use o módulo para iniciar a base comercial e preparar o simulador
                 para selecionar clientes reais futuramente.
               </p>
             </div>
@@ -508,8 +508,8 @@ export default function ClientesPage() {
             <div>
               <h3 className="crmPanelTitle">Listagem operacional</h3>
               <p className="crmPanelDescription">
-                Visualizacao preparada para evoluir para tabela, paginacao e
-                relacoes com negociacoes.
+                Visualização preparada para evoluir para tabela, paginação e
+                relações com negociações.
               </p>
             </div>
           </div>
@@ -544,8 +544,8 @@ export default function ClientesPage() {
                       <span className="crmDealOverline">Cliente</span>
                       <h3>{cliente.nome}</h3>
                       <p>
-                        {cliente.cidade || "Cidade nao informada"} -{" "}
-                        {cliente.corretorResponsavel || "Sem corretor responsavel"}
+                        {cliente.cidade || "Cidade não informada"} -{" "}
+                        {cliente.corretorResponsavel || "Sem corretor responsável"}
                       </p>
                       </div>
                     </div>
@@ -568,7 +568,7 @@ export default function ClientesPage() {
                             {cliente.telefone}
                           </a>
                         ) : (
-                          "Nao informado"
+                          "Não informado"
                         )}
                       </strong>
                     </div>
@@ -580,13 +580,13 @@ export default function ClientesPage() {
                             {cliente.email}
                           </a>
                         ) : (
-                          "Nao informado"
+                          "Não informado"
                         )}
                       </strong>
                     </div>
                     <div className="crmDealMetaItem">
                       <span className="crmDealMetaLabel">CPF</span>
-                      <strong>{cliente.cpf || "Nao informado"}</strong>
+                      <strong>{cliente.cpf || "Não informado"}</strong>
                     </div>
                     <div className="crmDealMetaItem">
                       <span className="crmDealMetaLabel">Criado em</span>

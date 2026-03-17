@@ -31,7 +31,7 @@ export default function Login() {
       navigate(destino || "/", { replace: true });
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Nao foi possivel autenticar.";
+        error instanceof Error ? error.message : "Não foi possível autenticar.";
       setErro(message);
     } finally {
       setLoading(false);
@@ -59,7 +59,7 @@ export default function Login() {
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              placeholder="voce@bomm.com.br"
+              placeholder="você@bomm.com.br"
               required
             />
           </label>

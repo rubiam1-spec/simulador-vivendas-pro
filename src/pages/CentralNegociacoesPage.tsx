@@ -35,7 +35,7 @@ export default function CentralNegociacoesPage() {
     agendarAberturaNegociacao(negociacao.id);
     await appendNegociacaoEvent(negociacao.id, {
       tipo: "negociacao_aberta",
-      descricao: "Negociacao aberta",
+      descricao: "Negociação aberta",
     });
     await recarregar();
     navigate("/simulador");
@@ -45,14 +45,14 @@ export default function CentralNegociacoesPage() {
     const duplicada = await duplicateNegociacaoById(id);
     if (!duplicada) return;
     await recarregar();
-    notificar("Negociacao duplicada com sucesso.");
+    notificar("Negociação duplicada com sucesso.");
   }
 
   async function excluir(id: string) {
-    if (!window.confirm("Deseja excluir esta negociacao?")) return;
+    if (!window.confirm("Deseja excluir esta negociação?")) return;
     await deleteNegociacaoById(id);
     await recarregar();
-    notificar("Negociacao excluida.");
+    notificar("Negociação excluída.");
   }
 
   async function gerarPdf(negociacao: NegociacaoSalva) {

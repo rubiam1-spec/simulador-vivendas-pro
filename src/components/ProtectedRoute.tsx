@@ -16,7 +16,7 @@ export default function ProtectedRoute({
   const location = useLocation();
 
   if (loading) {
-    return <div className="appShellLoading">Carregando sessao...</div>;
+    return <div className="appShellLoading">Carregando sessão...</div>;
   }
 
   if (!session) {

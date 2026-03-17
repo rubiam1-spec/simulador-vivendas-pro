@@ -96,7 +96,7 @@ export default function AppLayout() {
           </div>
 
           <div className="appShellUser">
-            <span>{profile?.nome || session?.user.email || "Usuario autenticado"}</span>
+            <span>{profile?.nome || session?.user.email || "Usuário autenticado"}</span>
             <small>
               {profileStateLabel} - {hasSupabaseConfig ? "Supabase Auth" : "Modo local"}
             </small>

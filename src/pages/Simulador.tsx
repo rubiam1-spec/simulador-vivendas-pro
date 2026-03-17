@@ -1201,7 +1201,7 @@ export default function Simulador() {
       const atualizada = await updateNegociacaoById(negociacaoAtivaId, negociacao, [
         {
           tipo: "negociacao_atualizada",
-          descricao: "Negociacao atualizada a partir do simulador",
+          descricao: "Negociação atualizada a partir do simulador",
         },
         {
           tipo: "negociacao_atualizada",
@@ -1286,7 +1286,7 @@ export default function Simulador() {
     setNegociacaoAtivaId(negociacao.id);
     await appendNegociacaoEvent(negociacao.id, {
       tipo: "negociacao_aberta",
-      descricao: "Negociacao aberta",
+      descricao: "Negociação aberta",
     });
     await recarregarNegociacoes();
     mostrarFeedbackNegociacao("Negociação aberta no simulador.");
@@ -1705,22 +1705,22 @@ export default function Simulador() {
 
   const painelApoioTitulo =
     modoDocumento === "simulacao"
-      ? "Mensagem e acoes"
+      ? "Mensagem e ações"
       : modoDocumento === "proposta"
         ? "Fechamento da proposta"
         : "Fechamento da contraproposta";
 
   const painelApoioDescricao =
     modoDocumento === "simulacao"
-      ? "Revise a mensagem comercial, copie o texto, sincronize a simulacao no CRM e gere o PDF sem competir com o formulario principal."
+      ? "Revise a mensagem comercial, copie o texto, sincronize a simulação no CRM e gere o PDF sem competir com o formulário principal."
       : modoDocumento === "proposta"
-        ? "Conclua a proposta com uma area dedicada para mensagem, PDF e sincronizacao comercial."
-        : "Consolide a contraproposta com revisao textual, PDF institucional e registro no CRM.";
+        ? "Conclua a proposta com uma área dedicada para mensagem, PDF e sincronização comercial."
+        : "Consolide a contraproposta com revisão textual, PDF institucional e registro no CRM.";
 
   const painelApoioRodape =
     modoDocumento === "simulacao"
-      ? "Pronto para copiar, salvar no CRM e gerar PDF a partir da mesma negociacao."
-      : "Fluxo final preparado para sincronizacao da negociacao, mensagem e PDF institucional.";
+      ? "Pronto para copiar, salvar no CRM e gerar PDF a partir da mesma negociação."
+      : "Fluxo final preparado para sincronização da negociação, mensagem e PDF institucional.";
 
   return (
     <div className="simPage">
@@ -1817,7 +1817,7 @@ export default function Simulador() {
                   <div className="mini">
                     {clienteSelecionado
                       ? `Vinculado ao CRM: ${clienteSelecionado.nome}`
-                      : "Sem cliente vinculado. Voce pode preencher os dados manualmente."}
+                      : "Sem cliente vinculado. Você pode preencher os dados manualmente."}
                   </div>
                 </div>
 
@@ -3361,8 +3361,8 @@ export default function Simulador() {
                   <div className="luxResultIntro">
                     <div className="luxResultLead">
                       {modoDocumento === "simulacao"
-                        ? "Mensagem comercial pronta para revisao, copia imediata e geracao do PDF."
-                        : "Mensagem final pronta para revisao textual, sincronizacao da negociacao e PDF institucional."}
+                        ? "Mensagem comercial pronta para revisão, cópia imediata e geração do PDF."
+                        : "Mensagem final pronta para revisão textual, sincronização da negociação e PDF institucional."}
                     </div>
                     <div className="luxResultPills">
                       <span className="luxChip">
@@ -3372,7 +3372,7 @@ export default function Simulador() {
                       </span>
                       <span className="luxChip">
                         {modoDocumento === "simulacao"
-                          ? "PDF da simulacao"
+                          ? "PDF da simulação"
                           : modoDocumento === "proposta"
                             ? "PDF da proposta"
                             : "PDF da contraproposta"}
@@ -3405,8 +3405,8 @@ export default function Simulador() {
                     >
                       {modoDocumento === "simulacao"
                         ? negociacaoAtivaId
-                          ? "Atualizar simulacao no CRM"
-                          : "Salvar simulacao no CRM"
+                          ? "Atualizar simulação no CRM"
+                          : "Salvar simulação no CRM"
                         : modoDocumento === "proposta"
                           ? "Gerar proposta + PDF + salvar no CRM"
                           : "Gerar contraproposta + PDF + salvar no CRM"}
@@ -3417,7 +3417,7 @@ export default function Simulador() {
                     </button>
 
                     <span className="luxHint luxResultHint">
-                      INCC ate entrega - IPCA apos entrega
+                      INCC até entrega - IPCA após entrega
                     </span>
                   </div>
 
@@ -3429,7 +3429,7 @@ export default function Simulador() {
               <section className="luxFlowPanel">
                 <div className="luxFlowHead">
                   <div className="luxKicker">Resumo financeiro</div>
-                  <h2 className="luxH2">Linha do calculo</h2>
+                  <h2 className="luxH2">Linha do cálculo</h2>
                   <p className="luxFlowText">
                     Ordem real do cálculo: valor total, entrada, saldo final,
                     permuta, veículo e base final para mensais e balões.
@@ -3455,7 +3455,7 @@ export default function Simulador() {
 
               <section className="luxFlowPanel luxFlowPanelSoft">
                 <div className="luxFlowHead">
-                  <div className="luxKicker">Selecao atual</div>
+                  <div className="luxKicker">Seleção atual</div>
                   <h2 className="luxH2">Lotes escolhidos</h2>
                 </div>
 

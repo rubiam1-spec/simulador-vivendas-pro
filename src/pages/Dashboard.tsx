@@ -51,7 +51,7 @@ export default function DashboardPage() {
         setErro(
           error instanceof Error
             ? error.message
-            : "Nao foi possivel carregar os indicadores do dashboard."
+            : "Não foi possível carregar os indicadores do dashboard."
         );
       } finally {
         if (active) {

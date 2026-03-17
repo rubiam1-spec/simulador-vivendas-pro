@@ -13,7 +13,7 @@ export default function ConfiguracoesPage() {
             <div>
               <h3 className="crmPanelTitle">Conta</h3>
               <p className="crmPanelDescription">
-                Informacoes principais do usuario autenticado no RR CRM.
+                Informações principais do usuário autenticado no RR CRM.
               </p>
             </div>
           </div>
@@ -22,19 +22,19 @@ export default function ConfiguracoesPage() {
             <div className="crmDataItem">
               <span className="crmDataLabel">Nome</span>
               <strong className="crmDataValue">
-                {profile?.nome || "Nao informado"}
+                {profile?.nome || "Não informado"}
               </strong>
             </div>
             <div className="crmDataItem">
               <span className="crmDataLabel">E-mail</span>
               <strong className="crmDataValue">
-                {session?.user.email || "Nao identificado"}
+                {session?.user.email || "Não identificado"}
               </strong>
             </div>
             <div className="crmDataItem">
               <span className="crmDataLabel">Perfil</span>
               <strong className="crmDataValue">
-                {profile?.role || "Nao definido"}
+                {profile?.role || "Não definido"}
               </strong>
             </div>
             <div className="crmDataItem">
@@ -63,11 +63,11 @@ export default function ConfiguracoesPage() {
             </div>
             <div className="crmInlineListItem crmInlineListItemSplit">
               <span className="crmBadge isMuted">Sessao</span>
-              <strong>{session ? "Ativa" : "Nao autenticada"}</strong>
+              <strong>{session ? "Ativa" : "Não autenticada"}</strong>
             </div>
             <div className="crmHint">
-              A estrutura atual continua compativel com a tabela `profiles` usada
-              como base real de autorizacao do sistema.
+              A estrutura atual continua compatível com a tabela `profiles` usada
+              como base real de autorização do sistema.
             </div>
           </div>
         </section>
@@ -79,7 +79,7 @@ export default function ConfiguracoesPage() {
             <div>
               <h3 className="crmPanelTitle">Branding do cliente</h3>
               <p className="crmPanelDescription">
-                Referencias institucionais centralizadas para manter consistencia
+                Referências institucionais centralizadas para manter consistência
                 visual na plataforma.
               </p>
             </div>
@@ -108,16 +108,16 @@ export default function ConfiguracoesPage() {
         <section className="crmPanel crmPanelSeparated">
           <div className="crmPanelHead">
             <div>
-              <h3 className="crmPanelTitle">Preferencias futuras</h3>
+              <h3 className="crmPanelTitle">Preferências futuras</h3>
               <p className="crmPanelDescription">
-                Espaco preparado para evolucoes de ambiente e personalizacao do CRM.
+                Espaço preparado para evoluções de ambiente e personalização do CRM.
               </p>
             </div>
           </div>
 
           <div className="crmInlineList">
-            <div className="crmInlineListItem">Preferencias de notificacao da equipe.</div>
-            <div className="crmInlineListItem">Padroes por cliente e por operacao.</div>
+            <div className="crmInlineListItem">Preferências de notificação da equipe.</div>
+            <div className="crmInlineListItem">Padrões por cliente e por operação.</div>
             <div className="crmInlineListItem">Views dedicadas para clientes e corretores.</div>
           </div>
         </section>
@@ -129,8 +129,8 @@ export default function ConfiguracoesPage() {
             <span className="crmSectionEyebrow">Sessao</span>
             <h3 className="crmSectionTitle">Encerramento seguro</h3>
             <p className="crmSectionText">
-              Saia do ambiente mantendo a organizacao do shell e a compatibilidade
-              com o fluxo atual de autenticacao.
+              Saia do ambiente mantendo a organização do shell e a compatibilidade
+              com o fluxo atual de autenticação.
             </p>
           </div>
         </div>

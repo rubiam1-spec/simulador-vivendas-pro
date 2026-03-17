@@ -42,7 +42,7 @@ function getErrorMessage(error: unknown) {
     if (typeof maybeError.details === "string") return maybeError.details;
   }
 
-  return "Nao foi possivel carregar o perfil do usuario.";
+  return "Não foi possível carregar o perfil do usuário.";
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {

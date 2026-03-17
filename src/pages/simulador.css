@@ -1613,10 +1613,21 @@ body,
 }
 
 .luxValueRow {
-  display: grid;
-  grid-template-columns: minmax(280px, 1.45fr) repeat(2, minmax(220px, 1fr));
+  display: flex;
+  flex-direction: row;
   gap: 16px;
   align-items: stretch;
+  flex-wrap: nowrap;
+}
+
+.luxValueMain {
+  flex: 1.4;
+  min-width: 200px;
+}
+
+.luxMiniCard {
+  flex: 1;
+  min-width: 180px;
 }
 
 .luxValueMain,
@@ -1625,7 +1636,6 @@ body,
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.028));
   border-radius: var(--r-lg);
   padding: 18px 20px;
-  min-width: 220px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
@@ -1858,14 +1868,6 @@ body,
     position: static;
   }
 
-  .luxValueRow {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .luxValueMain {
-    grid-column: 1 / -1;
-  }
-
   .luxGrid3 {
     grid-template-columns: 1fr 1fr;
   }
@@ -1882,11 +1884,13 @@ body,
 
 @media (max-width: 900px) {
   .luxValueRow {
-    grid-template-columns: 1fr;
+    flex-direction: column;
   }
-
-  .luxValueMain {
-    grid-column: auto;
+  .luxValueMain,
+  .luxMiniCard {
+    flex: none;
+    width: 100%;
+    min-width: 0;
   }
 }
 
@@ -1997,14 +2001,6 @@ body,
   .luxHint {
     width: 100%;
     text-align: left;
-  }
-
-  .luxValueRow {
-    grid-template-columns: 1fr;
-  }
-
-  .luxValueMain {
-    grid-column: auto;
   }
 
   .luxGrid3 {

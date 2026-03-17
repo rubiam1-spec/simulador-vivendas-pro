@@ -29,18 +29,18 @@ type CentralNegociacoesProps = {
 
 const TIPOS: Array<{ value: TipoNegociacao | "todos"; label: string }> = [
   { value: "todos", label: "Todos" },
-  { value: "simulacao", label: "Simulacao" },
+  { value: "simulacao", label: "Simulação" },
   { value: "proposta", label: "Proposta" },
   { value: "contraproposta", label: "Contraproposta" },
 ];
 
 const STATUS: Array<{ value: StatusNegociacao | "todos"; label: string }> = [
   { value: "todos", label: "Todos" },
-  { value: "simulacao", label: "Simulacao" },
+  { value: "simulacao", label: "Simulação" },
   { value: "proposta_enviada", label: "Proposta enviada" },
   { value: "contraproposta", label: "Contraproposta" },
   { value: "rascunho", label: "Rascunho" },
-  { value: "em_negociacao", label: "Em negociacao" },
+  { value: "em_negociacao", label: "Em negociação" },
   { value: "aguardando_retorno", label: "Aguardando retorno" },
   { value: "aprovada", label: "Aprovada" },
   { value: "fechada", label: "Fechada" },
@@ -50,9 +50,9 @@ const STATUS: Array<{ value: StatusNegociacao | "todos"; label: string }> = [
 
 const STATUS_PILLS: Array<{ value: StatusNegociacao | "todos"; label: string }> = [
   { value: "todos", label: "Todos" },
-  { value: "simulacao", label: "Simulacao" },
+  { value: "simulacao", label: "Simulação" },
   { value: "proposta_enviada", label: "Propostas" },
-  { value: "em_negociacao", label: "Em negociacao" },
+  { value: "em_negociacao", label: "Em negociação" },
   { value: "aguardando_retorno", label: "Retorno" },
   { value: "aprovada", label: "Aprovadas" },
   { value: "fechada", label: "Fechadas" },
@@ -82,8 +82,8 @@ const ORIGENS: Array<{ value: OrigemNegociacao | "todos"; label: string }> = [
   { value: "corretor", label: "Corretor" },
   { value: "cliente_direto", label: "Cliente direto" },
   { value: "feira", label: "Feira" },
-  { value: "indicacao", label: "Indicacao" },
-  { value: "trafego_pago", label: "Trafego pago" },
+  { value: "indicacao", label: "Indicação" },
+  { value: "trafego_pago", label: "Tráfego pago" },
   { value: "interno", label: "Interno" },
   { value: "outro", label: "Outro" },
 ];
@@ -105,17 +105,17 @@ function formatarData(valor: string) {
 }
 
 function labelTipo(tipo: TipoNegociacao) {
-  if (tipo === "simulacao") return "Simulacao";
+  if (tipo === "simulacao") return "Simulação";
   if (tipo === "proposta") return "Proposta";
   return "Contraproposta";
 }
 
 function labelStatus(status: StatusNegociacao) {
-  if (status === "simulacao") return "Simulacao";
+  if (status === "simulacao") return "Simulação";
   if (status === "proposta_enviada") return "Proposta enviada";
   if (status === "contraproposta") return "Contraproposta";
   if (status === "rascunho") return "Rascunho";
-  if (status === "em_negociacao") return "Em negociacao";
+  if (status === "em_negociacao") return "Em negociação";
   if (status === "aguardando_retorno") return "Aguardando retorno";
   if (status === "aprovada") return "Aprovada";
   if (status === "fechada") return "Fechada";
@@ -139,8 +139,8 @@ function labelPrioridade(prioridade: PrioridadeNegociacao) {
 
 function labelOrigem(origem: OrigemNegociacao) {
   if (origem === "cliente_direto") return "Cliente direto";
-  if (origem === "trafego_pago") return "Trafego pago";
-  if (origem === "indicacao") return "Indicacao";
+  if (origem === "trafego_pago") return "Tráfego pago";
+  if (origem === "indicacao") return "Indicação";
   if (origem === "corretor") return "Corretor";
   if (origem === "feira") return "Feira";
   if (origem === "interno") return "Interno";
@@ -302,11 +302,11 @@ export default function CentralNegociacoes({
       <section className="crmSection crmFilterShell">
         <div className="crmSectionHeader">
           <div>
-            <span className="crmSectionEyebrow">Operacao comercial</span>
+            <span className="crmSectionEyebrow">Operação comercial</span>
             <h3 className="crmSectionTitle">Central operacional do funil</h3>
             <p className="crmSectionText">
-              Filtros compactos, leitura rapida das negociacoes e acoes diretas para
-              acompanhar o pipeline sem poluicao visual.
+              Filtros compactos, leitura rápida das negociações e ações diretas para
+              acompanhar o pipeline sem poluição visual.
             </p>
           </div>
         </div>
@@ -317,7 +317,7 @@ export default function CentralNegociacoes({
             <input
               value={busca}
               onChange={(event) => setBusca(event.target.value)}
-              placeholder="Cliente, corretor, lote ou ultima acao"
+              placeholder="Cliente, corretor, lote ou última ação"
             />
           </label>
 
@@ -410,7 +410,7 @@ export default function CentralNegociacoes({
           <article className="crmMetricCard">
             <span className="crmMetricLabel">Resultados</span>
             <strong className="crmMetricValue">{resumo.total}</strong>
-            <span className="crmMetricHint">Negociacoes dentro dos filtros atuais.</span>
+            <span className="crmMetricHint">Negociações dentro dos filtros atuais.</span>
           </article>
 
           <article className="crmMetricCard crmMetricCardAccent">
@@ -428,7 +428,7 @@ export default function CentralNegociacoes({
           <article className="crmMetricCard">
             <span className="crmMetricLabel">Aprovadas</span>
             <strong className="crmMetricValue">{resumo.aprovadas}</strong>
-            <span className="crmMetricHint">Negociacoes com sinal positivo.</span>
+            <span className="crmMetricHint">Negociações com sinal positivo.</span>
           </article>
         </section>
       </section>
@@ -437,9 +437,9 @@ export default function CentralNegociacoes({
         <section className="crmSection">
           <div className="crmEmptyState">
             <span className="crmBadge">Estado vazio</span>
-            <h3>Nenhuma negociacao encontrada</h3>
+            <h3>Nenhuma negociação encontrada</h3>
             <p>
-              Ajuste os filtros ou salve novas negociacoes no simulador para preencher
+              Ajuste os filtros ou salve novas negociações no simulador para preencher
               esta central com oportunidades reais.
             </p>
           </div>
@@ -449,7 +449,7 @@ export default function CentralNegociacoes({
           <div className="crmSectionHeader">
             <div>
               <span className="crmSectionEyebrow">Fila de trabalho</span>
-              <h3 className="crmSectionTitle">Negociacoes em acompanhamento</h3>
+              <h3 className="crmSectionTitle">Negociações em acompanhamento</h3>
             </div>
           </div>
 
@@ -511,7 +511,7 @@ export default function CentralNegociacoes({
                               anterior === negociacao.id ? null : negociacao.id
                             )
                           }
-                          aria-label="Abrir acoes"
+                          aria-label="Abrir ações"
                         >
                           ...
                         </button>
@@ -541,7 +541,7 @@ export default function CentralNegociacoes({
                     <div className="crmDealMetaItem">
                       <span className="crmDealMetaLabel">Corretor</span>
                       <strong>
-                        {negociacao.corretorNome || negociacao.corretor || "Nao informado"}
+                        {negociacao.corretorNome || negociacao.corretor || "Não informado"}
                       </strong>
                     </div>
                     <div className="crmDealMetaItem">
@@ -555,8 +555,8 @@ export default function CentralNegociacoes({
                       </strong>
                     </div>
                     <div className="crmDealMetaItem">
-                      <span className="crmDealMetaLabel">Ultima acao</span>
-                      <strong>{negociacao.ultimaAcao || "Sem acao registrada"}</strong>
+                      <span className="crmDealMetaLabel">Última ação</span>
+                      <strong>{negociacao.ultimaAcao || "Sem ação registrada"}</strong>
                     </div>
                     <div className="crmDealMetaItem">
                       <span className="crmDealMetaLabel">Lotes</span>
@@ -662,7 +662,7 @@ export default function CentralNegociacoes({
                       </label>
 
                       <label className="crmField crmFieldWide">
-                        <span>Ultima acao</span>
+                        <span>Última ação</span>
                         <input
                           value={edicao.ultimaAcao}
                           onChange={(event) =>
@@ -680,7 +680,7 @@ export default function CentralNegociacoes({
                       </label>
 
                       <label className="crmField crmFieldWide">
-                        <span>Observacao interna</span>
+                        <span>Observação interna</span>
                         <textarea
                           className="crmTextarea"
                           value={edicao.observacaoInterna}
@@ -727,7 +727,7 @@ export default function CentralNegociacoes({
                         ))
                       ) : (
                         <div className="crmHint">
-                          Nenhum evento registrado ate o momento para esta negociacao.
+                          Nenhum evento registrado até o momento para esta negociação.
                         </div>
                       )}
                     </div>
@@ -753,7 +753,7 @@ export default function CentralNegociacoes({
                         )
                       }
                     >
-                      {historicoAberto ? "Ocultar historico" : "Ver historico"}
+                      {historicoAberto ? "Ocultar histórico" : "Ver histórico"}
                     </button>
                   </div>
                 </article>
