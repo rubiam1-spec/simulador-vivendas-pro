@@ -24,6 +24,7 @@ type IdentificacaoPdf = {
 
 export type PdfPropostaPayload = IdentificacaoPdf & {
   data: string;
+  clienteLogoDataUrl?: string;
   quadra: string;
   lote: string;
   valor: string;
@@ -55,6 +56,7 @@ export type PdfPropostaPayload = IdentificacaoPdf & {
 
 export type PdfContrapropostaPayload = IdentificacaoPdf & {
   data: string;
+  clienteLogoDataUrl?: string;
   quadra: string;
   lote: string;
   valor: string;
@@ -118,6 +120,7 @@ type LayoutMeta = {
   titulo: string;
   subtitulo: string;
   data: string;
+  clienteLogoDataUrl?: string;
 };
 
 type Field = {
@@ -388,7 +391,11 @@ function renderPageFrame(doc: jsPDF, meta: LayoutMeta) {
 
   try {
     addLogo(doc, logoVivendas, "PNG", CONTENT_LEFT, 18, 134, 44);
-    addLogo(doc, logoBomm, "PNG", PAGE_WIDTH - CONTENT_LEFT - 120, 18, 120, 44);
+    if (meta.clienteLogoDataUrl) {
+      addLogo(doc, meta.clienteLogoDataUrl, "PNG", PAGE_WIDTH - CONTENT_LEFT - 120, 18, 120, 44);
+    } else {
+      addLogo(doc, logoBomm, "PNG", PAGE_WIDTH - CONTENT_LEFT - 120, 18, 120, 44);
+    }
   } catch {
     setColor(doc, "text", COLORS.white);
     doc.setFont("helvetica", "bold");
@@ -1126,6 +1133,7 @@ export function gerarPdfProposta(dados: PdfPropostaPayload) {
     titulo: "TERMO DE PROPOSTA",
     subtitulo: "Documento comercial institucional",
     data: dados.data,
+    clienteLogoDataUrl: dados.clienteLogoDataUrl,
   });
   drawProposalLayout(doc, dados);
   doc.save("proposta-vivendas.pdf");
@@ -1136,6 +1144,7 @@ export function gerarPdfContraproposta(dados: PdfContrapropostaPayload) {
     titulo: "TERMO DE CONTRAPROPOSTA",
     subtitulo: "Documento comercial institucional",
     data: dados.data,
+    clienteLogoDataUrl: dados.clienteLogoDataUrl,
   });
   drawContrapropostaLayout(doc, dados);
   doc.save("contraproposta-vivendas.pdf");

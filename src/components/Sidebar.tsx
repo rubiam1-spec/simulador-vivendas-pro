@@ -3,6 +3,8 @@ import { NavLink } from "react-router-dom";
 import { branding } from "../config/branding";
 import { getNavigationSections } from "../config/navigation";
 import { useAuth } from "./AuthProvider";
+import { useBranding } from "../hooks/useBranding";
+import { LogoRRCRM } from "./LogoRRCRM";
 
 type SidebarProps = {
   mobileMenuOpen: boolean;
@@ -121,6 +123,7 @@ export default function Sidebar({
   onCloseMobileMenu,
 }: SidebarProps) {
   const { profile, profileResolved } = useAuth();
+  const clienteBranding = useBranding();
   const sections = getNavigationSections(profile, profileResolved);
 
   return (
@@ -144,11 +147,19 @@ export default function Sidebar({
       >
         <div className="appSidebarBrand">
           <div className="appSidebarKicker">{branding.sidebarSubtitle}</div>
-          <h1>{branding.sidebarTitle}</h1>
+          <LogoRRCRM variant="compact" height={36} theme="dark" />
           <p>{branding.sidebarDescription}</p>
           <div className="appSidebarClient">
             <span>{branding.sidebarClientLabel}</span>
-            <strong>{branding.clientLabel}</strong>
+            {clienteBranding.mostrarLogoClienteNaSidebar && clienteBranding.clienteLogoUrl ? (
+              <img
+                src={clienteBranding.clienteLogoUrl}
+                alt={clienteBranding.clienteNome}
+                style={{ height: 24, objectFit: "contain", display: "block", marginTop: 4 }}
+              />
+            ) : (
+              <strong>{clienteBranding.clienteNome || branding.clientLabel}</strong>
+            )}
           </div>
         </div>
 

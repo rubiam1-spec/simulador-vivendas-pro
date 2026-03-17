@@ -2,7 +2,7 @@ import { type ChangeEvent, type FormEvent, useRef, useState } from "react";
 
 import { branding } from "../config/branding";
 import { useAuth } from "../components/AuthProvider";
-import { hasSupabaseConfig } from "../lib/supabase";
+import { hasSupabaseConfig, supabase } from "../lib/supabase";
 import { updateProfile, uploadAvatar } from "../services/profileService";
 
 function formatarRole(role: string) {
@@ -38,6 +38,60 @@ export default function ConfiguracoesPage() {
   );
   const fileRef = useRef<HTMLInputElement>(null);
   const pendingFile = useRef<File | null>(null);
+
+  // Identidade do cliente (white label)
+  const [clienteNome, setClienteNome] = useState(profile?.clienteNome ?? "");
+  const [clienteCorPrimaria, setClienteCorPrimaria] = useState(
+    profile?.clienteCorPrimaria ?? ""
+  );
+  const [clienteLogoPreview, setClienteLogoPreview] = useState<string | null>(
+    profile?.clienteLogoUrl ?? null
+  );
+  const clienteLogoFileRef = useRef<HTMLInputElement>(null);
+  const pendingClienteLogoFile = useRef<File | null>(null);
+  const [savingCliente, setSavingCliente] = useState(false);
+
+  function handleClienteLogoChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    pendingClienteLogoFile.current = file;
+    const reader = new FileReader();
+    reader.onload = (e) => setClienteLogoPreview(e.target?.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  async function handleSaveClienteIdentidade(event: FormEvent) {
+    event.preventDefault();
+    if (!profile) return;
+    setSavingCliente(true);
+    setFeedback("");
+    try {
+      let logoUrl: string | null = profile.clienteLogoUrl ?? null;
+      if (pendingClienteLogoFile.current && supabase) {
+        const file = pendingClienteLogoFile.current;
+        const ext = file.name.split(".").pop() ?? "png";
+        const path = `${profile.id}/cliente-logo.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("avatars")
+          .upload(path, file, { upsert: true });
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+        logoUrl = urlData.publicUrl;
+        pendingClienteLogoFile.current = null;
+      }
+      await updateProfile(profile.id, {
+        clienteNome: clienteNome.trim(),
+        clienteCorPrimaria: clienteCorPrimaria.trim() || null,
+        clienteLogoUrl: logoUrl,
+      });
+      await refreshProfile();
+      setFeedback("Identidade do cliente salva com sucesso.");
+    } catch {
+      setFeedback("Erro ao salvar identidade. Tente novamente.");
+    } finally {
+      setSavingCliente(false);
+    }
+  }
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -292,6 +346,104 @@ export default function ConfiguracoesPage() {
           </div>
         </section>
       </div>
+
+      {/* Identidade do cliente (white label) */}
+      <section className="crmSection">
+        <div className="crmSectionHeader">
+          <div>
+            <span className="crmSectionEyebrow">White Label</span>
+            <h3 className="crmSectionTitle">Identidade do cliente</h3>
+            <p className="crmSectionText">
+              Logo, nome e cor da sua empresa — aplicados nos PDFs, no Simulador e na Sidebar.
+            </p>
+          </div>
+        </div>
+
+        <form onSubmit={(e) => void handleSaveClienteIdentidade(e)} className="crmAccessForm">
+          <div className="crmAccessFormSplit" style={{ alignItems: "flex-start" }}>
+            {/* Logo preview */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+              <button
+                type="button"
+                onClick={() => clienteLogoFileRef.current?.click()}
+                style={{
+                  width: 100,
+                  height: 60,
+                  borderRadius: 8,
+                  overflow: "hidden",
+                  border: "2px dashed var(--line, #334)",
+                  background: "var(--surface2, #1a2f54)",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 11,
+                  color: "var(--muted2, #99bbf5)",
+                  padding: 4,
+                }}
+                title="Clique para enviar logo do cliente"
+              >
+                {clienteLogoPreview ? (
+                  <img
+                    src={clienteLogoPreview}
+                    alt="Logo do cliente"
+                    style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                  />
+                ) : (
+                  "Logo"
+                )}
+              </button>
+              <span style={{ fontSize: 11, color: "var(--muted2)" }}>
+                Clique para enviar logo
+              </span>
+              <input
+                ref={clienteLogoFileRef}
+                type="file"
+                accept="image/*"
+                style={{ display: "none" }}
+                onChange={handleClienteLogoChange}
+              />
+            </div>
+
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16 }}>
+              <label className="crmField">
+                <span>Nome do cliente</span>
+                <input
+                  value={clienteNome}
+                  onChange={(e) => setClienteNome(e.target.value)}
+                  placeholder="Ex: Bomm Urbanizadora"
+                />
+              </label>
+
+              <label className="crmField">
+                <span>Cor primária (hex)</span>
+                <input
+                  value={clienteCorPrimaria}
+                  onChange={(e) => setClienteCorPrimaria(e.target.value)}
+                  placeholder="#1a56db"
+                  maxLength={7}
+                />
+              </label>
+
+              <div className="crmHint">
+                <strong>Onde sua logo aparece:</strong>
+                <ul style={{ margin: "4px 0 0 16px", padding: 0 }}>
+                  <li>PDFs de proposta e contraproposta ✓</li>
+                  <li>Simulador (cabeçalho do hero) ✓</li>
+                  <li>Sidebar (seção CLIENTE ATIVO) ✓</li>
+                  <li>Header RR CRM — não substituído</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div className="crmButtonRow">
+            <button type="submit" className="btn" disabled={savingCliente}>
+              {savingCliente ? "Salvando..." : "Salvar identidade"}
+            </button>
+          </div>
+        </form>
+      </section>
 
       <section className="crmSection">
         <div className="crmSectionHeader">

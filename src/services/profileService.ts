@@ -17,6 +17,9 @@ type ProfileRow = {
   avatar_url?: string | null;
   telefone?: string | null;
   cargo?: string | null;
+  cliente_logo_url?: string | null;
+  cliente_nome?: string | null;
+  cliente_cor_primaria?: string | null;
 };
 
 function createId(prefix: string) {
@@ -42,6 +45,9 @@ function normalizeProfile(row: ProfileRow | UserProfile): UserProfile {
     avatarUrl: maybe.avatarUrl ?? (maybe as ProfileRow).avatar_url ?? undefined,
     telefone: maybe.telefone ?? (maybe as ProfileRow).telefone ?? undefined,
     cargo: maybe.cargo ?? (maybe as ProfileRow).cargo ?? undefined,
+    clienteLogoUrl: maybe.clienteLogoUrl ?? (maybe as ProfileRow).cliente_logo_url ?? undefined,
+    clienteNome: maybe.clienteNome ?? (maybe as ProfileRow).cliente_nome ?? undefined,
+    clienteCorPrimaria: maybe.clienteCorPrimaria ?? (maybe as ProfileRow).cliente_cor_primaria ?? undefined,
   };
 }
 
@@ -84,7 +90,7 @@ async function findRemoteProfileByUser(user: AuthUser): Promise<UserProfile | nu
 
   const { data: byUserId, error: byUserIdError } = await supabase
     .from("profiles")
-    .select("id, user_id, nome, email, role, ativo, created_at, nome_exibicao, avatar_url, telefone, cargo")
+    .select("id, user_id, nome, email, role, ativo, created_at, nome_exibicao, avatar_url, telefone, cargo, cliente_logo_url, cliente_nome, cliente_cor_primaria")
     .eq("user_id", user.id)
     .limit(1);
 
@@ -102,7 +108,7 @@ async function findRemoteProfileByUser(user: AuthUser): Promise<UserProfile | nu
 
   const { data: byEmail, error: byEmailError } = await supabase
     .from("profiles")
-    .select("id, user_id, nome, email, role, ativo, created_at, nome_exibicao, avatar_url, telefone, cargo")
+    .select("id, user_id, nome, email, role, ativo, created_at, nome_exibicao, avatar_url, telefone, cargo, cliente_logo_url, cliente_nome, cliente_cor_primaria")
     .eq("email", normalizedEmail)
     .limit(1);
 
@@ -149,6 +155,9 @@ export type UpdateProfileInput = {
   nomeExibicao?: string;
   telefone?: string;
   cargo?: string;
+  clienteLogoUrl?: string | null;
+  clienteNome?: string;
+  clienteCorPrimaria?: string | null;
 };
 
 export async function updateProfile(
@@ -164,13 +173,19 @@ export async function updateProfile(
     payload.telefone = input.telefone || null;
   if (input.cargo !== undefined)
     payload.cargo = input.cargo || null;
+  if (input.clienteLogoUrl !== undefined)
+    payload.cliente_logo_url = input.clienteLogoUrl || null;
+  if (input.clienteNome !== undefined)
+    payload.cliente_nome = input.clienteNome || null;
+  if (input.clienteCorPrimaria !== undefined)
+    payload.cliente_cor_primaria = input.clienteCorPrimaria || null;
 
   const { data, error } = await supabase
     .from("profiles")
     .update(payload)
     .eq("id", profileId)
     .select(
-      "id, user_id, nome, email, role, ativo, created_at, nome_exibicao, avatar_url, telefone, cargo"
+      "id, user_id, nome, email, role, ativo, created_at, nome_exibicao, avatar_url, telefone, cargo, cliente_logo_url, cliente_nome, cliente_cor_primaria"
     )
     .single();
 

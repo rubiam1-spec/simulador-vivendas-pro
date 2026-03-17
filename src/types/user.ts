@@ -12,6 +12,9 @@ export type UserProfile = {
   avatarUrl?: string;
   telefone?: string;
   cargo?: string;
+  clienteLogoUrl?: string;
+  clienteNome?: string;
+  clienteCorPrimaria?: string;
 };
 
 export type CreateUserAccessInput = {

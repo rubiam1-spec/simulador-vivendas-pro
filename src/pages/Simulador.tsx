@@ -19,6 +19,7 @@ import {
 } from "../services/negociacoesService";
 import { consumirNegociacaoAgendada } from "../services/negociacoesSession";
 import { useAuth } from "../components/AuthProvider";
+import { useBranding } from "../hooks/useBranding";
 import { listClientes } from "../services/clientesServiceSupabase";
 import { listCorretores } from "../services/corretoresServiceSupabase";
 import type { Cliente } from "../types/cliente";
@@ -267,6 +268,7 @@ function calcularResumoFinanceiro(
 
 export default function Simulador() {
   const { profile } = useAuth();
+  const branding = useBranding();
   const [lotes, setLotes] = useState<Lote[]>([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState("");
@@ -1735,6 +1737,13 @@ export default function Simulador() {
           {erro ? <div className="alert alertDanger">{erro}</div> : null}
 
           <section className="luxHero">
+            {branding.mostrarLogoClienteNoSimulador && branding.clienteLogoUrl ? (
+              <img
+                src={branding.clienteLogoUrl}
+                alt={branding.clienteNome}
+                style={{ height: 40, objectFit: "contain", marginBottom: 8 }}
+              />
+            ) : null}
             <div className="luxHeroKicker">{tituloModo}</div>
             <h1 className="luxTitle">Dados do Cliente</h1>
             <p className="luxHeroText">{descricaoModo}</p>
