@@ -6,7 +6,30 @@ import type {
 import type { DashboardAnalytics } from "../services/analyticsService";
 
 type DashboardComercialProps = {
-  analytics: DashboardAnalytics;
+  analytics?: DashboardAnalytics;
+};
+
+const EMPTY_ANALYTICS: DashboardAnalytics = {
+  totalNegociacoes: 0,
+  valorPipeline: 0,
+  negociacoesAbertas: 0,
+  negociacoesAprovadas: 0,
+  ticketMedio: 0,
+  metrics: {
+    total: 0,
+    totalSimulacoes: 0,
+    totalPropostasEnviadas: 0,
+    totalEmAndamento: 0,
+    totalFechadas: 0,
+    totalPerdidas: 0,
+    pipelineValor: 0,
+    ticketMedio: 0,
+    porStatus: [],
+    porOrigem: [],
+    porPrioridade: [],
+    recentes: [],
+  },
+  negociacoes: [],
 };
 
 function brl(valor: number) {
@@ -68,7 +91,7 @@ function tonePrioridade(prioridade: PrioridadeNegociacao) {
 }
 
 export default function DashboardComercial({
-  analytics,
+  analytics = EMPTY_ANALYTICS,
 }: DashboardComercialProps) {
   const metrics = analytics.metrics;
   const temDados = analytics.totalNegociacoes > 0;

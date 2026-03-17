@@ -23,7 +23,7 @@ export default function ProtectedRoute({
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
-  if (allowedRoles?.length && (profileLoading || !profileResolved)) {
+  if (profileLoading || !profileResolved) {
     return <div className="appShellLoading">Carregando perfil...</div>;
   }
 

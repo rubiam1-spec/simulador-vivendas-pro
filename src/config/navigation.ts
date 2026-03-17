@@ -15,6 +15,10 @@ export function getNavigationSections(
   profile: Pick<UserProfile, "role" | "ativo"> | null,
   profileResolved: boolean
 ): NavigationSection[] {
+  if (!profileResolved) {
+    return [];
+  }
+
   const isCorretor = profile?.role === "corretor";
   const isAdmin = profileResolved && profile?.ativo && profile.role === "admin";
 

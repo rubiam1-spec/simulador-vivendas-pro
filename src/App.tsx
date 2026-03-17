@@ -55,31 +55,25 @@ export default function App() {
 
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
-              <Route path="/" element={<HomeRedirect />} />
+              <Route index element={<HomeRedirect />} />
               <Route
                 element={<ProtectedRoute allowedRoles={["admin", "gestor"]} redirectTo="/" />}
               >
-                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="dashboard" element={<DashboardPage />} />
               </Route>
-              <Route
-                path="/negociacoes"
-                element={<CentralNegociacoesPage />}
-              />
-              <Route path="/simulador" element={<Simulador />} />
+              <Route path="negociacoes" element={<CentralNegociacoesPage />} />
+              <Route path="simulador" element={<Simulador />} />
               <Route
                 element={<ProtectedRoute allowedRoles={["admin"]} />}
               >
-                <Route path="/acessos" element={<AcessosPage />} />
+                <Route path="acessos" element={<AcessosPage />} />
               </Route>
-              <Route
-                path="/configuracoes"
-                element={<ConfiguracoesPage />}
-              />
+              <Route path="configuracoes" element={<ConfiguracoesPage />} />
               <Route
                 element={<ProtectedRoute allowedRoles={["admin", "gestor"]} redirectTo="/" />}
               >
-                <Route path="/clientes" element={<ClientesPage />} />
-                <Route path="/corretores" element={<CorretoresPage />} />
+                <Route path="clientes" element={<ClientesPage />} />
+                <Route path="corretores" element={<CorretoresPage />} />
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>

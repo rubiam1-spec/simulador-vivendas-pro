@@ -41,10 +41,10 @@ export default function DashboardPage() {
       try {
         setLoading(true);
         setErro("");
-        const analytics = await getDashboardAnalytics();
+        const nextAnalytics = await getDashboardAnalytics();
 
         if (!active) return;
-        setAnalytics(analytics);
+        setAnalytics(nextAnalytics);
       } catch (error) {
         if (!active) return;
         setAnalytics(EMPTY_ANALYTICS);
