@@ -13,13 +13,12 @@ type ClienteRow = {
   telefone: string | null;
   email: string | null;
   cpf: string | null;
-  cidade: string | null;
-  origem_lead: OrigemLead | null;
-  status: ClienteStatus;
-  corretor_responsavel: string | null;
+  origem: OrigemLead | null;
+  status: ClienteStatus | null;
   observacoes: string | null;
   created_at: string;
   updated_at: string;
+  user_id: string | null;
 };
 
 function statusValido(status: unknown): status is ClienteStatus {
@@ -52,10 +51,10 @@ function fromRow(row: ClienteRow): Cliente {
     telefone: row.telefone ?? "",
     email: row.email ?? "",
     cpf: row.cpf ?? "",
-    cidade: row.cidade ?? "",
-    origemLead: origemValida(row.origem_lead) ? row.origem_lead : "outro",
+    cidade: "",
+    origemLead: origemValida(row.origem) ? row.origem : "outro",
     status: statusValido(row.status) ? row.status : "novo",
-    corretorResponsavel: row.corretor_responsavel ?? "",
+    corretorResponsavel: "",
     observacoes: row.observacoes ?? "",
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -100,10 +99,8 @@ export async function createCliente(
       telefone: input.telefone || null,
       email: input.email || null,
       cpf: input.cpf || null,
-      cidade: input.cidade || null,
-      origem_lead: input.origemLead,
-      status: input.status,
-      corretor_responsavel: input.corretorResponsavel || null,
+      origem: input.origemLead || null,
+      status: input.status || null,
       observacoes: input.observacoes || null,
       user_id: user?.id ?? null,
     })
