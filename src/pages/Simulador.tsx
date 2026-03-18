@@ -1104,7 +1104,7 @@ export default function Simulador() {
 
   function mostrarFeedbackNegociacao(texto: string) {
     setFeedbackNegociacao(texto);
-    window.setTimeout(() => setFeedbackNegociacao(""), 2400);
+    window.setTimeout(() => setFeedbackNegociacao(""), 3000);
   }
 
   async function recarregarNegociacoes() {
@@ -1205,35 +1205,55 @@ export default function Simulador() {
 
     let negociacaoPersistida: NegociacaoSalva | null = null;
 
-    if (negociacaoAtual && negociacaoAtivaId) {
-      const atualizada = await updateNegociacaoById(negociacaoAtivaId, negociacao, [
-        {
-          tipo: "negociacao_atualizada",
-          descricao: "Negociação atualizada a partir do simulador",
-        },
-        {
-          tipo: "negociacao_atualizada",
-          descricao: configuracao.descricaoEvento,
-        },
-      ]);
+    try {
+      if (negociacaoAtual && negociacaoAtivaId) {
+        const atualizada = await updateNegociacaoById(negociacaoAtivaId, negociacao, [
+          {
+            tipo: "negociacao_atualizada",
+            descricao: "Negociação atualizada a partir do simulador",
+          },
+          {
+            tipo: "negociacao_atualizada",
+            descricao: configuracao.descricaoEvento,
+          },
+        ]);
 
-      if (atualizada) {
+        if (!atualizada) {
+          mostrarFeedbackNegociacao("Erro ao salvar: verifique sua conexão.");
+          return;
+        }
+
         negociacaoPersistida = atualizada;
         setNegociacaoAtivaId(atualizada.id);
         await recarregarNegociacoes();
         mostrarFeedbackNegociacao(configuracao.mensagemAtualizada);
+
+        window.dispatchEvent(
+          new StorageEvent("storage", { key: "central_negociacoes_bomm" })
+        );
+      } else {
+        const criada = await createNegociacao(negociacao, [
+          {
+            tipo: "negociacao_atualizada",
+            descricao: configuracao.descricaoEvento,
+          },
+        ]);
+        negociacaoPersistida = criada;
+        setNegociacaoAtivaId(criada.id);
+        await recarregarNegociacoes();
+        mostrarFeedbackNegociacao(configuracao.mensagemCriada);
+
+        window.dispatchEvent(
+          new StorageEvent("storage", { key: "central_negociacoes_bomm" })
+        );
       }
-    } else {
-      const criada = await createNegociacao(negociacao, [
-        {
-          tipo: "negociacao_atualizada",
-          descricao: configuracao.descricaoEvento,
-        },
-      ]);
-      negociacaoPersistida = criada;
-      setNegociacaoAtivaId(criada.id);
-      await recarregarNegociacoes();
-      mostrarFeedbackNegociacao(configuracao.mensagemCriada);
+    } catch (error) {
+      mostrarFeedbackNegociacao(
+        error instanceof Error
+          ? `Erro: ${error.message}`
+          : "Erro desconhecido ao salvar no CRM."
+      );
+      return;
     }
 
     if (options?.gerarPdfDepois) {
@@ -3517,7 +3537,31 @@ export default function Simulador() {
           </div>
 
           {feedbackNegociacao ? (
-            <div className="luxNote luxCentralFeedback">{feedbackNegociacao}</div>
+            <div style={{
+              position: "fixed",
+              bottom: 28,
+              right: 28,
+              zIndex: 999,
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              padding: "14px 20px",
+              borderRadius: "var(--r-md)",
+              background: feedbackNegociacao.startsWith("Erro")
+                ? "var(--clr-danger)"
+                : "linear-gradient(135deg, var(--clr-accent), var(--clr-accent-hi))",
+              color: "#ffffff",
+              fontWeight: 600,
+              fontSize: "14px",
+              letterSpacing: "-0.01em",
+              boxShadow: "var(--shadow-lg)",
+              animation: "toastIn 220ms var(--ease-out)",
+              fontFamily: "var(--font-sans)",
+              pointerEvents: "none",
+              maxWidth: 360,
+            }}>
+              {feedbackNegociacao.startsWith("Erro") ? "✗" : "✓"} {feedbackNegociacao}
+            </div>
           ) : null}
         </main>
       </div>
