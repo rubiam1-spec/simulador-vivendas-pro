@@ -574,6 +574,115 @@ export default function CentralNegociacoes({
                     </div>
                   </div>
 
+                  {/* Contexto rápido — visível sem clicar */}
+                  <div style={{
+                    marginTop: 12,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 8,
+                  }}>
+
+                    {/* Origem — sempre visível */}
+                    <div style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontSize: 12,
+                      color: "var(--clr-text-tertiary)",
+                    }}>
+                      <span style={{
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.08em",
+                        fontSize: 10,
+                      }}>
+                        Origem
+                      </span>
+                      <span className={["crmBadge", origemTone(negociacao.origem)].join(" ")}>
+                        {labelOrigem(negociacao.origem)}
+                      </span>
+                    </div>
+
+                    {/* Observação interna — só aparece se preenchida */}
+                    {negociacao.observacaoInterna ? (
+                      <div style={{
+                        padding: "10px 14px",
+                        borderRadius: "var(--r-sm)",
+                        background: "var(--clr-surface-2)",
+                        border: "1px solid var(--clr-border-subtle)",
+                        fontSize: 13,
+                        color: "var(--clr-text-secondary)",
+                        lineHeight: 1.55,
+                      }}>
+                        <span style={{
+                          display: "block",
+                          marginBottom: 4,
+                          fontSize: 10,
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.08em",
+                          color: "var(--clr-text-tertiary)",
+                        }}>
+                          Observação interna
+                        </span>
+                        {negociacao.observacaoInterna}
+                      </div>
+                    ) : null}
+
+                    {/* Última movimentação — só aparece se existir histórico */}
+                    {negociacao.historico && negociacao.historico.length > 0 ? (
+                      <div style={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: 10,
+                        padding: "10px 14px",
+                        borderRadius: "var(--r-sm)",
+                        background: "var(--clr-surface-2)",
+                        border: "1px solid var(--clr-border-subtle)",
+                      }}>
+                        <div style={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: "50%",
+                          background: "var(--clr-accent)",
+                          flexShrink: 0,
+                          marginTop: 4,
+                          boxShadow: "0 0 0 3px var(--clr-accent-subtle)",
+                        }} />
+                        <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+                          <span style={{
+                            fontSize: 10,
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.08em",
+                            color: "var(--clr-text-tertiary)",
+                          }}>
+                            Última movimentação
+                          </span>
+                          <span style={{
+                            fontSize: 13,
+                            color: "var(--clr-text-secondary)",
+                            lineHeight: 1.5,
+                          }}>
+                            {[...negociacao.historico]
+                              .sort((a, b) =>
+                                new Date(b.dataHora).getTime() - new Date(a.dataHora).getTime()
+                              )[0].descricao}
+                          </span>
+                          <span style={{ fontSize: 11, color: "var(--clr-text-tertiary)" }}>
+                            {formatarData(
+                              [...negociacao.historico]
+                                .sort((a, b) =>
+                                  new Date(b.dataHora).getTime() - new Date(a.dataHora).getTime()
+                                )[0].dataHora
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    ) : null}
+
+                  </div>
+
                   {editando ? (
                     <div className="crmEditorGrid">
                       <label className="crmField">
