@@ -144,42 +144,20 @@ function toDb(neg: Partial<NegociacaoSalva>) {
   return result;
 }
 
-export async function listarNegociacoesSalvas(options?: {
+export async function listarNegociacoesSalvas(_options?: {
   consultoraUserId?: string | null;
 }): Promise<NegociacaoSalva[]> {
-  if (!supabase) {
-    console.error('[RR CRM] Supabase não inicializado');
-    return [];
-  }
-
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    console.error('[RR CRM] Sessão inválida:', authError?.message);
-    return [];
-  }
-
-  let query = supabase
+  if (!supabase) return [];
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+  const { data, error } = await supabase
     .from('negociacoes')
-    .select('*', { count: 'exact' })
+    .select('*')
     .order('updated_at', { ascending: false });
-
-  if (options?.consultoraUserId) {
-    query = query.or(`user_id.eq.${options.consultoraUserId},created_by.eq.${options.consultoraUserId}`);
-  }
-
-  const { data, error, count } = await query;
-
   if (error) {
-    console.error('[RR CRM] Erro ao buscar negociações:', {
-      code: error.code,
-      message: error.message,
-      hint: (error as typeof error & { hint?: string }).hint,
-    });
+    console.error('[RR CRM] negociacoes erro:', error.message, (error as typeof error & { hint?: string }).hint);
     return [];
   }
-
-  console.log(`[RR CRM] ${count ?? 0} negociação(ões) carregada(s) para ${user.email}`);
   return (data ?? []).map((row) => fromDb(row as Record<string, unknown>));
 }
 
