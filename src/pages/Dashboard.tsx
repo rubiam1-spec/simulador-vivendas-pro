@@ -69,8 +69,12 @@ export default function DashboardPage() {
     void carregarDashboard();
 
     function handleStorage(event: StorageEvent) {
-      if (event.key && event.key !== "central_negociacoes_bomm") return;
-      void carregarDashboard();
+      if (
+        !event.key ||
+        event.key === "central_negociacoes_bomm"
+      ) {
+        void carregarDashboard();
+      }
     }
 
     function handleVisibilityChange() {

@@ -40,6 +40,7 @@ function formatarData(valor: string) {
   return data.toLocaleString("pt-BR", {
     dateStyle: "short",
     timeStyle: "short",
+    timeZone: "America/Sao_Paulo",
   });
 }
 

@@ -101,6 +101,7 @@ function formatarData(valor: string) {
   return data.toLocaleString("pt-BR", {
     dateStyle: "short",
     timeStyle: "short",
+    timeZone: "America/Sao_Paulo",
   });
 }
 
@@ -476,7 +477,7 @@ export default function CentralNegociacoes({
                   <div className="crmDealHeader">
                     <div className="crmDealTitleBlock">
                       <span className="crmDealOverline">
-                        {labelTipo(negociacao.tipo)} • Atualizado em{" "}
+                        Documento: {labelTipo(negociacao.tipo)} • Atualizado em{" "}
                         {formatarData(negociacao.updatedAt)}
                       </span>
                       <h3>{negociacao.clienteNome || negociacao.cliente || negociacao.titulo}</h3>
@@ -485,7 +486,8 @@ export default function CentralNegociacoes({
 
                     <div className="crmDealStatusArea">
                       <div className="crmDealStatus">
-                        <span className={["crmBadge", statusTone(negociacao.status)].join(" ")}>
+                        <span className={["crmBadge", statusTone(negociacao.status)].join(" ")}
+                          title="Status do pipeline">
                           {labelStatus(negociacao.status)}
                         </span>
                         <span className="crmBadge isMuted">{labelEtapa(negociacao.etapa)}</span>
