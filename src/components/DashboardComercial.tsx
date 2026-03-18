@@ -4,6 +4,7 @@ import type {
   StatusNegociacao,
 } from "../types/negociacao";
 import type { DashboardAnalytics } from "../services/analyticsService";
+import { formatCurrency, formatCurrencyFull, formatCount } from "../utils/formatMetric";
 
 type DashboardComercialProps = {
   analytics?: DashboardAnalytics;
@@ -32,12 +33,6 @@ const EMPTY_ANALYTICS: DashboardAnalytics = {
   negociacoes: [],
 };
 
-function brl(valor: number) {
-  return valor.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
-}
 
 function formatarData(valor: string) {
   const data = new Date(valor);
@@ -138,8 +133,11 @@ export default function DashboardComercial({
             {metricIcon("Negociações ativas")}
           </span>
           <span className="crmMetricLabel">Negociações ativas</span>
-          <strong className="crmMetricValue">
-            {analytics.totalNegociacoes.toLocaleString("pt-BR")}
+          <strong
+            className="crmMetricValue"
+            title={String(analytics.totalNegociacoes)}
+          >
+            {formatCount(analytics.totalNegociacoes)}
           </strong>
           <span className="crmMetricHint">Volume total em acompanhamento.</span>
         </article>
@@ -149,7 +147,12 @@ export default function DashboardComercial({
             {metricIcon("Pipeline financeiro")}
           </span>
           <span className="crmMetricLabel">Pipeline financeiro</span>
-          <strong className="crmMetricValue">{brl(analytics.valorPipeline)}</strong>
+          <strong
+            className="crmMetricValue"
+            title={formatCurrencyFull(analytics.valorPipeline)}
+          >
+            {formatCurrency(analytics.valorPipeline)}
+          </strong>
           <span className="crmMetricHint">
             Soma das oportunidades em rascunho, negociação, retorno e aprovação.
           </span>
@@ -160,8 +163,11 @@ export default function DashboardComercial({
             {metricIcon("Negociações em aberto")}
           </span>
           <span className="crmMetricLabel">Negociações em aberto</span>
-          <strong className="crmMetricValue">
-            {analytics.negociacoesAbertas.toLocaleString("pt-BR")}
+          <strong
+            className="crmMetricValue"
+            title={String(analytics.negociacoesAbertas)}
+          >
+            {formatCount(analytics.negociacoesAbertas)}
           </strong>
           <span className="crmMetricHint">Negociações em fase ativa do funil.</span>
         </article>
@@ -171,10 +177,11 @@ export default function DashboardComercial({
             {metricIcon("Aprovadas e fechadas")}
           </span>
           <span className="crmMetricLabel">Aprovadas e fechadas</span>
-          <strong className="crmMetricValue">
-            {(metrics.totalFechadas + analytics.negociacoesAprovadas).toLocaleString(
-              "pt-BR"
-            )}
+          <strong
+            className="crmMetricValue"
+            title={String(metrics.totalFechadas + analytics.negociacoesAprovadas)}
+          >
+            {formatCount(metrics.totalFechadas + analytics.negociacoesAprovadas)}
           </strong>
           <span className="crmMetricHint">
             Sinal positivo consolidado entre aprovação comercial e fechamento.
@@ -186,7 +193,12 @@ export default function DashboardComercial({
             {metricIcon("Ticket medio")}
           </span>
           <span className="crmMetricLabel">Ticket médio</span>
-          <strong className="crmMetricValue">{brl(analytics.ticketMedio)}</strong>
+          <strong
+            className="crmMetricValue"
+            title={formatCurrencyFull(analytics.ticketMedio)}
+          >
+            {formatCurrency(analytics.ticketMedio)}
+          </strong>
           <span className="crmMetricHint">
             Média de valor das negociações registradas.
           </span>
@@ -220,7 +232,7 @@ export default function DashboardComercial({
                 </div>
                 <div className="crmInlineListMeta">
                   <strong>{item.quantidade}</strong>
-                  <span>{brl(item.valor)}</span>
+                  <span title={formatCurrencyFull(item.valor)}>{formatCurrency(item.valor)}</span>
                 </div>
               </div>
             ))}
@@ -303,7 +315,12 @@ export default function DashboardComercial({
 
                 <div className="crmInlineListMeta">
                   <span>{formatarData(negociacao.updatedAt)}</span>
-                  <strong className="crmRecentValue">{brl(negociacao.valorTotal)}</strong>
+                  <strong
+                    className="crmRecentValue"
+                    title={formatCurrencyFull(negociacao.valorTotal)}
+                  >
+                    {formatCurrency(negociacao.valorTotal)}
+                  </strong>
                 </div>
               </div>
             ))}
