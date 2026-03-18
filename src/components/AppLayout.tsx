@@ -54,9 +54,6 @@ export default function AppLayout() {
     };
   }, [mobileMenuOpen]);
 
-  const roleLabel = { admin: "Administrador", gestor: "Gestor", corretor: "Corretor", consultora: "Consultora" };
-  const nomeUsuario = profile?.nomeExibicao ?? profile?.nome ?? session?.user.email ?? "Usuário";
-  const cargoUsuario = profile?.cargo ?? (profile?.role ? (roleLabel[profile.role as keyof typeof roleLabel] ?? profile.role) : "");
 
   return (
     <div className="appShell">
@@ -95,7 +92,12 @@ export default function AppLayout() {
           </div>
 
           <div className="appShellUser">
-            <span>{nomeUsuario}{cargoUsuario ? ` / ${cargoUsuario}` : ""}</span>
+            <span>{profile?.nomeExibicao ?? profile?.nome ?? session?.user.email ?? "Usuário"}</span>
+            <small>
+              {profile?.cargo ?? (profile?.role
+                ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1)
+                : "")}
+            </small>
           </div>
         </header>
 

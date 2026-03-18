@@ -801,14 +801,14 @@
 }
 
 .crmMetricValue {
-  font-size: 1.1rem;
-  line-height: 1.1;
+  font-size: 1.1rem !important;
+  line-height: 1.2 !important;
   letter-spacing: -0.02em;
   font-weight: 800;
   color: var(--clr-text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
   cursor: default;
 }
 
@@ -1598,8 +1598,11 @@
   }
 
   .crmMetricValue {
-    font-size: 1rem;
-    white-space: nowrap;
+    font-size: 1.1rem !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
 }
 
@@ -1714,7 +1717,10 @@
   font-weight: var(--weight-extrabold) !important;
   letter-spacing: -0.02em !important;
   white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
   font-size: 1.1rem !important;
+  line-height: 1.2 !important;
 }
 
 /* ── Buttons ─────────────────────────────────────────────────── */
@@ -2082,6 +2088,14 @@ body, html {
 [data-theme="light"] .crmSectionTitle,
 [data-theme="light"] .crmPanelTitle {
   color: #08142d !important;
+}
+
+[data-theme="light"] .crmMetricValue {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  font-size: 1.1rem !important;
+  line-height: 1.2 !important;
 }
 
 [data-theme="light"] .crmMetricLabel,
