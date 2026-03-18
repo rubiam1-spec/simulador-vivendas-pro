@@ -147,17 +147,30 @@ function toDb(neg: Partial<NegociacaoSalva>) {
 export async function listarNegociacoesSalvas(_options?: {
   consultoraUserId?: string | null;
 }): Promise<NegociacaoSalva[]> {
-  if (!supabase) return [];
+  if (!supabase) {
+    console.error('[NEGOCIACOES] supabase não inicializado');
+    return [];
+  }
+
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return [];
+  if (!user) {
+    console.error('[NEGOCIACOES] usuário não autenticado');
+    return [];
+  }
+
+  console.log('[NEGOCIACOES] buscando para:', user.email);
+
   const { data, error } = await supabase
     .from('negociacoes')
     .select('*')
     .order('updated_at', { ascending: false });
+
   if (error) {
-    console.error('[RR CRM] negociacoes erro:', error.message, (error as typeof error & { hint?: string }).hint);
+    console.error('[NEGOCIACOES] erro:', error.code, error.message);
     return [];
   }
+
+  console.log('[NEGOCIACOES] total:', data?.length ?? 0, 'registros');
   return (data ?? []).map((row) => fromDb(row as Record<string, unknown>));
 }
 

@@ -90,7 +90,25 @@ export default function Login() {
 
           {erro ? <div className="loginError">{erro}</div> : null}
 
-          <button type="submit" disabled={loading}>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '13px 20px',
+              background: loading
+                ? 'rgba(48, 112, 240, 0.5)'
+                : 'linear-gradient(135deg, #0e3fa0, #3070f0)',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '10px',
+              fontSize: '14px',
+              fontWeight: '700',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              fontFamily: 'inherit',
+              transition: 'all 200ms ease',
+            }}
+          >
             {loading ? "Entrando..." : "Entrar"}
           </button>
         </form>

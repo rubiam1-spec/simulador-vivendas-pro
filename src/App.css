@@ -1930,41 +1930,316 @@ body, html {
 .whats::placeholder { color: rgba(100,150,255,0.3); }
 .luxField select option { background: #0a1528; color: #eaf0ff; }
 
-/* ── MODO CLARO ── */
+/* ── MODO CLARO — SIDEBAR ── */
 [data-theme="light"] body,
 [data-theme="light"] html {
   background: #f4f6fb;
   color: #08142d;
 }
+
 [data-theme="light"] .appSidebar {
-  background: linear-gradient(180deg,#fff,#f8faff);
-  border-right: 1px solid rgba(14,63,160,0.1);
+  background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%) !important;
+  border-right: 1px solid rgba(14, 63, 160, 0.12) !important;
 }
-[data-theme="light"] .appSidebarLink { color: rgba(8,20,45,0.5); }
+
+[data-theme="light"] .appSidebarBrand p,
+[data-theme="light"] .appSidebarKicker {
+  color: rgba(8, 20, 45, 0.55) !important;
+}
+
+[data-theme="light"] .appSidebarSectionTitle {
+  color: rgba(8, 20, 45, 0.4) !important;
+}
+
+[data-theme="light"] .appSidebarLink {
+  color: rgba(8, 20, 45, 0.6) !important;
+  border-color: transparent !important;
+  background: transparent !important;
+}
+
 [data-theme="light"] .appSidebarLink:hover {
-  background: rgba(26,95,212,0.07); color: #1a5fd4;
+  background: rgba(26, 95, 212, 0.06) !important;
+  color: #1a5fd4 !important;
+  border-color: transparent !important;
 }
+
 [data-theme="light"] .appSidebarLink.isActive {
-  background: rgba(26,95,212,0.1); color: #1a5fd4;
+  background: rgba(26, 95, 212, 0.10) !important;
+  color: #1a5fd4 !important;
 }
+
 [data-theme="light"] .appSidebarLink.isActive::before {
-  background: linear-gradient(180deg,#1a5fd4,#3070f0);
+  background: linear-gradient(180deg, #1a5fd4, #3070f0) !important;
 }
+
+[data-theme="light"] .appSidebarIcon svg {
+  color: inherit !important;
+}
+
+[data-theme="light"] .appSidebarIcon {
+  color: inherit !important;
+}
+
+[data-theme="light"] .appSidebarUserName {
+  color: #08142d !important;
+}
+
+[data-theme="light"] .appSidebarUserRole {
+  color: rgba(8, 20, 45, 0.5) !important;
+}
+
+[data-theme="light"] .appSidebarUser {
+  border-bottom-color: rgba(14, 63, 160, 0.1) !important;
+}
+
+[data-theme="light"] .appSidebarUserAvatar {
+  background: rgba(26, 95, 212, 0.12) !important;
+  color: #1a5fd4 !important;
+  border-color: rgba(26, 95, 212, 0.2) !important;
+}
+
+[data-theme="light"] .appSidebarFooter {
+  border-top-color: rgba(14, 63, 160, 0.1) !important;
+  background: transparent !important;
+}
+
+[data-theme="light"] .appSidebarFooter span {
+  color: rgba(8, 20, 45, 0.4) !important;
+}
+
+[data-theme="light"] .appSidebarFooter strong {
+  color: #08142d !important;
+}
+
+[data-theme="light"] .appSidebarClient {
+  background: rgba(26, 95, 212, 0.06) !important;
+  border-color: rgba(14, 63, 160, 0.12) !important;
+}
+
+[data-theme="light"] .appSidebarClient span {
+  color: rgba(8, 20, 45, 0.45) !important;
+}
+
+[data-theme="light"] .appSidebarClient strong {
+  color: #08142d !important;
+}
+
+/* ── MODO CLARO — MAIN CONTENT ── */
+[data-theme="light"] .appShellMain {
+  background: #f0f4ff !important;
+}
+
+[data-theme="light"] .appShellTopbar {
+  background: rgba(248, 250, 255, 0.95) !important;
+  border-bottom-color: rgba(14, 63, 160, 0.1) !important;
+}
+
+[data-theme="light"] .appShellTopbar h2 {
+  color: #08142d !important;
+}
+
+[data-theme="light"] .appShellTopbar p {
+  color: rgba(8, 20, 45, 0.6) !important;
+}
+
+[data-theme="light"] .appShellUser {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(14, 63, 160, 0.1) !important;
+}
+
+[data-theme="light"] .appShellUser span {
+  color: #08142d !important;
+}
+
+[data-theme="light"] .appShellUser small {
+  color: rgba(8, 20, 45, 0.5) !important;
+}
+
+[data-theme="light"] .appShellKicker {
+  color: #1a5fd4 !important;
+}
+
+[data-theme="light"] .crmSection,
+[data-theme="light"] .crmPanel {
+  background: #ffffff !important;
+  border-color: rgba(14, 63, 160, 0.1) !important;
+  box-shadow: 0 2px 12px rgba(8, 20, 45, 0.06) !important;
+}
+
+[data-theme="light"] .crmMetricCard {
+  background: #ffffff !important;
+  border-color: rgba(14, 63, 160, 0.1) !important;
+  box-shadow: 0 2px 8px rgba(8, 20, 45, 0.05) !important;
+}
+
+[data-theme="light"] .crmMetricValue,
+[data-theme="light"] .crmSectionTitle,
+[data-theme="light"] .crmPanelTitle {
+  color: #08142d !important;
+}
+
+[data-theme="light"] .crmMetricLabel,
+[data-theme="light"] .crmMetricHint,
+[data-theme="light"] .crmPanelDescription,
+[data-theme="light"] .crmSectionText {
+  color: rgba(8, 20, 45, 0.55) !important;
+}
+
+[data-theme="light"] .crmSectionEyebrow {
+  color: #1a5fd4 !important;
+}
+
+[data-theme="light"] .crmDealCard,
+[data-theme="light"] .crmEntityCard,
+[data-theme="light"] .crmAccessCard {
+  background: #ffffff !important;
+  border-color: rgba(14, 63, 160, 0.1) !important;
+}
+
+[data-theme="light"] .crmStatusPill {
+  background: rgba(248, 250, 255, 0.9) !important;
+  border-color: rgba(14, 63, 160, 0.12) !important;
+  color: rgba(8, 20, 45, 0.6) !important;
+}
+
+[data-theme="light"] .crmStatusPill.isActive {
+  background: rgba(26, 95, 212, 0.1) !important;
+  border-color: rgba(26, 95, 212, 0.3) !important;
+  color: #1a5fd4 !important;
+}
+
+[data-theme="light"] .crmFilterSummary {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border-color: rgba(14, 63, 160, 0.12) !important;
+  color: rgba(8, 20, 45, 0.6) !important;
+}
+
+[data-theme="light"] .crmEmptyState h3 {
+  color: #08142d !important;
+}
+
+[data-theme="light"] .crmEmptyState p {
+  color: rgba(8, 20, 45, 0.55) !important;
+}
+
+[data-theme="light"] .appShellLoadingInline {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border-color: rgba(14, 63, 160, 0.12) !important;
+  color: rgba(8, 20, 45, 0.5) !important;
+}
+
+[data-theme="light"] .crmInlineListItem {
+  background: rgba(248, 250, 255, 0.8) !important;
+  border-color: rgba(14, 63, 160, 0.1) !important;
+}
+
+[data-theme="light"] .crmBadge {
+  background: rgba(26, 95, 212, 0.08) !important;
+  color: #1a5fd4 !important;
+  border-color: rgba(26, 95, 212, 0.2) !important;
+}
+
+[data-theme="light"] .crmBadge.isWarning,
+[data-theme="light"] .crmBadge.is-gestor {
+  background: rgba(212, 134, 10, 0.08) !important;
+  color: #8a5500 !important;
+  border-color: rgba(212, 134, 10, 0.2) !important;
+}
+
+[data-theme="light"] .crmBadge.isDanger {
+  background: rgba(217, 50, 64, 0.07) !important;
+  color: #a02030 !important;
+  border-color: rgba(217, 50, 64, 0.2) !important;
+}
+
+[data-theme="light"] .btn {
+  background: linear-gradient(135deg, #1247b0, #3070f0) !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+[data-theme="light"] .btnGhost {
+  background: rgba(26, 95, 212, 0.06) !important;
+  border-color: rgba(26, 95, 212, 0.2) !important;
+  color: #1a5fd4 !important;
+}
+
+[data-theme="light"] .crmField input,
+[data-theme="light"] .crmField select,
+[data-theme="light"] .crmTextarea,
+[data-theme="light"] .loginForm input {
+  background: #ffffff !important;
+  border-color: rgba(14, 63, 160, 0.18) !important;
+  color: #08142d !important;
+}
+
+[data-theme="light"] .crmField input::placeholder,
+[data-theme="light"] .crmTextarea::placeholder {
+  color: rgba(8, 20, 45, 0.3) !important;
+}
+
 [data-theme="light"] .luxField input,
 [data-theme="light"] .luxField select,
 [data-theme="light"] .whats {
-  background: #fff;
-  border-color: rgba(14,63,160,0.18);
-  color: #08142d;
+  background: #fff !important;
+  border-color: rgba(14, 63, 160, 0.18) !important;
+  color: #08142d !important;
 }
+
 [data-theme="light"] .luxSection,
-[data-theme="light"] .crmPanel,
-[data-theme="light"] .crmMetricCard {
-  background: #fff;
-  border-color: rgba(14,63,160,0.1);
+[data-theme="light"] .luxFlowPanel {
+  background: #ffffff !important;
+  border-color: rgba(14, 63, 160, 0.1) !important;
 }
-[data-theme="light"] .luxField input::placeholder { color: rgba(8,20,45,0.3); }
+
+[data-theme="light"] .luxField input::placeholder { color: rgba(8, 20, 45, 0.3) !important; }
 [data-theme="light"] .luxField select option { background: #fff; color: #08142d; }
+
+[data-theme="light"] .crmDataItem {
+  background: rgba(248, 250, 255, 0.8) !important;
+  border-color: rgba(14, 63, 160, 0.08) !important;
+}
+
+[data-theme="light"] .crmDataLabel {
+  color: rgba(8, 20, 45, 0.5) !important;
+}
+
+[data-theme="light"] .crmDataValue {
+  color: #08142d !important;
+}
+
+[data-theme="light"] .crmTimeline {
+  background: rgba(248, 250, 255, 0.7) !important;
+  border-color: rgba(14, 63, 160, 0.1) !important;
+}
+
+[data-theme="light"] .crmTimelineDot {
+  background: #1a5fd4 !important;
+  box-shadow: 0 0 0 4px rgba(26, 95, 212, 0.12) !important;
+}
+
+[data-theme="light"] .crmTimelineBody span {
+  color: rgba(8, 20, 45, 0.5) !important;
+}
+
+[data-theme="light"] .crmMenuDropdown {
+  background: #ffffff !important;
+  border-color: rgba(14, 63, 160, 0.12) !important;
+  box-shadow: 0 8px 32px rgba(8, 20, 45, 0.12) !important;
+}
+
+[data-theme="light"] .crmMenuDropdown button {
+  color: #08142d !important;
+}
+
+[data-theme="light"] .crmMenuDropdown button.isDanger {
+  color: #d93240 !important;
+}
+
+[data-theme="light"] .appPageStack h2,
+[data-theme="light"] .crmStack h2 {
+  color: #08142d !important;
+}
 
 /* ── ETAPA 4: botoes e inputs com tokens semanticos ── */
 .btn,
