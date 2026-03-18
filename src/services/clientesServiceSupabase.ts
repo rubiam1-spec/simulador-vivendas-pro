@@ -106,7 +106,7 @@ export async function createCliente(
     })
     .select("*")
     .single();
-  if (error) throw error;
+  if (error) throw new Error(error.message ?? "Erro ao salvar cliente.");
   return fromRow(data as ClienteRow);
 }
 
@@ -141,7 +141,7 @@ export async function updateCliente(
 export async function deleteCliente(id: string): Promise<void> {
   const client = getClient();
   const { error } = await client.from("clientes").delete().eq("id", id);
-  if (error) throw error;
+  if (error) throw new Error(error.message ?? "Erro ao excluir cliente.");
 }
 
 export async function migrarClientesDoLocalStorage(): Promise<{

@@ -231,11 +231,15 @@ export default function ClientesPage() {
       setEditingId(null);
       setShowForm(false);
     } catch (submitError) {
-      setError(
+      const mensagem =
         submitError instanceof Error
           ? submitError.message
-          : "Não foi possível salvar o cliente."
-      );
+          : typeof submitError === "object" &&
+            submitError !== null &&
+            "message" in submitError
+          ? String((submitError as { message: unknown }).message)
+          : "Não foi possível salvar o cliente.";
+      setError(mensagem);
     } finally {
       setSaving(false);
     }
