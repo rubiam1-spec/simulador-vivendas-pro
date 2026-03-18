@@ -2,12 +2,11 @@ import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 
 import { getPageMeta } from "../config/pageMeta";
-import { hasSupabaseConfig } from "../lib/supabase";
 import { useAuth } from "./AuthProvider";
 import Sidebar from "./Sidebar";
 
 export default function AppLayout() {
-  const { session, profile, profileLoading, profileError } = useAuth();
+  const { session, profile } = useAuth();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pageMeta = getPageMeta(location.pathname);
@@ -55,9 +54,9 @@ export default function AppLayout() {
     };
   }, [mobileMenuOpen]);
 
-  const profileStateLabel = profileLoading
-    ? "CARREGANDO PERFIL"
-    : (profile?.role || (profileError ? "ERRO DE PERFIL" : "SEM PERFIL")).toUpperCase();
+  const roleLabel = { admin: "Administrador", gestor: "Gestor", corretor: "Corretor", consultora: "Consultora" };
+  const nomeUsuario = profile?.nomeExibicao ?? profile?.nome ?? session?.user.email ?? "Usuário";
+  const cargoUsuario = profile?.cargo ?? (profile?.role ? (roleLabel[profile.role as keyof typeof roleLabel] ?? profile.role) : "");
 
   return (
     <div className="appShell">
@@ -96,10 +95,7 @@ export default function AppLayout() {
           </div>
 
           <div className="appShellUser">
-            <span>{profile?.nome || session?.user.email || "Usuário autenticado"}</span>
-            <small>
-              {profileStateLabel} - {hasSupabaseConfig ? "Supabase Auth" : "Modo local"}
-            </small>
+            <span>{nomeUsuario}{cargoUsuario ? ` / ${cargoUsuario}` : ""}</span>
           </div>
         </header>
 

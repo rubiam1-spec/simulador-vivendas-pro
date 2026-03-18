@@ -938,7 +938,7 @@ export default function Simulador() {
     const linhas: string[] = [];
 
     if (modoDocumento === "simulacao") {
-      linhas.push(`Opa, ${cliente || "Nome"}! 😊`);
+      linhas.push(`Olá, ${cliente || "Cliente"}!`);
       linhas.push("");
       linhas.push(
         "Preparei uma simulação personalizada do Vivendas do Bosque pra você ter uma visão clara de como fica o fluxo financeiro:"
