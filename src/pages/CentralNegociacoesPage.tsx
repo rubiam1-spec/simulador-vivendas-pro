@@ -31,7 +31,7 @@ export default function CentralNegociacoesPage() {
 
   function notificar(texto: string) {
     setFeedback(texto);
-    window.setTimeout(() => setFeedback(""), 2200);
+    window.setTimeout(() => setFeedback(""), 3000);
   }
 
   useEffect(() => {
@@ -76,29 +76,83 @@ export default function CentralNegociacoesPage() {
     id: string,
     dados: Pick<
       NegociacaoSalva,
-      "status" | "etapa" | "prioridade" | "origem" | "observacaoInterna" | "ultimaAcao"
+      | "status"
+      | "etapa"
+      | "prioridade"
+      | "origem"
+      | "observacaoInterna"
+      | "ultimaAcao"
     >
   ) {
+    // Atualização otimista: UI responde imediatamente
+    setNegociacoes((anterior) =>
+      anterior.map((neg) =>
+        neg.id === id
+          ? { ...neg, ...dados, updatedAt: new Date().toISOString() }
+          : neg
+      )
+    );
+
     try {
       const atualizada = await updateNegociacaoById(id, dados);
+
       if (!atualizada) {
-        notificar("Erro ao salvar: verifique sua conexão ou permissões.");
+        // Banco rejeitou: reverte e avisa
+        await recarregar();
+        notificar("Erro ao salvar. Verifique sua conexão.");
         return;
       }
-      await recarregar();
-      notificar("Dados comerciais atualizados.");
+
+      // Confirma com dados reais vindos do banco
+      setNegociacoes((anterior) =>
+        anterior.map((neg) => (neg.id === id ? atualizada : neg))
+      );
+
+      notificar("Negociação atualizada.");
+
+      // Sincroniza o Dashboard automaticamente
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: "central_negociacoes_bomm",
+        })
+      );
     } catch (error) {
+      // Reverte e exibe mensagem de erro clara
+      await recarregar();
       notificar(
         error instanceof Error
-          ? `Erro ao salvar: ${error.message}`
-          : "Erro desconhecido ao salvar dados comerciais."
+          ? `Erro: ${error.message}`
+          : "Erro desconhecido ao salvar."
       );
     }
   }
 
   return (
     <div className="appPageStack">
-      {feedback ? <div className="appInlineFeedback">{feedback}</div> : null}
+      {feedback ? (
+        <div style={{
+          position: "fixed",
+          bottom: 28,
+          right: 28,
+          zIndex: 999,
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          padding: "14px 20px",
+          borderRadius: "var(--r-md)",
+          background: "linear-gradient(135deg, var(--clr-accent), var(--clr-accent-hi))",
+          color: "#ffffff",
+          fontWeight: 600,
+          fontSize: "14px",
+          letterSpacing: "-0.01em",
+          boxShadow: "var(--shadow-lg), 0 0 0 1px rgba(48,112,240,0.3)",
+          animation: "toastIn 220ms var(--ease-out)",
+          fontFamily: "var(--font-sans)",
+          pointerEvents: "none",
+        }}>
+          ✓ {feedback}
+        </div>
+      ) : null}
 
       <CentralNegociacoes
         negociacoes={negociacoes}
