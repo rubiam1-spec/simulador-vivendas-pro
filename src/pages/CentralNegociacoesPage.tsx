@@ -79,10 +79,21 @@ export default function CentralNegociacoesPage() {
       "status" | "etapa" | "prioridade" | "origem" | "observacaoInterna" | "ultimaAcao"
     >
   ) {
-    const atualizada = await updateNegociacaoById(id, dados);
-    if (!atualizada) return;
-    await recarregar();
-    notificar("Dados comerciais atualizados.");
+    try {
+      const atualizada = await updateNegociacaoById(id, dados);
+      if (!atualizada) {
+        notificar("Erro ao salvar: verifique sua conexão ou permissões.");
+        return;
+      }
+      await recarregar();
+      notificar("Dados comerciais atualizados.");
+    } catch (error) {
+      notificar(
+        error instanceof Error
+          ? `Erro ao salvar: ${error.message}`
+          : "Erro desconhecido ao salvar dados comerciais."
+      );
+    }
   }
 
   return (
